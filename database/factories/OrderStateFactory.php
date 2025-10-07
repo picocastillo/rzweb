@@ -4,16 +4,16 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use App\Models\User;
+use App\Models\OrderState;
 
-class UserFactory extends Factory
+class OrderStateFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var string
      */
-    protected $model = User::class;
+    protected $model = OrderState::class;
 
     /**
      * Define the model's default state.
@@ -21,8 +21,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'email' => fake()->safeEmail(),
-            'role' => fake()->word(),
+            'order_id' => fake()->numberBetween(-10000, 10000),
             'created_at' => fake()->dateTime(),
         ];
     }

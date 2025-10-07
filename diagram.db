@@ -1,0 +1,103 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table users {
+  id integer [primary key]
+  email varchar
+  role varchar
+  created_at timestamp
+}
+
+Table client {
+  id integer [primary key]
+  email varchar
+  name varchar
+  cuil varchar
+  phone varchar
+  created_at timestamp
+}
+
+
+Table bill {
+  id integer [primary key]
+  client_id integer [not null]
+  date_from timestamp
+  date_to timestamp
+
+  amount float
+  name varchar
+  cuil varchar
+  phone varchar
+  created_at timestamp
+}
+
+Table bill_item {
+  id integer [primary key]
+  created_at datetime
+  bill_id integer [not null]
+  days integer
+  stock_movement_id integer [not null]
+}
+Table product {
+  id integer [primary key]
+  created_at datetime
+  title varchar
+}
+
+Table stock_movement {
+  id integer [primary key]
+  product_id integer
+  type enum(
+    ENTRADA_POR_ORDEN ,
+    ALTA_STOCK ,
+    SALIDA_PARA_ORDEN
+  )
+  description varchar
+  is_billable bool
+  created_at datetime
+  qty integer
+}
+
+Table item_order {
+  id integer [primary key]
+  order_id integer
+  stock_movement_id integer
+  created_at datetime
+  product_id integer [not null]
+  qty integer
+}
+
+Table order {
+  id integer [primary key]
+  user_id integer [not null]
+  last_state varchar
+  created_at datetime
+  address varchar
+  code varchar
+  is_active bool
+}
+
+Table order_state {
+  id integer [primary key]
+  order_id integer
+  created_at datetime
+}
+
+
+Ref: "client"."email" < "order"."id"
+
+Ref: "order"."id" < "item_order"."order_id"
+
+Ref: "stock_movement"."product_id" < "item_order"."id"
+
+Ref: "product"."title" < "stock_movement"."id"
+
+Ref: "order"."id" < "order_state"."order_id"
+
+Ref: "users"."created_at" < "order"."user_id"
+
+Ref: "product"."title" < "item_order"."product_id"
+
+Ref: "client"."created_at" < "bill"."client_id"
+
+Ref: "bill"."phone" < "bill_item"."bill_id"
