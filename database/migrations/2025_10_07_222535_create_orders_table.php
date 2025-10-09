@@ -15,10 +15,15 @@ return new class extends Migration
             $table->increments('id');
             $table->unsignedInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedInteger('client_id');
+            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
+           
             $table->string('last_state');
             $table->string('address');
             $table->string('code');
-            $table->boolean('is_active');
+            $table->date('date_from');
+            $table->date('date_to');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

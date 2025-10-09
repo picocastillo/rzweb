@@ -15,7 +15,7 @@ return new class extends Migration
             $table->increments('id');
             $table->unsignedInteger('product_id');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
-            $table->integer('type');//REGRESO_POR_ORDEN ,ALTA_STOCK , SALIDA_PARA_ORDEN
+            $table->string('type');
             $table->boolean('is_billable');
             $table->integer('qty');
             $table->timestamps();
