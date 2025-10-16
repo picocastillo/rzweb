@@ -69,7 +69,6 @@ class Order extends Model
                         'product_id' => $value['product_id'],
                         'qty' => $value['qty'],
                         'type'=> getNameTypeMovement(2),
-                        'is_billable'=> true,
                     ]);
 
                     ItemOrder::create([

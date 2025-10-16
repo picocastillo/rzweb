@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedInteger('product_id');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
             $table->string('type');
-            $table->boolean('is_billable');
+            $table->boolean('is_billed')->default(false);
             $table->integer('qty');
             $table->timestamps();
         });
