@@ -28,6 +28,7 @@ class Order extends Model
         'is_active',
     ];
 
+    protected $appends = ['name_client', 'name_last_state'];
 
     /**
      * Get the attributes that should be cast.
@@ -42,52 +43,38 @@ class Order extends Model
         ];
     }
 
-       public static function createWithInitialState(array $attributes = [])
+    ////Relationships////
+    public function client()
     {
-        try {
-            return DB::transaction(function () use ($attributes) {
-                
-                $order = self::create([
-                    'last_state' => getNameStateOrder(0), 
-                    'address' => $attributes['address'],
-                    'user_id' => $attributes['user_id'],
-                    'code' => $attributes['code'],
-                    'date_from' => $attributes['date_from'],
-                    'date_to' => $attributes['date_to'],
-                    'client_id' =>$attributes['client_id'],
-                ]);
-
-
-                OrderState::create([
-                    'name' => getNameStateOrder(0),
-                    'order_id' => $order->id
-                ]);
-
-                foreach ($attributes['items'] as $value) {
-                    
-                    $stock = StockMovement::create([
-                        'product_id' => $value['product_id'],
-                        'qty' => $value['qty'],
-                        'type'=> getNameTypeMovement(2),
-                        'is_billable'=> true,
-                    ]);
-
-                    ItemOrder::create([
-                        'product_id' => $value['product_id'],
-                        'qty' => $value['qty'],
-                        'order_id' => $order->id,
-                        'stock_movement_id' => $stock->id
-                    ]);
-                }
-
-                return $order;
-            });
-        } catch (Exception $e) {
-            // Loguear el error o manejarlo como quieras
-            \Log::error('Error al crear orden: ' . $e->getMessage());
-            throw $e; // re-lanzamos el error
-        }
+        return $this->belongsTo(Client::class);
     }
 
+    public function states()
+    {
+        return $this->hasMany(OrderState::class);
+    }
+
+    ////Functions/////
+    public function getNameClientAttribute()
+    {
+        return $this->client_id ? $this->client->name : '-';
+    }
+
+    public function getNameLastStateAttribute()
+    {
+        if (! isset($this->last_state)) {
+            return 'Desconocido';
+        }
+
+        if (function_exists('getNameStateOrder')) {
+            try {
+                return getNameStateOrder((int) $this->last_state) ?? 'Desconocido';
+            } catch (\Throwable $e) {
+                return 'Desconocido';
+            }
+        }
+
+        return 'Desconocido';
+    }
 
 }

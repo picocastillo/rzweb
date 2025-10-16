@@ -29,4 +29,17 @@ class Product extends Model
             'created_at' => 'datetime',
         ];
     }
+
+    ////Relationships////
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+
+    ////Functions////
+    public function getCurrentStockAttribute()
+    {
+        return $this->stockMovements()->sum('qty');
+    }    
 }
