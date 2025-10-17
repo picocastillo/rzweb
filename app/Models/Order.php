@@ -43,6 +43,10 @@ class Order extends Model
         ];
     }
 
+
+
+    
+
     ////Relationships////
     public function client()
     {
