@@ -9,7 +9,7 @@ use App\Http\Controllers\OrderController;
 // Auth::routes(['register' => false, 'reset' => false]);
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('auth/login');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -24,3 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
+require __DIR__.'/clients.php';
+require __DIR__.'/products.php';
+require __DIR__.'/orders.php';
+require __DIR__.'/bills.php';

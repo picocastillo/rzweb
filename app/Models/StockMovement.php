@@ -33,4 +33,10 @@ class StockMovement extends Model
             'created_at' => 'datetime',
         ];
     }
+
+    ////Relationships////
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 }
