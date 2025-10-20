@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -41,5 +42,32 @@ class Product extends Model
     public function getCurrentStockAttribute()
     {
         return $this->stockMovements()->sum('qty');
-    }    
+    }
+    
+    public function adjustStock(int $qty, int $type, bool $isBillable = true)
+    {
+        switch ($type) {
+            case 0: // Regreso por orden
+            case 1: // Alta stock
+                $finalQty = $qty;
+                break;
+            case 2: // Salida por orden
+                $finalQty = -$qty;
+                break;
+            default:
+                throw new Exception('Tipo de movimiento inválido');
+        }
+
+        // Crear movimiento de stock
+        $movement = $this->stockMovements()->create([
+            'qty' => $finalQty,
+            'type' => $type,
+            'is_billable' => $isBillable,
+        ]);
+
+        // Actualizar stock actual del producto
+        $this->increment('current_stock', $finalQty);
+
+        return $movement;
+    }
 }

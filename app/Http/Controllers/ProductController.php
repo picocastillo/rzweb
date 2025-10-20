@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 use function App\Helpers\TYPE_MOVEMENT;
 
 class ProductController extends Controller
@@ -106,23 +107,15 @@ class ProductController extends Controller
             'type' => 'required|integer|in:0,1,2',
         ]);
 
-        switch ($request->type) {
-            case 0: // Regreso Por Orden -> suma
-            case 1: // Alta Stock -> suma 
-                $qty = $request->qty;
-                break;
-            case 2: // Salida Por Orden -> resta 
-                $qty = -$request->qty;
-                break;
-            default:
-                throw new \Exception('Tipo de movimiento inválido');
-        }
+        try {
+            
+            $product->adjustStock($request->qty, $request->type);
+            return redirect()->back()->with('success', 'Stock actualizado correctamente.');
 
-        $product->stockMovements()->create([
-            'qty' => $qty,
-            'type' => $request->type,
-            'is_billable' => true,
-        ]);
+        } catch (\Throwable $th) {
+            \Log::error('Error al actualizar stock: '.$e->getMessage());
+            return back()->with('error', 'Ocurrió un error al actualizar el stock.');
+        }
 
         return redirect()->back()->with('success', 'Stock actualizado correctamente.');
     }

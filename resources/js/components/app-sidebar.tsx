@@ -13,13 +13,18 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, SquareMenu } from 'lucide-react';
+import { LayoutGrid, Users, ShoppingCart, ClipboardList } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
+    // {
+    //     title: 'Inicio',
+    //     href: dashboard(),
+    //     icon: LayoutGrid,
+    // },
     {
-        title: 'Inicio',
-        href: dashboard(),
+        title: 'Reportes',
+        href: '/bills',
         icon: LayoutGrid,
     },
     {
@@ -30,18 +35,14 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Ordenes',
         href: '/orders',
-        icon: Users,
+        icon: ClipboardList,
     },
     {
         title: 'Productos',
         href: '/products',
-        icon: SquareMenu,
+        icon: ShoppingCart,
     },
-    {
-        title: 'Reportes',
-        href: '/bills',
-        icon: Users,
-    },
+
 ];
 
 // const footerNavItems: NavItem[] = [

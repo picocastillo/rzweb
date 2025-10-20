@@ -41,50 +41,24 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'address' => 'nullable|string|max:255',
             'code' => 'nullable|string|max:100',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.qty' => 'required|numeric|min:1',
         ]);
 
-         DB::transaction(function () use ($request) {
-
-        $order = Order::create([
+        // Logica de negocios en el modelo
+        Order::createWithInitialState([
+            ...$validated,
             'user_id' => auth()->id(),
-            'client_id' => $request->client_id,
-            'address' => $request->address,
-            'code' => $request->code,
-            'date_from' => $request->date_from,
-            'date_to' => $request->date_to,
-            'last_state' => 0, // Iniciada
-            'is_active' => true,
         ]);
-
-        OrderState::create([
-            'order_id' => $order->id,
-            'name' => getNameStateOrder(0), // “Iniciada”
-        ]);
-
-        foreach ($request->items as $item) {
-            $stock = StockMovement::create([
-                'product_id' => $item['product_id'],
-                'qty' => -$item['qty'], // Restamos el stock
-                'type' => getNameTypeMovement(2), // “Salida por orden”
-                'is_billable' => true,
-            ]);
-
-            ItemOrder::create([
-                'order_id' => $order->id,
-                'product_id' => $item['product_id'],
-                'qty' => $item['qty'],
-                'stock_movement_id' => $stock->id,
-            ]);
-            
-        }
-    });
 
         return redirect('/orders')->with('success', 'Order created successfully.');
     }
+
 }
