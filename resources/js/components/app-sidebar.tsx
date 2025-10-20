@@ -17,14 +17,9 @@ import { LayoutGrid, Users, ShoppingCart, ClipboardList } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
-    // {
-    //     title: 'Inicio',
-    //     href: dashboard(),
-    //     icon: LayoutGrid,
-    // },
     {
-        title: 'Reportes',
-        href: '/bills',
+        title: 'Inicio',
+        href: dashboard(),
         icon: LayoutGrid,
     },
     {
@@ -42,7 +37,11 @@ const mainNavItems: NavItem[] = [
         href: '/products',
         icon: ShoppingCart,
     },
-
+    {
+        title: 'Reportes',
+        href: '/bills',
+        icon: LayoutGrid,
+    },
 ];
 
 // const footerNavItems: NavItem[] = [
