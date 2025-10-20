@@ -36,7 +36,7 @@ export default function Create({
 }: Props) {
     const [billableItems, setBillableItems] = useState<BillableItem[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [_selectedClient, setSelectedClient] = useState<Client | null>(null);
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
         { title: 'Facturas', href: '/bills' },
