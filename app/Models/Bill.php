@@ -37,6 +37,12 @@ class Bill extends Model
         ];
     }
 
+    //// Relationships ////
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
+
     // ////////////////
     // /Functions
     // ////////////////
@@ -52,7 +58,9 @@ class Bill extends Model
                     ->latest('date_from')
                     ->first();
 
-                $startDate = $lastBill ? $lastBill->date_from : $attributes['date'];
+                $startDate = $lastBill
+                ? Carbon::parse($lastBill->date_from)
+                : Carbon::parse($attributes['date']);
                 // $startDate = Carbon::parse('2024-01-01');
                 $today = Carbon::today();
 

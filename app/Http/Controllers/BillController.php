@@ -85,6 +85,7 @@ class BillController extends Controller
 
     public function store(Request $request)
     {
+        //dd($request->all());
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'date_from' => 'nullable|date',

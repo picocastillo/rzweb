@@ -15,7 +15,6 @@ interface Bill {
   client_id: number;
   client: Client;
   date_from: string;
-  date_to: string;
   amount: number;
   name: string;
   cuil: string;
@@ -55,17 +54,16 @@ export default function IndexBills({ bills }: Props) {
     });
   };
 
-  const filteredBills = bills.filter(bill => {
-    const matchesSearch = 
-      bill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bill.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bill.cuil.includes(searchTerm);
+  const filteredBills = bills.filter((bill) => {
+    const matchesSearch =
+      bill.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bill.client?.cuil?.includes(searchTerm);
 
     const billDate = new Date(bill.date_from);
-    const matchesMonth = !filterMonth || 
-      (billDate.getMonth() + 1).toString() === filterMonth;
-    const matchesYear = !filterYear || 
-      billDate.getFullYear().toString() === filterYear;
+    const matchesMonth =
+      !filterMonth || (billDate.getMonth() + 1).toString() === filterMonth;
+    const matchesYear =
+      !filterYear || billDate.getFullYear().toString() === filterYear;
 
     return matchesSearch && matchesMonth && matchesYear;
   });
@@ -185,31 +183,6 @@ export default function IndexBills({ bills }: Props) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mes
-            </label>
-            <select
-              value={filterMonth}
-              onChange={(e) => setFilterMonth(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Todos los meses</option>
-              <option value="1">Enero</option>
-              <option value="2">Febrero</option>
-              <option value="3">Marzo</option>
-              <option value="4">Abril</option>
-              <option value="5">Mayo</option>
-              <option value="6">Junio</option>
-              <option value="7">Julio</option>
-              <option value="8">Agosto</option>
-              <option value="9">Septiembre</option>
-              <option value="10">Octubre</option>
-              <option value="11">Noviembre</option>
-              <option value="12">Diciembre</option>
-            </select>
-          </div>
-
           {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Año
@@ -286,15 +259,12 @@ export default function IndexBills({ bills }: Props) {
                   <tr key={bill.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <FileText className="w-5 h-5 text-blue-600" />
-                        </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
                             {bill.name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            ID: {bill.id}
+                            {bill.id}
                           </div>
                         </div>
                       </div>
@@ -306,14 +276,14 @@ export default function IndexBills({ bills }: Props) {
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {bill.cuil}
+                      {bill.client.cuil}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900 font-medium">
                         {getMonthName(bill.date_from)}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {formatDate(bill.date_from)} - {formatDate(bill.date_to)}
+                        {formatDate(bill.date_from)}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
