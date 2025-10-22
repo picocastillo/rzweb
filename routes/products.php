@@ -21,5 +21,7 @@ Route::middleware(['auth', 'verified'])->prefix('products')->group(function () {
     Route::get('/{product}', [ProductController::class, 'show']);
 
     Route::post('/{product}/add-stock', [ProductController::class, 'addStock']);
+
+    Route::post('/{product}/add-cost', [ProductController::class, 'addCost']);
     
 });

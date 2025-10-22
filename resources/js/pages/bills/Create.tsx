@@ -36,6 +36,7 @@ export default function Create({
 }: Props) {
     const [billableItems, setBillableItems] = useState<BillableItem[]>([]);
     const [loading, setLoading] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_selectedClient, setSelectedClient] = useState<Client | null>(null);
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },

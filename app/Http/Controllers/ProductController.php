@@ -15,11 +15,12 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::with('stockMovements')->get()->map(function ($product) {
+        $products = Product::with('stockMovements', 'costs')->get()->map(function ($product) {
             return [
                 'id' => $product->id,
                 'name' => $product->name,
                 'current_stock' => $product->current_stock,
+                'current_cost' => $product->current_cost,
             ];
         });
 
@@ -118,5 +119,21 @@ class ProductController extends Controller
         }
 
         return redirect()->back()->with('success', 'Stock actualizado correctamente.');
+    }
+
+    public function addCost(Request $request, Product $product)
+    {
+        $request->validate([
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $product->addCostToProduct($request->price);
+
+            return redirect()->back()->with('success', 'Costo actualizado correctamente.');
+        } catch (\Throwable $e) {
+            \Log::error('Error al agregar costo: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error al actualizar el costo.');
+        }
     }
 }

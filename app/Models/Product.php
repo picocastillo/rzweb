@@ -37,6 +37,10 @@ class Product extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    public function costs()
+    {
+        return $this->hasMany(Cost::class);
+    }
 
     ////Functions////
     public function getCurrentStockAttribute()
@@ -70,4 +74,17 @@ class Product extends Model
 
         return $movement;
     }
+
+    public function addCostToProduct(float $price): Cost
+    {
+        return $this->costs()->create([
+            'price' => $price,
+        ]);
+    }
+
+    public function getCurrentCostAttribute(): ?float
+    {
+        return $this->costs()->latest()->value('price');
+    }
+
 }
