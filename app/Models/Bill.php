@@ -89,7 +89,7 @@ class Bill extends Model
                     ]);
 
                     StockMovement::create([
-                        'product_id' => $item->product,
+                        'product_id' => $item->product_id,
                         'type' => getNameTypeMovement(0),
                         'is_billed' => false,
                         'qty' => $item->qty,
@@ -104,6 +104,8 @@ class Bill extends Model
                     $item->save();
                 }
                 $bill->update(['amount' => $totalAmount]);
+
+                return $bill;
             });
         } catch (Exception $e) {
             // Loguear el error o manejarlo como quieras
