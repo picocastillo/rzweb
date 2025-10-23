@@ -28,6 +28,7 @@ class Order extends Model
         'is_active',
     ];
 
+    protected $appends = ['name_client', 'name_last_state'];
 
     /**
      * Get the attributes that should be cast.
@@ -42,7 +43,19 @@ class Order extends Model
         ];
     }
 
-       public static function createWithInitialState(array $attributes = [])
+    ////Relationships////
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
+
+    public function states()
+    {
+        return $this->hasMany(OrderState::class);
+    }
+
+    ////Functions/////
+    public static function createWithInitialState(array $attributes = [])
     {
         try {
             return DB::transaction(function () use ($attributes) {
@@ -55,6 +68,7 @@ class Order extends Model
                     'date_from' => $attributes['date_from'],
                     'date_to' => $attributes['date_to'],
                     'client_id' =>$attributes['client_id'],
+                    'is_active' => true,
                 ]);
 
 
@@ -88,5 +102,26 @@ class Order extends Model
         }
     }
 
+    public function getNameClientAttribute()
+    {
+        return $this->client_id ? $this->client->name : '-';
+    }
+
+    public function getNameLastStateAttribute()
+    {
+        if (! isset($this->last_state)) {
+            return 'Desconocido';
+        }
+
+        if (function_exists('getNameStateOrder')) {
+            try {
+                return getNameStateOrder((int) $this->last_state) ?? 'Desconocido';
+            } catch (\Throwable $e) {
+                return 'Desconocido';
+            }
+        }
+
+        return 'Desconocido';
+    }
 
 }
