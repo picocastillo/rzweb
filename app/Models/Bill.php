@@ -31,9 +31,9 @@ class Bill extends Model
     protected function casts(): array
     {
         return [
-            'date_from' => 'timestamp',
+            'date_from' => 'datetime:Y-m-d H:i:s',
             'amount' => 'float',
-            'created_at' => 'timestamp',
+            'created_at' => 'datetime:Y-m-d H:i:s',
         ];
     }
 
@@ -58,11 +58,12 @@ class Bill extends Model
                     ->latest('date_from')
                     ->first();
 
-                $startDate = $lastBill
-                ? Carbon::parse($lastBill->date_from)
-                : Carbon::parse($attributes['date']);
-                // $startDate = Carbon::parse('2024-01-01');
                 $today = Carbon::today();
+
+                // Si NO hay factura anterior, usamos la fecha de hoy
+                $startDate = $lastBill
+                ? Carbon::parse($lastBill->created_at)
+                : Carbon::parse($attributes['date'] ?? $today);
 
                 $all_movements = StockMovement::whereBetween('created_at', [$startDate, $today->endOfDay()])
                     ->where('type', getNameTypeMovement(2))
@@ -78,21 +79,11 @@ class Bill extends Model
                 // For each movement, create a item billed and mark as billed the movement
                 $totalAmount = 0;
                 foreach ($all_movements as $item) {
-                    $lastBillItem = BillItem::where('stock_movement_id', $item->id)
-                        ->latest('created_at')
-                        ->first();
+                    $days = $startDate->diffInDays($today);
 
-                    if ($lastBillItem) {
-                        $startDateForItem = $lastBillItem->bill->date_from;
-                    } else {
-                        $startDateForItem = $item->created_at;
-                    }
-
-                    $days = $startDateForItem->diffInDays($today);
-                    // $subtotal = $item->qty * $days;
                     BillItem::create([
                         'bill_id' => $bill->id,
-                        'days' => $startDate->diffInDays($today),
+                        'days' => $days,
                         'stock_movement_id' => $item->id,
                     ]);
 

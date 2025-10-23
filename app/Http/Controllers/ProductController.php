@@ -113,7 +113,7 @@ class ProductController extends Controller
             $product->adjustStock($request->qty, $request->type);
             return redirect()->back()->with('success', 'Stock actualizado correctamente.');
 
-        } catch (\Throwable $th) {
+        } catch (\Throwable $e) {
             \Log::error('Error al actualizar stock: '.$e->getMessage());
             return back()->with('error', 'Ocurrió un error al actualizar el stock.');
         }

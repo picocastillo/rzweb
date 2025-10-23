@@ -43,15 +43,11 @@ export default function IndexBills({ bills }: Props) {
     }).format(amount);
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('es-AR');
-  };
-
-  const getMonthName = (date: string) => {
-    return new Date(date).toLocaleDateString('es-AR', { 
-      month: 'long', 
-      year: 'numeric' 
-    });
+  const formatDate = (date: string | null | undefined) => {
+    if (!date) return '';
+    const parsed = new Date(date);
+    if (isNaN(parsed.getTime())) return ''; // evita mostrar 1970
+    return parsed.toLocaleDateString('es-AR');
   };
 
   const filteredBills = bills.filter((bill) => {
@@ -240,9 +236,9 @@ export default function IndexBills({ bills }: Props) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     CUIL/CUIT
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Período
-                  </th>
+                  </th> */}
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Monto
                   </th>
@@ -278,21 +274,21 @@ export default function IndexBills({ bills }: Props) {
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {bill.client.cuil}
                     </td>
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <div className="text-sm text-gray-900 font-medium">
                         {getMonthName(bill.date_from)}
                       </div>
                       <div className="text-xs text-gray-500">
                         {formatDate(bill.date_from)}
                       </div>
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 text-right">
                       <span className="text-sm font-bold text-green-600">
                         {formatCurrency(bill.amount)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {formatDate(bill.created_at)}
+                      {formatDate(bill.date_from || bill.created_at)}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">

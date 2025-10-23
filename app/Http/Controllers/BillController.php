@@ -88,12 +88,10 @@ class BillController extends Controller
         //dd($request->all());
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'date_from' => 'nullable|date',
         ]);
 
-        $bill = Bill::createWithInitialState([
+        Bill::createWithInitialState([
             'client_id' => $validated['client_id'],
-            'date' => $validated['date_from'] ?? now(),
         ]);
 
         return redirect('/bills')->with('success', 'Factura creada exitosamente.');

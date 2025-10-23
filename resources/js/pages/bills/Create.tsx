@@ -12,12 +12,10 @@ interface Client {
 
 interface Props {
     clients: Client[];
-    defaultDateFrom: string;
 }
 
 export default function Create({
     clients,
-    defaultDateFrom,
 }: Props) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -29,7 +27,6 @@ export default function Create({
 
     const { data, setData, post, errors } = useForm({
         client_id: '',
-        date_from: defaultDateFrom,
     });
 
     const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
