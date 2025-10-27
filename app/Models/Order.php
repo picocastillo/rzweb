@@ -54,6 +54,23 @@ class Order extends Model
         return $this->hasMany(OrderState::class);
     }
 
+    public function orderItems()
+    {
+        return $this->hasMany(ItemOrder::class, 'order_id');
+    }
+
+    public function stockMovements()
+    {
+        return $this->hasManyThrough(
+            StockMovement::class,  // Modelo final
+            ItemOrder::class,      // Modelo intermedio
+            'order_id',            // Clave foránea en ItemOrder
+            'id',                  // Clave foránea en StockMovement
+            'id',                  // Clave local en Order
+            'stock_movement_id'    // Clave local en ItemOrder
+        );
+    }
+
     ////Functions/////
     public static function createWithInitialState(array $attributes = [])
     {
@@ -99,6 +116,36 @@ class Order extends Model
             // Loguear el error o manejarlo como quieras
             \Log::error('Error al crear orden: ' . $e->getMessage());
             throw $e; // re-lanzamos el error
+        }
+    }
+
+    public static function addMovementStock(array $attributes = [])
+    {
+        try {
+            return DB::transaction(function () use ($attributes) {
+
+                // movimiento de stock (regreso por orden)
+                $stock = StockMovement::create([
+                    'product_id' => $attributes['product_id'],
+                    'qty' => $attributes['qty'],
+                    'type' => getNameTypeMovement(0), // Regreso por orden
+                ]);
+
+                //registramos el movimiento en ItemOrder 
+                if (isset($attributes['order_id'])) {
+                    ItemOrder::create([
+                        'product_id' => $attributes['product_id'],
+                        'qty' => $attributes['qty'],
+                        'order_id' => $attributes['order_id'],
+                        'stock_movement_id' => $stock->id,
+                    ]);
+                }
+
+                return $stock;
+            });
+        } catch (Exception $e) {
+            \Log::error('Error al crear movimiento de stock: ' . $e->getMessage());
+            throw $e;
         }
     }
 

@@ -2,19 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
-use App\Models\Order;
 use App\Models\Client;
+use App\Models\Order;
 use App\Models\Product;
-use App\Models\ItemOrder;
-use App\Models\OrderState;
 use Illuminate\Http\Request;
-use App\Models\StockMovement;
-use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class OrderController extends Controller
 {
-    function index(){
+    public function index()
+    {
         $orders = Order::with('client')->get();
 
         return Inertia::render('orders/Index', [
@@ -32,7 +29,7 @@ class OrderController extends Controller
                 'current_stock' => $product->current_stock,
             ];
         });
-        
+
         return Inertia::render('orders/Create', [
             'clients' => $clients,
             'products' => $products,
@@ -61,4 +58,38 @@ class OrderController extends Controller
         return redirect('/orders')->with('success', 'Order created successfully.');
     }
 
+    public function show(Order $order)
+    {
+        $order->load(['stockMovements', 'client', 'stockMovements.product']);
+        $productsInOrder = $order->orderItems->map(function ($item) {
+            return [
+                'id' => $item->product->id,
+                'name' => $item->product->name,
+                'sku' => $item->product->sku,
+                'current_stock' => $item->qty, // cantidad en la orden
+            ];
+        })->unique('id')->values();
+
+        //dd($productsInOrder);
+        return Inertia::render('orders/Show', [
+            'order' => $order,
+            'products' => $productsInOrder,
+        ]);
+    }
+
+    public function stockMovement(Request $request, $orderId)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'qty' => 'required|numeric|min:1',
+        ]);
+
+        Order::addMovementStock([
+            'order_id' => $orderId,
+            'product_id' => $request->product_id,
+            'qty' => $request->qty,
+        ]);
+
+        return redirect()->back()->with('success', 'Stock movement recorded successfully.');
+    }
 }

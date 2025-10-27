@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use App\Models\Bill;
 use App\Models\Client;
+use App\Models\ItemOrder;
 use App\Models\Order;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
@@ -14,74 +15,59 @@ class BillController extends Controller
 {
     public function index()
     {
-        $bills = Bill::with('client')
-            ->latest()
-            ->get();
+        $clients = Client::with([
+            'orders' => function ($q) {
+                $q->where('is_active', true)
+                ->with(['stockMovements' => function ($q) {
+                    $q->where('is_billed', false)
+                        ->with('product');
+                }]);
+            }
+        ])->get();
 
         return Inertia::render('bills/Index', [
-            'bills' => $bills,
+            'clients' => $clients,
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $clients = Client::orderBy('name')->get();
-        
-        // Fechas predefinidas para el mes actual
-        $defaultDateFrom = now()->startOfMonth()->format('Y-m-d');
+        $orders = collect();
+        $items = collect();
+
+        if ($request->has('client_id')) {
+            $orders = Order::where('is_active', true)
+                ->where('client_id', $request->client_id)
+                ->with('orderItems')
+                ->get();
+
+            // Cargar items de TODAS las órdenes del cliente
+            $orderIds = $orders->pluck('id');
+            
+            if ($orderIds->isNotEmpty()) {
+                $items = ItemOrder::whereIn('order_id', $orderIds)
+                    ->with('product')
+                    ->get()
+                    ->map(function ($item) {
+                        return [
+                            'id' => $item->id,
+                            'order_id' => $item->order_id,
+                            'stock_movement_id' => $item->stock_movement_id ?? 0,
+                            'product_name' => $item->product->name ?? 'Producto no encontrado',
+                            'quantity' => $item->qty,
+                        ];
+                    });
+            }
+        }
 
         return Inertia::render('bills/Create', [
             'clients' => $clients,
-            'defaultDateFrom' => $defaultDateFrom,
+            'orders' => $orders,
+            'items' => $items,
+            'selectedClientId' => $request->client_id,
         ]);
     }
-
-    // public function getBillableItems(Request $request)
-    // {
-    //     $request->validate([
-    //         'client_id' => 'required|exists:clients,id',
-    //         'date_from' => 'required|date',
-    //     ]);
-
-    //     // aca obtenemos las ordenes en el rango de fechas
-    //     $orders = Order::where('client_id', $request->client_id)
-    //         ->where('is_active', true)
-    //         ->whereBetween('date_from', [$request->date_from, $request->date_to])
-    //         ->with(['items.product', 'items.stockMovement'])
-    //         ->get();
-
-    //     // aca obtenemos los movimientos de stock 
-    //     $billableItems = [];
-    //     $totalAmount = 0;
-
-    //     foreach ($orders as $order) {
-    //         foreach ($order->items as $item) {
-    //             if ($item->stockMovement && $item->stockMovement->is_billable) {
-    //                 $price = $item->product->price ?? 0;
-    //                 $subtotal = $price * $item->qty;
-                    
-    //                 $billableItems[] = [
-    //                     'order_id' => $order->id,
-    //                     'order_code' => $order->code,
-    //                     'product_id' => $item->product_id,
-    //                     'product_name' => $item->product->name,
-    //                     'qty' => $item->qty,
-    //                     'price' => $price,
-    //                     'subtotal' => $subtotal,
-    //                     'address' => $order->address,
-    //                     'date_from' => $order->date_from,
-    //                 ];
-                    
-    //                 $totalAmount += $subtotal;
-    //             }
-    //         }
-    //     }
-
-    //     return response()->json([
-    //         'items' => $billableItems,
-    //         'total_amount' => $totalAmount,
-    //     ]);
-    // }
 
     public function store(Request $request)
     {

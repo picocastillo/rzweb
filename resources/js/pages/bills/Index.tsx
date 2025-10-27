@@ -1,341 +1,525 @@
+//import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
-import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
-import { FileText, Search, Filter, Download, Eye, Trash2, Plus } from 'lucide-react';
 import { type BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/react';
+import { FileText, Filter, Plus, Search } from 'lucide-react';
+import { useState } from 'react';
 
 interface Client {
-  id: number;
-  name: string;
-  cuil: string;
+    id: number;
+    name: string;
+    cuil: string;
+    orders: Order[];
+}
+
+interface Order {
+    id: number;
+    user_id: number;
+    client_id: number;
+    last_state: string;
+    address: string;
+    code: string;
+    date_from: string;
+    date_to: string;
+    is_active: boolean;
+    stock_movements: {
+        id: number;
+        order_id: number;
+        product_id: number;
+        qty: number;
+        product: {
+            id: number;
+            name: string;
+        } | null;
+    }[];
 }
 
 interface Bill {
-  id: number;
-  client_id: number;
-  client: Client;
-  date_from: string;
-  amount: number;
-  name: string;
-  cuil: string;
-  phone: string;
-  created_at: string;
+    id: number;
+    client_id: number;
+    client: Client;
+    date_from: string;
+    amount: number;
+    name: string;
+    cuil: string;
+    phone: string;
+    created_at: string;
 }
 
 interface Props {
-  bills: Bill[];
+    bills: Bill[];
+    clients: Client[];
 }
 
-export default function IndexBills({ bills }: Props) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterMonth, setFilterMonth] = useState('');
-  const [filterYear, setFilterYear] = useState('');
+export default function IndexBills({ clients }: Props) {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterMonth, setFilterMonth] = useState('');
+    const [filterYear, setFilterYear] = useState('');
 
-  const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Facturas', href: '/bills' },
-  ];
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'Facturas', href: '/bills' },
+    ];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-    }).format(amount);
-  };
-
-  const formatDate = (date: string | null | undefined) => {
-    if (!date) return '';
-    const parsed = new Date(date);
-    if (isNaN(parsed.getTime())) return ''; // evita mostrar 1970
-    return parsed.toLocaleDateString('es-AR');
-  };
-
-  const filteredBills = bills.filter((bill) => {
-    const matchesSearch =
-      bill.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bill.client?.cuil?.includes(searchTerm);
-
-    const billDate = new Date(bill.date_from);
-    const matchesMonth =
-      !filterMonth || (billDate.getMonth() + 1).toString() === filterMonth;
-    const matchesYear =
-      !filterYear || billDate.getFullYear().toString() === filterYear;
-
-    return matchesSearch && matchesMonth && matchesYear;
-  });
-
-  const totalAmount = filteredBills.reduce((sum, bill) => sum + bill.amount, 0);
-
-  // const uniqueYears = [...new Set(bills.map(bill => 
-  //   new Date(bill.date_from).getFullYear()
-  // ))].sort((a, b) => b - a);
-
-  const handleDelete = (id: number) => {
-    if (confirm('¿Estás seguro de que deseas eliminar esta factura?')) {
-      router.delete(`/bills/${id}`);
-    }
-  };
-
-  const handleView = (id: number) => {
-    router.visit(`/bills/${id}`);
-  };
-
-  const handleDownload = (id: number) => {
-    window.open(`/bills/${id}/download`, '_blank');
-  };
-
-  return (
-    <AppLayout breadcrumbs={breadcrumbs}>
-        <Head title="Facturas" />
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <FileText className="w-8 h-8 text-blue-600" />
-              Facturas
-            </h1>
-            <p className="mt-2 text-sm text-gray-600">
-              Gestiona y visualiza todas las facturas generadas
-            </p>
-          </div>
-          <button
-            onClick={() => router.visit('/bills/create')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            <Plus className="w-5 h-5" />
-            Nueva Factura
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-white mb-1">Total Facturas</p>
-              <p className="text-2xl font-bold text-white">{filteredBills.length}</p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-white mb-1">Monto Total</p>
-              <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(totalAmount)}
-              </p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <span className="text-2xl">💰</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-white mb-1">Promedio por Factura</p>
-              <p className="text-2xl font-bold text-white">
-                {filteredBills.length > 0 
-                  ? formatCurrency(totalAmount / filteredBills.length)
-                  : formatCurrency(0)}
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <span className="text-2xl">📊</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow mb-6 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="w-5 h-5 text-gray-600" />
-          <h2 className="text-lg font-semibold text-white">Filtros</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Buscar
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cliente, nombre o CUIL..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Año
-            </label>
-            <select
-              value={filterYear}
-              onChange={(e) => setFilterYear(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Todos los años</option>
-              {uniqueYears.map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div> */}
-        </div>
-
-        {(searchTerm || filterMonth || filterYear) && (
-          <button
-            onClick={() => {
-              setSearchTerm('');
-              setFilterMonth('');
-              setFilterYear('');
-            }}
-            className="mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Limpiar filtros
-          </button>
-        )}
-      </div>
-
-      {/* Bills Table */}
-      <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow overflow-hidden">
-        {filteredBills.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No se encontraron facturas</p>
-            <p className="text-gray-400 text-sm mt-2">
-              {searchTerm || filterMonth || filterYear 
-                ? 'Intenta ajustar los filtros'
-                : 'Comienza creando tu primera factura'}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Factura
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cliente
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    CUIL/CUIT
-                  </th>
-                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Período
-                  </th> */}
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Monto
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Creada
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredBills.map((bill) => (
-                  <tr key={bill.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {bill.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {bill.id}
-                          </div>
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Facturas" />
+            <div className="p-6">
+                {/* Header */}
+                <div className="mb-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="flex items-center gap-3 text-3xl font-bold text-white">
+                                <FileText className="h-8 w-8 text-blue-600" />
+                                Facturas
+                            </h1>
+                            <p className="mt-2 text-sm text-gray-600">
+                                Gestiona y visualiza todas las facturas
+                            </p>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{bill.client.name}</div>
-                      {bill.phone && (
-                        <div className="text-sm text-gray-500">{bill.phone}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {bill.client.cuil}
-                    </td>
-                    {/* <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 font-medium">
-                        {getMonthName(bill.date_from)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {formatDate(bill.date_from)}
-                      </div>
-                    </td> */}
-                    <td className="px-6 py-4 text-right">
-                      <span className="text-sm font-bold text-green-600">
-                        {formatCurrency(bill.amount)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {formatDate(bill.date_from || bill.created_at)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
                         <button
-                          onClick={() => handleView(bill.id)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Ver detalles"
+                            onClick={() => router.visit('/bills/create')}
+                            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white shadow-sm transition-colors hover:bg-blue-700"
                         >
-                          <Eye className="w-5 h-5" />
+                            <Plus className="h-5 w-5" />
+                            Nueva Factura
                         </button>
-                        <button
-                          onClick={() => handleDownload(bill.id)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Descargar PDF"
-                        >
-                          <Download className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(bill.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                    </div>
+                </div>
 
-      {/* Summary Footer */}
-      {filteredBills.length > 0 && (
-        <div className="mt-4 bg-gray-50 rounded-lg p-4 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            Mostrando <span className="font-semibold">{filteredBills.length}</span> de{' '}
-            <span className="font-semibold">{bills.length}</span> facturas
-          </div>
-          <div className="text-sm font-semibold text-gray-900">
-            Total filtrado: {formatCurrency(totalAmount)}
-          </div>
-        </div>
-      )}
-    </div>
-    </AppLayout>
-  );
+                {/* Filters */}
+                <div className="mb-6 rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900">
+                    <div className="mb-4 flex items-center gap-2">
+                        <Filter className="h-5 w-5 text-gray-600" />
+                        <h2 className="text-lg font-semibold text-white">
+                            Filtros
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div className="relative">
+                            <label className="mb-2 block text-sm font-medium text-gray-700">
+                                Buscar
+                            </label>
+                            <div className="relative">
+                                <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Cliente, nombre o CUIL..."
+                                    value={searchTerm}
+                                    onChange={(e) =>
+                                        setSearchTerm(e.target.value)
+                                    }
+                                    className="w-full rounded-md border border-gray-300 py-2 pr-3 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {(searchTerm || filterMonth || filterYear) && (
+                        <button
+                            onClick={() => {
+                                setSearchTerm('');
+                                setFilterMonth('');
+                                setFilterYear('');
+                            }}
+                            className="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700"
+                        >
+                            Limpiar filtros
+                        </button>
+                    )}
+                </div>
+
+                {/* Bills Table */}
+                <div className="overflow-hidden rounded-lg bg-gray-50 shadow dark:bg-gray-900">
+                                                <div
+                                
+                                className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+                            >
+                                <div className="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h1 className="text-2xl font-bold text-gray-900">
+                                                Factura #Numero
+                                            </h1>
+                                            <p className="mt-1 text-gray-600">
+                                                (aca va el periodo facturado tanto a tanto)
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center space-x-4">
+                                            <span
+                                                className={`rounded-full px-3 py-1 text-sm font-medium`}
+                                            >
+                                                Estado
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-6">
+
+                                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+ 
+                                                    <div className="rounded-lg bg-gray-50 p-4">
+                                                        <h2 className="mb-3 text-lg font-semibold text-gray-900">
+                                                            Información del Cliente
+                                                        </h2>
+                                                        <div className="space-y-2">
+                                                            <div>
+                                                                <p className="text-sm text-gray-500">
+                                                                    Nombre
+                                                                </p>
+                                                                <p className="font-medium text-black">
+                                                                    Cuil
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm text-gray-500">
+                                                                    Teléfono
+                                                                </p>
+                                                                <p className="font-medium text-black">
+                                                                   
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                    
+                                                    {/* Información del alquiler */}
+                                                    <div className="rounded-lg bg-gray-50 p-4">
+                                                        <h2 className="mb-3 text-lg font-semibold text-gray-900">
+                                                            Detalles del Alquiler
+                                                        </h2>
+                                                        <div className="space-y-2">
+                                                            <div className="flex justify-between">
+                                                                <span className="text-sm text-gray-500">
+                                                                    Fecha de inicio:
+                                                                </span>
+                                                                {/* <span className="font-medium text-black">
+                                                                    {formatDate(order.date_from)}
+                                                                </span> */}
+                                                            </div>
+                                                            <div className="flex justify-between">
+                                                                <span className="text-sm text-gray-500">
+                                                                    Fecha de fin:
+                                                                </span>
+                                                                {/* <span className="font-medium text-black">
+                                                                    {formatDate(order.date_to)}
+                                                                </span> */}
+                                                            </div>
+                                                            <div className="flex justify-between border-t border-gray-200 pt-2">
+                                                                <span className="text-sm text-gray-500">
+                                                                    Duración:
+                                                                </span>
+                                                                <span className="font-medium text-black">
+                                                                    {/* {calculateRentalDays()} días */}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                    
+
+                                                <div>
+                                                    <div className="mb-4 flex items-center justify-between">
+                                                        <h2 className="text-lg font-semibold text-gray-900">
+                                                            Items Facturados
+                                                        </h2>
+                                                        <span className="text-sm text-gray-500">
+                                                            (0)
+                                                            movimiento(s)
+                                                        </span>
+                                                    </div>
+                    
+
+                                                        <div className="overflow-hidden rounded-lg border border-gray-200">
+                                                            <table className="min-w-full divide-y divide-gray-200">
+                                                                <thead className="bg-gray-50">
+                                                                    <tr>
+                                                                        <th
+                                                                            scope="col"
+                                                                            className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                                                                        >
+                                                                            Producto
+                                                                        </th>
+                                                                        <th
+                                                                            scope="col"
+                                                                            className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                                                                        >
+                                                                            Cantidad
+                                                                        </th>
+                                                                        <th
+                                                                            scope="col"
+                                                                            className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                                                                        >
+                                                                            Tipo
+                                                                        </th>
+                                                                        <th
+                                                                            scope="col"
+                                                                            className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                                                                        >
+                                                                            Fecha
+                                                                        </th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-gray-200 bg-white">
+
+                                                                            <tr
+
+                                                                                className="transition-colors hover:bg-gray-50"
+                                                                            >
+                                                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                                                    <div className="flex items-center">
+                                                                                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                                                                                            <span className="font-medium text-blue-600">
+                                                                                                P
+                                                                                            </span>
+                                                                                        </div>
+                                                                                        <div className="ml-4">
+                                                                                            <div className="text-sm font-medium text-gray-900">
+                                                                                                Nombre producto
+                                                                                            </div>
+                                                                                            <div className="text-sm text-gray-500">
+                                                                                                ID: #
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                                                    <span
+                                                                                        className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium" 
+                                                                                    >
+                                                                                        Cantidad
+                                                                                    </span>
+                                                                                </td>
+                                                                                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+                                                                                    Tipo de movimiento
+                                                                                </td>
+                                                                                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+                                                                                    Dias facturados
+                                                                                </td>
+                                                                            </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                </div>
+
+                                        </div>
+                                    </div>
+                    {/* Render bills or orders */}
+                    {/* {clients.map((client) =>
+                        client.orders.map((order) => (
+                            <div
+                                key={order.id}
+                                className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+                            >
+                                <div className="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h1 className="text-2xl font-bold text-gray-900">
+                                                Factura #{order.code}
+                                            </h1>
+                                            <p className="mt-1 text-gray-600">
+                                                (aca va el periodo facturado tanto a tanto)
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center space-x-4">
+                                            <span
+                                                className={`rounded-full px-3 py-1 text-sm font-medium`}
+                                            >
+                                                {order.last_state}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-6">
+
+                                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+ 
+                                                    <div className="rounded-lg bg-gray-50 p-4">
+                                                        <h2 className="mb-3 text-lg font-semibold text-gray-900">
+                                                            Información del Cliente
+                                                        </h2>
+                                                        <div className="space-y-2">
+                                                            <div>
+                                                                <p className="text-sm text-gray-500">
+                                                                    Nombre
+                                                                </p>
+                                                                <p className="font-medium text-black">
+                                                                    {client.name}
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm text-gray-500">
+                                                                    Teléfono
+                                                                </p>
+                                                                <p className="font-medium text-black">
+                                                                   
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div> */}
+                    
+                                                    {/* Información del alquiler */}
+                                                    {/* <div className="rounded-lg bg-gray-50 p-4">
+                                                        <h2 className="mb-3 text-lg font-semibold text-gray-900">
+                                                            Detalles del Alquiler
+                                                        </h2>
+                                                        <div className="space-y-2">
+                                                            <div className="flex justify-between">
+                                                                <span className="text-sm text-gray-500">
+                                                                    Fecha de inicio:
+                                                                </span> */}
+                                                                {/* <span className="font-medium text-black">
+                                                                    {formatDate(order.date_from)}
+                                                            //     </span> */}
+                                                            {/* </div>
+                                                            <div className="flex justify-between">
+                                                                <span className="text-sm text-gray-500">
+                                                                    Fecha de fin:
+                                                                </span> */}
+                                                                {/* <span className="font-medium text-black">
+                                                                    {formatDate(order.date_to)}
+                                                                </span> */}
+                                                            {/* </div>
+                                                            <div className="flex justify-between border-t border-gray-200 pt-2">
+                                                                <span className="text-sm text-gray-500">
+                                                                    Duración:
+                                                                </span>
+                                                                <span className="font-medium text-black"> */}
+                                                                    {/* {calculateRentalDays()} días */}
+                                                                {/* </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                    
+
+                                                <div>
+                                                    <div className="mb-4 flex items-center justify-between">
+                                                        <h2 className="text-lg font-semibold text-gray-900">
+                                                            Items Facturados
+                                                        </h2>
+                                                        <span className="text-sm text-gray-500">
+                                                            {order.stock_movements.length}{' '}
+                                                            movimiento(s)
+                                                        </span>
+                                                    </div>
+                    
+                                                    {order.stock_movements.length > 0 ? (
+                                                        <div className="overflow-hidden rounded-lg border border-gray-200">
+                                                            <table className="min-w-full divide-y divide-gray-200">
+                                                                <thead className="bg-gray-50">
+                                                                    <tr>
+                                                                        <th
+                                                                            scope="col"
+                                                                            className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                                                                        >
+                                                                            Producto
+                                                                        </th>
+                                                                        <th
+                                                                            scope="col"
+                                                                            className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                                                                        >
+                                                                            Cantidad
+                                                                        </th>
+                                                                        <th
+                                                                            scope="col"
+                                                                            className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                                                                        >
+                                                                            Tipo
+                                                                        </th>
+                                                                        <th
+                                                                            scope="col"
+                                                                            className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                                                                        >
+                                                                            Fecha
+                                                                        </th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-gray-200 bg-white">
+                                                                    {order.stock_movements.map(
+                                                                        (sm) => (
+                                                                            <tr
+                                                                                key={sm.id}
+                                                                                className="transition-colors hover:bg-gray-50"
+                                                                            >
+                                                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                                                    <div className="flex items-center">
+                                                                                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                                                                                            <span className="font-medium text-blue-600">
+                                                                                                P
+                                                                                            </span>
+                                                                                        </div>
+                                                                                        <div className="ml-4">
+                                                                                            <div className="text-sm font-medium text-gray-900">
+                                                                                                Nombre producto
+                                                                                            </div>
+                                                                                            <div className="text-sm text-gray-500">
+                                                                                                ID:{' '}
+                                                                                                {
+                                                                                                    sm.id
+                                                                                                }
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                                                    <span
+                                                                                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${sm.qty > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                                                                                    >
+                                                                                        {sm.qty > 0
+                                                                                            ? '+'
+                                                                                            : ''}
+                                                                                        {sm.qty}
+                                                                                    </span>
+                                                                                </td>
+                                                                                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+                                                                                    Tipo de movimiento
+                                                                                </td>
+                                                                                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+                                                                                    Hace cuantos dias que esta
+                                                                                </td>
+                                                                            </tr>
+                                                                        ),
+                                                                    )}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="rounded-lg border border-gray-200 bg-gray-50 py-12 text-center">
+                                                            <svg
+                                                                className="mx-auto h-12 w-12 text-gray-400"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={2}
+                                                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-8V4a1 1 0 00-1-1h-2a1 1 0 00-1 1v1M9 7h6"
+                                                                />
+                                                            </svg>
+                                                            <h3 className="mt-2 text-sm font-medium text-gray-900">
+                                                                No hay movimientos de stock
+                                                            </h3>
+                                                            <p className="mt-1 text-sm text-gray-500">
+                                                                No se han registrado movimientos de
+                                                                stock para esta orden.
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                        </div>
+                                    </div>
+                        )),
+                    )} */}
+                </div>
+            </div>
+        </AppLayout>
+    );
 }

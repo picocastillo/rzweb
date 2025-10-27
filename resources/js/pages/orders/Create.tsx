@@ -127,7 +127,7 @@ export default function CreateOrder({ clients, products }: { clients: Client[], 
                             <select
                                 value={currentProduct}
                                 onChange={(e) => setCurrentProduct(e.target.value)}
-                                className="flex-1 border rounded px-2 py-1"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                             >
                                 <option value="">Seleccionar producto</option>
                                 {products.map((p) => (

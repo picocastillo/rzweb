@@ -32,4 +32,9 @@ class Client extends Model
             'created_at' => 'timestamp',
         ];
     }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

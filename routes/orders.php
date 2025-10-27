@@ -20,5 +20,7 @@ Route::middleware(['auth', 'verified'])->prefix('orders')->group(function () {
     Route::get('/{order}', [OrderController::class, 'show']);
 
     Route::post('/{order}/add-stock', [OrderController::class, 'addStock']);
+
+    Route::post('/{order}/stock-movement', [OrderController::class, 'stockMovement']);
     
 });
