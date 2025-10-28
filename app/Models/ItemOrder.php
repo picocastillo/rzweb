@@ -38,6 +38,11 @@ class ItemOrder extends Model
         return $this->belongsTo(Order::class);
     }
 
+    public function stockMovement()
+    {
+        return $this->belongsTo(StockMovement::class);
+    }
+
     public function product()
     {
         return $this->belongsTo(Product::class);

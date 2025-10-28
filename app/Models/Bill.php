@@ -43,6 +43,11 @@ class Bill extends Model
         return $this->belongsTo(Client::class);
     }
 
+    public function billItems()
+    {
+        return $this->hasMany(BillItem::class);
+    }
+
     // ////////////////
     // /Functions
     // ////////////////
@@ -51,10 +56,12 @@ class Bill extends Model
     {
         try {
 
-            // Para sacar la fecha, chequear para ese cliente, la ultima factura.
-
             return DB::transaction(function () use ($attributes) {
-                $lastBill = Bill::where('client_id', $attributes['client_id'])
+
+                $clientId = $attributes['client_id'];
+
+                // Para sacar la fecha, chequear para ese cliente, la ultima factura.
+                $lastBill = Bill::where('client_id', $clientId)
                     ->latest('date_from')
                     ->first();
 
@@ -65,10 +72,31 @@ class Bill extends Model
                 ? Carbon::parse($lastBill->created_at)
                 : Carbon::parse($attributes['date'] ?? $today);
 
-                $all_movements = StockMovement::whereBetween('created_at', [$startDate, $today->endOfDay()])
+                if ($lastBill) {
+                    $all_movements = StockMovement::whereBetween('created_at', [$startDate, $today->endOfDay()])
                     ->where('type', getNameTypeMovement(2))
                     ->where('is_billed', false)
+                    ->whereHas('itemOrders.order', function($query) use ($clientId) {
+                        $query->where('client_id', $clientId);
+                    })
                     ->get();
+                }
+                else {
+                    $all_movements = StockMovement::where('created_at', '<=', $today->endOfDay())
+                    ->where('type', getNameTypeMovement(2))
+                    ->where('is_billed', false)
+                    ->whereHas('itemOrders.order', function($query) use ($clientId) {
+                        $query->where('client_id', $clientId);
+                    })
+                    ->get();
+
+                }
+
+                //dd($all_movements);
+
+                if ($all_movements->isEmpty()) {
+                    throw new Exception('No hay movimientos pendientes para facturar para este cliente');
+                }
 
                 $bill = Bill::create([
                     'client_id' => $attributes['client_id'],
@@ -79,7 +107,11 @@ class Bill extends Model
                 // For each movement, create a item billed and mark as billed the movement
                 $totalAmount = 0;
                 foreach ($all_movements as $item) {
-                    $days = $startDate->diffInDays($today);
+                    $movementDate = Carbon::parse($item->created_at);
+                    $days = $movementDate->diffInDays($today);
+                    
+                    // Si es 0 días, considerar al menos 1 día (opcional)
+                    //$days = max($days, 1);
 
                     BillItem::create([
                         'bill_id' => $bill->id,

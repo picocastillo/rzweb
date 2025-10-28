@@ -54,9 +54,9 @@ class Order extends Model
         return $this->hasMany(OrderState::class);
     }
 
-    public function orderItems()
+    public function itemOrders()
     {
-        return $this->hasMany(ItemOrder::class, 'order_id');
+        return $this->hasMany(ItemOrder::class);
     }
 
     public function stockMovements()

@@ -39,4 +39,10 @@ class StockMovement extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function itemOrders()
+    {
+        return $this->hasMany(ItemOrder::class);
+    }
+
 }

@@ -31,4 +31,15 @@ class BillItem extends Model
             'created_at' => 'datetime',
         ];
     }
+
+    //// Relationships ////
+    public function bill()
+    {
+        return $this->belongsTo(Bill::class);
+    }
+
+    public function stockMovement()
+    {
+        return $this->belongsTo(StockMovement::class);
+    }
 }

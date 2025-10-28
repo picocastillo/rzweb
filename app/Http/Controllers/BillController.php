@@ -15,18 +15,16 @@ class BillController extends Controller
 {
     public function index()
     {
-        $clients = Client::with([
-            'orders' => function ($q) {
-                $q->where('is_active', true)
-                ->with(['stockMovements' => function ($q) {
-                    $q->where('is_billed', false)
-                        ->with('product');
-                }]);
-            }
-        ])->get();
+        $bills = Bill::with([
+            'client',
+            'billItems.stockMovement.product.costs'
+        ])
+        ->latest('created_at')
+        ->get();
+        //dd($bills);
 
         return Inertia::render('bills/Index', [
-            'clients' => $clients,
+            'bills' => $bills,
         ]);
     }
 
@@ -39,7 +37,7 @@ class BillController extends Controller
         if ($request->has('client_id')) {
             $orders = Order::where('is_active', true)
                 ->where('client_id', $request->client_id)
-                ->with('orderItems')
+                ->with('itemOrders')
                 ->get();
 
             // Cargar items de TODAS las órdenes del cliente

@@ -31,6 +31,8 @@ class Product extends Model
         ];
     }
 
+    protected $appends = ['current_cost'];
+
     ////Relationships////
     public function stockMovements()
     {
@@ -39,7 +41,7 @@ class Product extends Model
 
     public function costs()
     {
-        return $this->hasMany(Cost::class);
+        return $this->hasMany(Cost::class)->orderBy('created_at', 'desc');
     }
 
     ////Functions////
@@ -84,6 +86,12 @@ class Product extends Model
 
     public function getCurrentCostAttribute(): ?float
     {
+        // Primero intenta desde la relación ya cargada (eager loading)
+        if ($this->relationLoaded('costs') && $this->costs->isNotEmpty()) {
+            return (float) $this->costs->first()->price;
+        }
+        
+        // Si no está cargada, hace la consulta
         return $this->costs()->latest()->value('price');
     }
 

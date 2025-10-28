@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Client {
     id: number;
@@ -43,13 +43,12 @@ export default function Create({
     items,
     selectedClientId,
 }: Props) {
-    const { data, setData, post } = useForm({
-        client_id: selectedClientId ?? '',
-        order_ids: [] as number[], // Cambiado a array para múltiples órdenes
-        items: [] as { id: number; qty: number }[],
-    });
+const { data, setData, post } = useForm({
+    client_id: selectedClientId ?? '',
+});
+const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
 
-    // Sincronizar el estado del formulario cuando cambien los props
+    // Sincronizamos el estado del formulario cuando cambien los props
     useEffect(() => {
         setData((prev) => ({
             ...prev,
@@ -60,12 +59,12 @@ export default function Create({
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
         { title: 'Facturas', href: '/bills' },
-        { title: 'Nuevo', href: '/clients/create' },
+        { title: 'Nuevo', href: '/bills/create' },
     ];
 
     const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const clientId = e.target.value;
-        setData((prev) => ({ ...prev, client_id: clientId, order_ids: [] }));
+        setData((prev) => ({ ...prev, client_id: clientId, setSelectedOrderIds: [] }));
         router.visit(`/bills/create?client_id=${clientId}`, {
             preserveState: true,
             preserveScroll: true,
@@ -73,39 +72,24 @@ export default function Create({
     };
 
     const handleOrderToggle = (orderId: number) => {
-        setData((prev) => {
-            const orderIds = prev.order_ids.includes(orderId)
-                ? prev.order_ids.filter((id) => id !== orderId) // Remover si ya está seleccionado
-                : [...prev.order_ids, orderId]; // Agregar si no está seleccionado
-
-            return { ...prev, order_ids: orderIds };
-        });
+        setSelectedOrderIds(prev => 
+            prev.includes(orderId)
+                ? prev.filter(id => id !== orderId)
+                : [...prev, orderId]
+        );
     };
-
     const handleSelectAllOrders = () => {
         setData((prev) => ({
             ...prev,
-            order_ids: clientOrders.map((order) => order.id),
+            setSelectedOrderIds: clientOrders.map((order) => order.id),
         }));
     };
 
     const handleDeselectAllOrders = () => {
         setData((prev) => ({
             ...prev,
-            order_ids: [],
+            setSelectedOrderIds: [],
         }));
-    };
-
-    const handleQuantityChange = (id: number, value: number) => {
-        setData((prev) => {
-            const existing = prev.items.find((i) => i.id === id);
-            if (existing) {
-                existing.qty = value;
-            } else {
-                prev.items.push({ id, qty: value });
-            }
-            return { ...prev };
-        });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -113,7 +97,7 @@ export default function Create({
         post('/bills');
     };
 
-    // Filtrar órdenes por cliente seleccionado
+    // Filtramos ordenes por cliente seleccionado
     const clientOrders = data.client_id
         ? orders.filter(
               (order) =>
@@ -121,12 +105,12 @@ export default function Create({
           )
         : [];
 
-    // Obtener todos los items de las órdenes seleccionadas
-    const selectedOrdersItems = data.order_ids.length > 0
-        ? items.filter(item => data.order_ids.includes(item.order_id))
+    // Obtenemos todos los items de las órdenes seleccionadas
+    const selectedOrdersItems = selectedOrderIds.length > 0
+        ? items.filter(item => selectedOrderIds.includes(item.order_id))
         : [];
 
-    // Obtener dias de los productos en alquiler
+    // Obtenemos dias de los productos en alquiler
     const calculateDaysInRental = (itemId: number): number => {
         const item = items.find(i => i.id === itemId);
         if (!item) return 0;
@@ -195,7 +179,7 @@ export default function Create({
                             </div>
 
                             <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                                {data.order_ids.length} de {clientOrders.length}{' '}
+                                {selectedOrderIds.length} de {clientOrders.length}{' '}
                                 órdenes seleccionadas
                             </div>
 
@@ -204,7 +188,7 @@ export default function Create({
                                     <div
                                         key={order.id}
                                         className={`cursor-pointer rounded-lg border p-4 transition-all ${
-                                            data.order_ids.includes(order.id)
+                                            selectedOrderIds.includes(order.id)
                                                 ? 'border-green-500 bg-green-50 ring-2 ring-green-500 dark:bg-green-900/20'
                                                 : 'border-gray-300 hover:border-green-300 dark:border-gray-600 dark:hover:border-green-700'
                                         }`}
@@ -217,7 +201,7 @@ export default function Create({
                                                 {order.code}
                                             </h3>
                                             <div className="flex items-center space-x-2">
-                                                {data.order_ids.includes(
+                                                {selectedOrderIds.includes(
                                                     order.id,
                                                 ) && (
                                                     <span className="rounded-full bg-green-500 px-2 py-1 text-xs text-white">
@@ -226,7 +210,7 @@ export default function Create({
                                                 )}
                                                 <input
                                                     type="checkbox"
-                                                    checked={data.order_ids.includes(
+                                                    checked={selectedOrderIds.includes(
                                                         order.id,
                                                     )}
                                                     onChange={() =>
@@ -295,7 +279,7 @@ export default function Create({
                         <div className="rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900">
                             <h2 className="mb-4 text-lg font-semibold">
                                 Productos de las Órdenes Seleccionadas (
-                                {data.order_ids.length} órdenes)
+                                {selectedOrderIds.length} órdenes)
                             </h2>
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead>
@@ -342,11 +326,11 @@ export default function Create({
                         <button
                             type="submit"
                             disabled={
-                                !data.client_id || data.order_ids.length === 0
+                                !data.client_id || selectedOrderIds.length === 0
                             }
                             className="rounded-md bg-green-600 px-6 py-2 text-white hover:bg-green-700 disabled:bg-gray-400"
                         >
-                            Crear Factura ({data.order_ids.length} órdenes)
+                            Crear Factura ({selectedOrderIds.length} órdenes)
                         </button>
                     </div>
                 </form>
