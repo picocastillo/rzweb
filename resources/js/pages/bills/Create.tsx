@@ -79,17 +79,11 @@ const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
         );
     };
     const handleSelectAllOrders = () => {
-        setData((prev) => ({
-            ...prev,
-            setSelectedOrderIds: clientOrders.map((order) => order.id),
-        }));
+        setSelectedOrderIds(clientOrders.map((order) => order.id));
     };
 
     const handleDeselectAllOrders = () => {
-        setData((prev) => ({
-            ...prev,
-            setSelectedOrderIds: [],
-        }));
+        setSelectedOrderIds([]);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
