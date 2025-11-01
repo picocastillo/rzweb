@@ -32,4 +32,19 @@ class ItemOrder extends Model
             'created_at' => 'datetime',
         ];
     }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function stockMovement()
+    {
+        return $this->belongsTo(StockMovement::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 }
