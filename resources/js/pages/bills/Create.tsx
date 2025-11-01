@@ -2,33 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
-
-interface Client {
-    id: number;
-    name: string;
-    cuil: string;
-    phone: string;
-}
-
-interface Order {
-    id: number;
-    user_id: number;
-    client_id: number;
-    last_state: string;
-    address: string;
-    code: string;
-    date_from: string;
-    date_to: string;
-    is_active: boolean;
-}
-
-interface ItemOrder {
-    id: number;
-    order_id: number;
-    stock_movement_id: number;
-    product_name: string;
-    quantity: number;
-}
+import { ItemOrder, Order, Client } from '@/types';
 
 interface Props {
     clients: Client[];
@@ -118,6 +92,11 @@ const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         return diffDays;
+    }
+
+    const subTotal = (item: ItemOrder): number => {
+        const days = calculateDaysInRental(item.id);
+        return (item.current_cost ?? 0) * item.quantity * days;
     }
 
     return (
@@ -246,9 +225,9 @@ const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
                                             </p>
                                             <p>
                                                 <span className="font-medium">
-                                                    Activa:
+                                                    Estado:
                                                 </span>{' '}
-                                                {order.is_active ? 'Sí' : 'No'}
+                                                {order.is_active ? 'Activa' : 'Inactiva'}
                                             </p>
                                         </div>
                                     </div>
@@ -287,6 +266,9 @@ const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
                                         <th className="px-4 py-2 text-center text-sm font-semibold">
                                             Dias en Alquiler
                                         </th>
+                                        <th className="px-4 py-2 text-center text-sm font-semibold">
+                                            Subtotal
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -300,6 +282,9 @@ const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
                                             </td>
                                             <td className="px-4 py-2 text-center">
                                                 {calculateDaysInRental(item.id)}
+                                            </td>
+                                            <td className="px-4 py-2 text-center">
+                                                {subTotal(item).toFixed(2)}
                                             </td>
                                         </tr>
                                     ))}

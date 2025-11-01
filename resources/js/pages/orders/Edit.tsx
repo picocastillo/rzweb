@@ -1,22 +1,44 @@
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { usePage, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { OrderShowProps } from '@/types/order';
-import { formatDate, calculateRentalDays, getStatusColor } from '@/utils/order-utils';
-import StockMovementModal from '@/components/order/StockMovementModal';
 
-export default function Show() {
-    const { order, products, allProducts } = usePage().props as unknown as OrderShowProps;
+export default function Edit() {
+    const { order, products } = usePage().props as unknown as {
+        order: {
+            id: number;
+            code: string;
+            address: string;
+            date_from: string;
+            date_to: string;
+            last_state: string;
+            client: {
+                id: number;
+                name: string;
+                email: string;
+                cuil: string;
+                phone: string;
+            };
+            stockMovements: Array<{
+                id: number;
+                product_id: number;
+                qty: number;
+                type: string;
+                created_at: string;
+            }>;
+        };
+        products: Array<{
+            id: number;
+            name: string;
+            current_stock: number;
+        }>;
+    };
 
     const [activeTab, setActiveTab] = useState('details');
     const [showModal, setShowModal] = useState(false);
-    const { reset } = useForm({
+    const { data, setData, post, errors, reset } = useForm({
         product_id: '',
         qty: '',
-        general: '',
-        type: '',
     });
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -24,6 +46,41 @@ export default function Show() {
         { title: 'Órdenes', href: '/orders' },
         { title: `Orden #${order.code}`, href: `/orders/${order.id}` },
     ];
+
+    // Función para formatear fechas
+    const formatDate = (dateString: Date) => {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString('es-ES', options);
+    };
+
+    // Función para calcular días de alquiler
+    const calculateRentalDays = () => {
+        const from = new Date(order.date_from);
+        const to = new Date(order.date_to);
+        const diffTime = Math.abs(to - from);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+
+    // Función para obtener el color del estado
+    const getStatusColor = (status) => {
+        const statusColors = {
+            Iniciada: 'bg-blue-100 text-blue-800',
+            Asignada: 'bg-green-100 text-green-800',
+        };
+        return statusColors[status] || 'bg-gray-100 text-gray-800';
+    };
+
+    // Enviar formulario
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        post(`/orders/${order.id}/stock-movement`, {
+            onSuccess: () => {
+                reset(); 
+                setShowModal(false);
+            },
+        });
+    };
 
     // Cerrar modal y resetear formulario
     const handleCloseModal = () => {
@@ -55,13 +112,13 @@ export default function Show() {
                                 {/* <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium">
                                     Editar Orden
                                 </button> */}
-                                <Button
+                                {/* <button
                                     type="button"
                                     onClick={() => setShowModal(true)}
-                                    variant={'success'}
+                                    className="inline-flex items-center rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
                                 >
                                     Agregar Movimiento
-                                </Button>
+                                </button> */}
                             </div>
                         </div>
                     </div>
@@ -116,12 +173,12 @@ export default function Show() {
                                 {/* Información del alquiler */}
                                 <div className="rounded-lg bg-gray-50 p-4">
                                     <h2 className="mb-3 text-lg font-semibold text-gray-900">
-                                        Detalles del Alquiler
+                                        Detalles de la Orden
                                     </h2>
                                     <div className="space-y-2">
                                         <div className="flex justify-between">
                                             <span className="text-sm text-gray-500">
-                                                Fecha de inicio:
+                                                Fecha Inicio:
                                             </span>
                                             <span className="text-black">
                                                 {formatDate(order.date_from)}
@@ -129,7 +186,7 @@ export default function Show() {
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-sm text-gray-500">
-                                                Fecha de fin:
+                                                Fecha fin:
                                             </span>
                                             <span className="text-black">
                                                 {formatDate(order.date_to)}
@@ -140,7 +197,7 @@ export default function Show() {
                                                 Duración:
                                             </span>
                                             <span className="text-black">
-                                                {calculateRentalDays(order.date_from, order.date_to)} días
+                                                {calculateRentalDays()} días
                                             </span>
                                         </div>
                                     </div>
@@ -280,13 +337,101 @@ export default function Show() {
                 {showModal && (
                     <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
                         <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
-                            <StockMovementModal 
-                                order={order}
-                                products={products}
-                                allProducts={allProducts}
-                                showModal={showModal}
-                                onClose={handleCloseModal}
-                            />
+                            <div className="border-b border-gray-200 px-6 py-4">
+                                <h2 className="text-lg font-semibold text-gray-900">
+                                    Agregar Movimiento de Stock
+                                </h2>
+                            </div>
+
+                            <form onSubmit={handleSubmit}>
+                                <div className="space-y-4 p-6">
+                                    {errors.general && (
+                                        <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                            {errors.general}
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label
+                                            htmlFor="product_id"
+                                            className="mb-1 block text-sm font-medium text-gray-700"
+                                        >
+                                            Producto *
+                                        </label>
+                                        <select
+                                            id="product_id"
+                                            name="product_id"
+                                            value={data.product_id}
+                                            onChange={e => setData('product_id', e.target.value)}
+                                            className={`w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none ${
+                                                errors.product_id
+                                                    ? 'border-red-300'
+                                                    : 'border-gray-300'
+                                            }`}
+                                            required
+                                        >
+                                            <option value="">
+                                                Seleccionar producto
+                                            </option>
+                                            {products.map((product) => (
+                                                <option key={product.id} value={product.id}>
+                                                    {product.name} - Disponible: {product.current_stock}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.product_id && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {errors.product_id}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            htmlFor="qty"
+                                            className="mb-1 block text-sm font-medium text-gray-700"
+                                        >
+                                            Cantidad *
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="qty"
+                                            name="qty"
+                                            min="1"
+                                            value={data.qty}
+                                            onChange={e => setData('qty', e.target.value)}
+                                            className={`w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none ${
+                                                errors.qty
+                                                    ? 'border-red-300'
+                                                    : 'border-gray-300'
+                                            }`}
+                                            placeholder="Ingrese la cantidad"
+                                            required
+                                        />
+                                        {errors.qty && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {errors.qty}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end space-x-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
+                                    <button
+                                        type="button"
+                                        onClick={handleCloseModal}
+                                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        Agregar Movimiento
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 )}

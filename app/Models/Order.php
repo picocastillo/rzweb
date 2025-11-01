@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use DB;
+use Exception;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Order extends Model
 {
@@ -78,7 +79,7 @@ class Order extends Model
             return DB::transaction(function () use ($attributes) {
                 
                 $order = self::create([
-                    'last_state' => getNameStateOrder(0), 
+                    'last_state' => 0, 
                     'address' => $attributes['address'],
                     'user_id' => $attributes['user_id'],
                     'code' => $attributes['code'],
@@ -90,7 +91,7 @@ class Order extends Model
 
 
                 OrderState::create([
-                    'name' => getNameStateOrder(0),
+                    'name' => 0,
                     'order_id' => $order->id
                 ]);
 
@@ -99,7 +100,7 @@ class Order extends Model
                     $stock = StockMovement::create([
                         'product_id' => $value['product_id'],
                         'qty' => $value['qty'],
-                        'type'=> getNameTypeMovement(2),
+                        'type'=> 2, // Salida por orden
                     ]);
 
                     ItemOrder::create([
@@ -122,16 +123,33 @@ class Order extends Model
     public static function addMovementStock(array $attributes = [])
     {
         try {
-            return DB::transaction(function () use ($attributes) {
+            // Validaciones de negocio antes de crear el movimiento
+            if (isset($attributes['type']) && isset($attributes['order_id'])) {
+                $order = Order::with('itemOrders')->findOrFail($attributes['order_id']);
+                $itemOrder = $order->itemOrders->firstWhere('product_id', $attributes['product_id']);
 
-                // movimiento de stock (regreso por orden)
+                if ($attributes['type'] == 2) {
+                    // SALIDA — verificar si hay suficiente stock
+                    if (!$itemOrder || $itemOrder->qty < $attributes['qty']) {
+                        throw new Exception('No hay suficiente stock en la orden para esta salida.');
+                    }
+                } elseif ($attributes['type'] == 0) {
+                    // ENTRADA — verificar que el producto exista en la orden
+                    if (!$itemOrder) {
+                        throw new Exception('El producto no existe en la orden para esta entrada.');
+                    }
+                }
+            }
+
+            return DB::transaction(function () use ($attributes) {
+                // Crear el movimiento de stock
                 $stock = StockMovement::create([
                     'product_id' => $attributes['product_id'],
                     'qty' => $attributes['qty'],
-                    'type' => getNameTypeMovement(0), // Regreso por orden
+                    'type' => $attributes['type'] ?? 0, // por defecto entrada
                 ]);
 
-                //registramos el movimiento en ItemOrder 
+                // Registrar en ItemOrder si hay orden asociada
                 if (isset($attributes['order_id'])) {
                     ItemOrder::create([
                         'product_id' => $attributes['product_id'],
@@ -145,7 +163,7 @@ class Order extends Model
             });
         } catch (Exception $e) {
             \Log::error('Error al crear movimiento de stock: ' . $e->getMessage());
-            throw $e;
+            throw $e; // el controlador puede capturarla
         }
     }
 

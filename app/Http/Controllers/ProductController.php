@@ -59,6 +59,8 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        $product->load(['stockMovements', 'costs']);
+        //dd($product->stockMovements);
         return Inertia::render('products/Show', [
             'product' => $product,
         ]);
@@ -105,12 +107,12 @@ class ProductController extends Controller
         //dd($request->all());
         $request->validate([
             'qty' => 'required|integer',
-            'type' => 'required|integer|in:0,1,2',
+            //'type' => 'required|integer|in:0,1,2',
         ]);
 
         try {
             
-            $product->adjustStock($request->qty, $request->type);
+            $product->adjustStock($request->qty);
             return redirect()->back()->with('success', 'Stock actualizado correctamente.');
 
         } catch (\Throwable $e) {

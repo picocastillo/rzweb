@@ -54,10 +54,13 @@ class BillController extends Controller
                             'stock_movement_id' => $item->stock_movement_id ?? 0,
                             'product_name' => $item->product->name ?? 'Producto no encontrado',
                             'quantity' => $item->qty,
+                            'current_cost' => $item->product->current_cost ?? 0,
                         ];
                     });
             }
         }
+
+        //dd($items);
 
         return Inertia::render('bills/Create', [
             'clients' => $clients,

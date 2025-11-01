@@ -74,7 +74,7 @@ class Bill extends Model
 
                 if ($lastBill) {
                     $all_movements = StockMovement::whereBetween('created_at', [$startDate, $today->endOfDay()])
-                    ->where('type', getNameTypeMovement(2))
+                    ->where('type', 2)
                     ->where('is_billed', false)
                     ->whereHas('itemOrders.order', function($query) use ($clientId) {
                         $query->where('client_id', $clientId);
@@ -83,7 +83,7 @@ class Bill extends Model
                 }
                 else {
                     $all_movements = StockMovement::where('created_at', '<=', $today->endOfDay())
-                    ->where('type', getNameTypeMovement(2))
+                    ->where('type', 2)
                     ->where('is_billed', false)
                     ->whereHas('itemOrders.order', function($query) use ($clientId) {
                         $query->where('client_id', $clientId);
@@ -107,9 +107,10 @@ class Bill extends Model
                 // For each movement, create a item billed and mark as billed the movement
                 $totalAmount = 0;
                 foreach ($all_movements as $item) {
-                    $movementDate = Carbon::parse($item->created_at);
+                    $movementDate = Carbon::parse($item->created_at)->startOfDay();
+                    $today = Carbon::today(); // Esto ya es startOfDay por defecto
                     $days = $movementDate->diffInDays($today);
-                    
+                    //dd($movementDate, $today, $days);
                     // Si es 0 días, considerar al menos 1 día (opcional)
                     //$days = max($days, 1);
 
@@ -121,7 +122,7 @@ class Bill extends Model
 
                     StockMovement::create([
                         'product_id' => $item->product_id,
-                        'type' => getNameTypeMovement(0),
+                        'type' => 0, // Ajuste por facturación
                         'is_billed' => false,
                         'qty' => $item->qty,
                     ]);

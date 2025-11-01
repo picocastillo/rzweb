@@ -323,9 +323,6 @@ export default function IndexBills({ bills = [] }: Props) {
                                                                     Días
                                                                 </th>
                                                                 <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                                                    Tipo
-                                                                </th>
-                                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                                                     Subtotal
                                                                 </th>
                                                             </tr>
@@ -430,12 +427,6 @@ export default function IndexBills({ bills = [] }: Props) {
                                                                                     }{' '}
                                                                                     día(s)
                                                                                 </span>
-                                                                            </td>
-                                                                            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-                                                                                {item
-                                                                                    .stock_movement
-                                                                                    .type ||
-                                                                                    'N/A'}
                                                                             </td>
                                                                             <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
                                                                                 $

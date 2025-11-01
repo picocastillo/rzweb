@@ -1,7 +1,8 @@
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { DollarSign, Edit, Eye, Plus, Trash, X } from 'lucide-react';
+import { Head, useForm, router } from '@inertiajs/react';
+import { DollarSign, Edit, Eye, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
 
 type Product = {
@@ -13,10 +14,8 @@ type Product = {
 
 export default function ProductsIndex({
     products,
-    typeMovement,
 }: {
     products: Product[];
-    typeMovement: string[];
 }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModalCostOpen, setIsModalCostOpen] = useState(false);
@@ -24,12 +23,10 @@ export default function ProductsIndex({
     const { data, setData, post, processing, errors, reset } = useForm<{
         product_id: number | string;
         qty: string;
-        type: number;
         price: string;
     }>({
         product_id: '',
         qty: '',
-        type: 1,
         price: '',
     });
 
@@ -81,18 +78,18 @@ export default function ProductsIndex({
                 <div className="mb-4 flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">Productos</h1>
                     <div className="flex gap-2">
-                        <button
+                        <Button
                             onClick={() => setIsModalOpen(true)}
-                            className="inline-flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-white transition hover:bg-green-700"
+                            variant={'success'}
                         >
                             <Plus size={18} /> Agregar Stock
-                        </button>
-                        <Link
-                            href="/products/create"
-                            className="inline-flex items-center gap-2 rounded bg-sky-600 px-4 py-2 text-white transition hover:bg-sky-700"
+                        </Button>
+                        <Button
+                            onClick={() => router.visit('/products/create')}
+                            variant={'warning'}
                         >
                             <Plus size={18} /> Nuevo Producto
-                        </Link>
+                        </Button>
                     </div>
                 </div>
 
@@ -127,22 +124,23 @@ export default function ProductsIndex({
                                         {product.current_cost !== null ? `$${product.current_cost}` : '—'}
                                     </td>
                                     <td className="space-x-2 px-6 py-3 text-center">
-                                        <Link
-                                            href={`/products/${product.id}`}
+                                        <Button
+                                            onClick={() => router.visit(`/products/${product.id}`)}
                                             title="Ver"
-                                            className="inline-flex items-center rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
-                                            as="button"
+                                            variant={'default'}
+                                            type="button"
                                         >
                                             <Eye size={16} />
-                                        </Link>
-                                        <Link
-                                            href={`/products/${product.id}/edit`}
+                                        </Button>
+                                        <Button
                                             title="Editar"
-                                            className="inline-flex items-center rounded bg-yellow-400 px-4 py-2 text-white transition hover:bg-yellow-500"
+                                            variant={'info'}
+                                            onClick={() => router.visit(`/products/${product.id}/edit`)}
+                                            type="button"
                                         >
                                             <Edit size={16} />
-                                        </Link>
-                                        <button
+                                        </Button>
+                                        <Button
                                         title='Agregar Costo'
                                             onClick={() => {
                                                 reset();
@@ -152,19 +150,20 @@ export default function ProductsIndex({
                                                     product.id,
                                                 );
                                             }}
-                                            className="inline-flex items-center rounded bg-emerald-600 px-4 py-2 text-white transition hover:bg-emerald-700"
+                                            variant={'success'}
                                         >
                                             <DollarSign size={16} className="mr-1" />
-                                        </button>
-                                        <Link
-                                            as="button"
-                                            method="delete"
-                                            href={`/products/${product.id}`}
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            onClick={() => router.delete(`/products/${product.id}`, {
+                                                preserveScroll: true,
+                                            })}
                                             title="Eliminar"
-                                            className="inline-flex items-center rounded bg-red-600 px-4 py-2 text-white transition hover:bg-red-700"
+                                            variant={'destructive'}
                                         >
-                                            <Trash size={16} />
-                                        </Link>
+                                            <Trash2 size={16} />
+                                        </Button>
                                     </td>
                                 </tr>
                             ))}
@@ -179,7 +178,8 @@ export default function ProductsIndex({
                     <div className="w-full max-w-md rounded-lg bg-white shadow-xl dark:bg-gray-800">
                         <div className="flex items-center justify-between border-b p-6 dark:border-gray-700">
                             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                Agregar Stock
+                                Agregar Stock <br />
+                                <small className="text-sm leading-none font-medium">Este ajuste suma stock real al inventario disponible para alquiler.</small>
                             </h2>
                             <button
                                 onClick={closeModal}
@@ -188,7 +188,7 @@ export default function ProductsIndex({
                                 <X size={24} />
                             </button>
                         </div>
-
+                        
                         <form onSubmit={handleSubmit} className="space-y-4 p-6">
                             <div>
                                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -220,28 +220,6 @@ export default function ProductsIndex({
                                         {errors.product_id}
                                     </p>
                                 )}
-                            </div>
-
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Tipo de Movimiento
-                                </label>
-                                <select
-                                    value={data.type}
-                                    onChange={(e) =>
-                                        setData(
-                                            'type',
-                                            parseInt(e.target.value),
-                                        )
-                                    }
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                >
-                                    {typeMovement.map((type, index) => (
-                                        <option key={index} value={index}>
-                                            {type}
-                                        </option>
-                                    ))}
-                                </select>
                             </div>
 
                             <div>

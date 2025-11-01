@@ -1,7 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
 import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 type Order = {
     name_last_state: string;
@@ -30,12 +31,12 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
             <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h1 className="text-2xl font-semibold">Ordenes</h1>
-                    <Link
-                        href="/orders/create"
-                        className="inline-flex items-center px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700 transition"
-                    >            
+                    <Button
+                        variant="success"
+                        onClick={() => router.visit('/orders/create')}
+                    >          
                         <Plus size={18} /> Nueva Orden
-                    </Link>
+                    </Button>
                 </div>
 
                 <div className="overflow-x-auto border rounded-lg">
@@ -59,27 +60,26 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                     <td className="px-6 py-3">{order.name_client ?? '-'}</td>
                                     <td className="px-6 py-3">{order.name_last_state ?? '-'}</td>
                                     <td className="px-6 py-3 text-right space-x-2">
-                                        <Link
-                                            href={`/orders/${order.id}`}
-                                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                                            as="button"
+                                        <Button
+                                            onClick={() => router.visit(`/orders/${order.id}`)}
+                                            variant={'default'}
+                                            
                                         >
                                             Ver
-                                        </Link>
-                                        <Link
-                                            //href={`/orders/${order.id}/edit`}
-                                            className="inline-flex items-center px-4 py-2 bg-yellow-400 text-white rounded hover:bg-yellow-500 transition"
+                                        </Button>
+                                        <Button
+                                            onClick={() => router.visit(`/orders/${order.id}/edit`)}
+                                            variant={'info'}
                                         >
                                             Editar
-                                        </Link>
-                                        <Link
-                                            as="button"
-                                            method="delete"
-                                            //href={`/orders/${order.id}`}
-                                            className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                        </Button>
+                                        <Button
+                                            
+                                            onClick={() => router.delete(`/orders/${order.id}`)}
+                                            variant={'destructive'}
                                         >
                                             Eliminar
-                                        </Link>
+                                        </Button>
                                     </td>
                                 </tr>
                             ))}

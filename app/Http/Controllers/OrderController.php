@@ -60,36 +60,80 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['stockMovements', 'client', 'stockMovements.product']);
-        $productsInOrder = $order->orderItems->map(function ($item) {
+        $order->load([
+            'stockMovements', 
+            'client', 
+            'stockMovements.product',
+            'itemOrders',
+            'itemOrders.product'
+        ]);
+        $productsInOrder = $order->itemOrders->map(function ($item) {
             return [
                 'id' => $item->product->id,
                 'name' => $item->product->name,
-                'sku' => $item->product->sku,
+                'code' => $item->product->code,
                 'current_stock' => $item->qty, // cantidad en la orden
             ];
         })->unique('id')->values();
+
+        $allProducts = Product::all();
 
         //dd($productsInOrder);
         return Inertia::render('orders/Show', [
             'order' => $order,
             'products' => $productsInOrder,
+            'allProducts' => $allProducts,
         ]);
     }
 
     public function stockMovement(Request $request, $orderId)
     {
+        //dd($request->all());
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'qty' => 'required|numeric|min:1',
+            'type' => 'required|in:0,2', // 0: entrada, 2: salida
         ]);
 
         Order::addMovementStock([
             'order_id' => $orderId,
             'product_id' => $request->product_id,
             'qty' => $request->qty,
+            'type' => $request->type,
         ]);
 
         return redirect()->back()->with('success', 'Stock movement recorded successfully.');
+    }
+
+    public function edit(Order $order)
+    {
+        $order->load([
+            'stockMovements', 
+            'client', 
+            'stockMovements.product',
+            'itemOrders',
+            'itemOrders.product'
+        ]);
+        $productsInOrder = $order->itemOrders->map(function ($item) {
+            return [
+                'id' => $item->product->id,
+                'name' => $item->product->name,
+                'code' => $item->product->code,
+                'current_stock' => $item->qty, // cantidad en la orden
+            ];
+        })->unique('id')->values();
+
+        //dd($productsInOrder);
+        return Inertia::render('orders/Edit', [
+            'order' => $order,
+            'products' => $productsInOrder,
+        ]);
+    }
+
+    public function destroy(Order $order)
+    {
+        $order->delete();
+
+        return redirect('/orders')->with('success', 'Order deleted successfully.');
     }
 }

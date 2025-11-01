@@ -31,7 +31,7 @@ class Product extends Model
         ];
     }
 
-    protected $appends = ['current_cost'];
+    protected $appends = ['current_cost', 'current_stock'];
 
     ////Relationships////
     public function stockMovements()
@@ -50,24 +50,14 @@ class Product extends Model
         return $this->stockMovements()->sum('qty');
     }
     
-    public function adjustStock(int $qty, int $type, bool $isBillable = true)
+    public function adjustStock(int $qty, bool $isBillable = true)
     {
-        switch ($type) {
-            case 0: // Regreso por orden
-            case 1: // Alta stock
-                $finalQty = $qty;
-                break;
-            case 2: // Salida por orden
-                $finalQty = -$qty;
-                break;
-            default:
-                throw new Exception('Tipo de movimiento inválido');
-        }
+        $finalQty = $qty;
 
         // Crear movimiento de stock
         $movement = $this->stockMovements()->create([
             'qty' => $finalQty,
-            'type' => $type,
+            'type' => 1,
             'is_billable' => $isBillable,
         ]);
 

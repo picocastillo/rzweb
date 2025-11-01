@@ -1,7 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
 import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { router } from '@inertiajs/react';
 
 type Client = {
     id: number | string;
@@ -24,12 +26,12 @@ export default function ClientsIndex({ clients }: { clients: Client[] }) {
             <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h1 className="text-2xl font-semibold">Clientes</h1>
-                    <Link
-                        href="/clients/create"
-                        className="inline-flex items-center px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700 transition"
-                    >            
-                        <Plus size={18} /> Nuevo Cliente
-                    </Link>
+                        <Button
+                            variant="success"
+                            onClick={() => router.visit('/clients/create')}
+                        >            
+                            <Plus size={18} /> Nuevo Cliente
+                        </Button>
                 </div>
 
                 <div className="overflow-x-auto border rounded-lg">
@@ -51,27 +53,26 @@ export default function ClientsIndex({ clients }: { clients: Client[] }) {
                                     <td className="px-6 py-3">{client.phone ?? '-'}</td>
                                     <td className="px-6 py-3">{client.email ?? '-'}</td>
                                     <td className="px-6 py-3 text-right space-x-2">
-                                        <Link
-                                            href={`/clients/${client.id}`}
-                                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                                            as="button"
+                                        <Button
+                                            onClick={() => router.visit(`/clients/${client.id}`)}
+                                            variant={'default'}
+                                            
                                         >
                                             Ver
-                                        </Link>
-                                        <Link
-                                            href={`/clients/${client.id}/edit`}
-                                            className="inline-flex items-center px-4 py-2 bg-yellow-400 text-white rounded hover:bg-yellow-500 transition"
+                                        </Button>
+                                        <Button
+                                            onClick={() => router.visit(`/clients/${client.id}/edit`)}
+                                            variant={'info'}
                                         >
                                             Editar
-                                        </Link>
-                                        <Link
-                                            as="button"
-                                            method="delete"
-                                            href={`/clients/${client.id}`}
-                                            className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                        </Button>
+                                        <Button
+                                            
+                                            onClick={() => router.delete(`/clients/${client.id}`)}
+                                            variant={'destructive'}
                                         >
                                             Eliminar
-                                        </Link>
+                                        </Button>
                                     </td>
                                 </tr>
                             ))}

@@ -41,3 +41,38 @@ export interface User {
     updated_at: string;
     [key: string]: unknown;
 }
+
+type Client = {
+    id: number | string;
+    name: string;
+    cuil?: string | null;
+    phone?: string | null;
+};
+
+interface Client {
+    id: number;
+    name: string;
+    cuil: string;
+    phone: string;
+}
+
+interface Order {
+    id: number;
+    user_id: number;
+    client_id: number;
+    last_state: string;
+    address: string;
+    code: string;
+    date_from: string;
+    date_to: string;
+    is_active: boolean;
+}
+
+interface ItemOrder {
+    id: number;
+    order_id: number;
+    stock_movement_id: number;
+    product_name: string;
+    quantity: number;
+    current_cost?: number;
+}
