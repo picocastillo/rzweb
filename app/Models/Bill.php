@@ -57,8 +57,12 @@ class Bill extends Model
         try {
 
             return DB::transaction(function () use ($attributes) {
-
                 $clientId = $attributes['client_id'];
+                $selectedOrderIds = $attributes['orders'] ?? [];
+
+                if (empty($selectedOrderIds)) {
+                    throw new Exception('Debe seleccionar al menos una orden para facturar');
+                }
 
                 // Para sacar la fecha, chequear para ese cliente, la ultima factura.
                 $lastBill = Bill::where('client_id', $clientId)
@@ -72,27 +76,29 @@ class Bill extends Model
                 ? Carbon::parse($lastBill->created_at)
                 : Carbon::parse($attributes['date'] ?? $today);
 
+                // Consulta base para movimientos
+                $movementsQuery = StockMovement::where('type', 0)
+                    ->where('is_billed', false)
+                    ->whereHas('itemOrders', function($query) use ($selectedOrderIds) {
+                        $query->whereIn('order_id', $selectedOrderIds);
+                    });
+//                 dd([
+//     'sql' => $movementsQuery->toSql(),
+//     'bindings' => $movementsQuery->getBindings(),
+//     'count' => $movementsQuery->count(),
+//     'results' => $movementsQuery->get()
+// ]);
+
+                // Aplicar filtro de fecha según si existe factura anterior
                 if ($lastBill) {
-                    $all_movements = StockMovement::whereBetween('created_at', [$startDate, $today->endOfDay()])
-                    ->where('type', 2)
-                    ->where('is_billed', false)
-                    ->whereHas('itemOrders.order', function($query) use ($clientId) {
-                        $query->where('client_id', $clientId);
-                    })
-                    ->get();
+                    $all_movements = $movementsQuery
+                        ->whereBetween('created_at', [$startDate, $today->endOfDay()])
+                        ->get();
+                } else {
+                    $all_movements = $movementsQuery
+                        ->where('created_at', '<=', $today->endOfDay())
+                        ->get();
                 }
-                else {
-                    $all_movements = StockMovement::where('created_at', '<=', $today->endOfDay())
-                    ->where('type', 2)
-                    ->where('is_billed', false)
-                    ->whereHas('itemOrders.order', function($query) use ($clientId) {
-                        $query->where('client_id', $clientId);
-                    })
-                    ->get();
-
-                }
-
-                //dd($all_movements);
 
                 if ($all_movements->isEmpty()) {
                     throw new Exception('No hay movimientos pendientes para facturar para este cliente');
@@ -108,7 +114,7 @@ class Bill extends Model
                 $totalAmount = 0;
                 foreach ($all_movements as $item) {
                     $movementDate = Carbon::parse($item->created_at)->startOfDay();
-                    $today = Carbon::today(); // Esto ya es startOfDay por defecto
+                    $today = Carbon::today();
                     $days = $movementDate->diffInDays($today);
                     //dd($movementDate, $today, $days);
                     // Si es 0 días, considerar al menos 1 día (opcional)
@@ -120,12 +126,12 @@ class Bill extends Model
                         'stock_movement_id' => $item->id,
                     ]);
 
-                    StockMovement::create([
-                        'product_id' => $item->product_id,
-                        'type' => 0, // Ajuste por facturación
-                        'is_billed' => false,
-                        'qty' => $item->qty,
-                    ]);
+                    // StockMovement::create([
+                    //     'product_id' => $item->product_id,
+                    //     'type' => 0, // Ajuste por facturación
+                    //     'is_billed' => 1,
+                    //     'qty' => $item->qty,
+                    // ]);
 
                     //calculamos el amount en base a los dias y el costo actual del producto
                     $productCost = $item->product->current_cost ?? 0;
@@ -145,9 +151,5 @@ class Bill extends Model
             throw $e; // re-lanzamos el error
         }
     }
-
-    // ////////////////
-    // /--- End Functions
-    // ////////////////
 
 }

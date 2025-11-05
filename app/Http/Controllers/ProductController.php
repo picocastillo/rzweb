@@ -21,6 +21,7 @@ class ProductController extends Controller
                 'name' => $product->name,
                 'current_stock' => $product->current_stock,
                 'current_cost' => $product->current_cost,
+                'available_stock' => $product->available_stock,
             ];
         });
 

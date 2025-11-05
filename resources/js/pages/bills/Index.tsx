@@ -277,14 +277,14 @@ export default function IndexBills({ bills = [] }: Props) {
                                                             )}
                                                         </span>
                                                     </div>
-                                                    {/* <div className="flex justify-between">
+                                                    <div className="flex justify-between">
                                                         <span className="text-sm text-gray-500">
                                                             Fecha de fin:
                                                         </span>
                                                         <span className="font-medium text-black">
                                                             {formatDate(bill.created_at)}
                                                         </span>
-                                                    </div> */}
+                                                    </div>
                                                     <div className="flex justify-between border-t border-gray-200 pt-2">
                                                         <span className="text-sm text-gray-500">
                                                             Total Items:
@@ -403,13 +403,13 @@ export default function IndexBills({ bills = [] }: Props) {
                                                                                             {product.name ||
                                                                                                 'Sin nombre'}
                                                                                         </div>
-                                                                                        {/* <div className="text-sm text-gray-500">
+                                                                                        <div className="text-sm text-gray-500">
                                                                                             $
                                                                                             {formatCurrency(
                                                                                                 cost,
                                                                                             )}
                                                                                             /día
-                                                                                        </div> */}
+                                                                                        </div> 
                                                                                     </div>
                                                                                 </div>
                                                                             </td>

@@ -39,7 +39,7 @@ class ClientController extends Controller
         ]);
 
         Client::create($validated);
-        return redirect('/clients');
+        return redirect('/clients')->with('success', 'Cliente creado correctamente!');
     }
 
     /**
@@ -75,7 +75,7 @@ class ClientController extends Controller
         ]);
 
         $client->update($validated);
-        return redirect('/clients');
+        return redirect('/clients')->with('success', 'Cliente actualizado correctamente!');
     }
 
     /**
@@ -84,6 +84,6 @@ class ClientController extends Controller
     public function destroy(Client $client)
     {
         $client->delete();
-        return redirect('/clients');
+        return redirect('/clients')->with('success', 'Cliente eliminado correctamente!');
     }
 }

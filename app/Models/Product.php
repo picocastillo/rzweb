@@ -31,7 +31,12 @@ class Product extends Model
         ];
     }
 
-    protected $appends = ['current_cost', 'current_stock'];
+    protected $appends = [
+        'current_cost', 
+        'current_stock',
+        'stock_in_rental',
+        'available_stock',
+    ];
 
     ////Relationships////
     public function stockMovements()
@@ -44,11 +49,16 @@ class Product extends Model
         return $this->hasMany(Cost::class)->orderBy('created_at', 'desc');
     }
 
-    ////Functions////
-    public function getCurrentStockAttribute()
+    public function itemOrders()
     {
-        return $this->stockMovements()->sum('qty');
+        return $this->hasMany(ItemOrder::class);
     }
+
+    ////Functions////
+    // public function getCurrentStockAttribute()
+    // {
+    //     return $this->stockMovements()->sum('qty');
+    // }
     
     public function adjustStock(int $qty, bool $isBillable = true)
     {
@@ -76,13 +86,68 @@ class Product extends Model
 
     public function getCurrentCostAttribute(): ?float
     {
-        // Primero intenta desde la relación ya cargada (eager loading)
         if ($this->relationLoaded('costs') && $this->costs->isNotEmpty()) {
             return (float) $this->costs->first()->price;
         }
         
-        // Si no está cargada, hace la consulta
+        // Si no esta cargada, hago la consulta
         return $this->costs()->latest()->value('price');
+    }
+
+    /**
+     * Stock total del producto (suma de TODOS los movimientos)
+     * Tipo 1 = Entrada (+)
+     * Tipo 2 = Salida (-)
+     * Tipo 0 = Ajuste por facturación (+)
+     */
+    public function getCurrentStockAttribute()
+    {
+        return $this->stockMovements()
+            ->selectRaw('
+                SUM(CASE 
+                    WHEN type = 1 THEN qty 
+                    WHEN type = 2 THEN -qty 
+                    WHEN type = 0 THEN qty 
+                    ELSE 0 
+                END) as total
+            ')
+            ->value('total') ?? 0;
+    }
+
+    /**
+     * Stock actualmente en alquiler (aún no facturado)
+     * Son los movimientos tipo 2 (salida) que tienen is_billed = false
+     */
+    public function getStockInRentalAttribute()
+    {
+        return $this->stockMovements()
+            ->where('type', 2)
+            ->where('is_billed', false)
+            ->sum('qty');
+    }
+
+    /**
+     * Stock disponible para nuevas órdenes
+     * = Stock total + Stock en alquiler (porque el stock en alquiler ya fue restado)
+     */
+    public function getAvailableStockAttribute()
+    {
+        
+        $totalEntries = $this->stockMovements()
+            ->whereIn('type', [1, 0]) // Entradas y ajustes
+            ->sum('qty');
+            
+        $billedExits = $this->stockMovements()
+            ->where('type', 2)
+            ->where('is_billed', true)
+            ->sum('qty');
+            
+        return $totalEntries - $billedExits;
+    }
+
+    public function getStockWithoutItemOrdersAttribute()
+    {
+        return $this->available_stock;
     }
 
 }

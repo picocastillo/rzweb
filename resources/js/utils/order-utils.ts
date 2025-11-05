@@ -1,7 +1,12 @@
 // Función para formatear fechas
 export const formatDate = (dateString: string | Date): string => {
+    let finalDateString = dateString;
+    if (typeof dateString === 'string' && dateString.length === 10) {
+        finalDateString = `${dateString}T12:00:00`; 
+    }
+    
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('es-ES', options);
+    return new Date(finalDateString).toLocaleDateString('ES-AR', options);
 };
 
 // Función para calcular días de alquiler

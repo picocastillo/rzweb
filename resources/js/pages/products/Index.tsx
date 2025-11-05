@@ -10,6 +10,7 @@ type Product = {
     name: string;
     current_stock: number | null;
     current_cost: number | null;
+    available_stock: number | null;
 };
 
 export default function ProductsIndex({
@@ -118,7 +119,9 @@ export default function ProductsIndex({
                                         {product.name}
                                     </td>
                                     <td className="px-6 py-3">
-                                        {product.current_stock}
+                                        {product.current_stock !== null
+                                            ? product.current_stock
+                                            : '—'}
                                     </td>
                                     <td className="px-6 py-3">
                                         {product.current_cost !== null ? `$${product.current_cost}` : '—'}

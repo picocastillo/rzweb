@@ -17,10 +17,11 @@ export default function Create({
     items,
     selectedClientId,
 }: Props) {
-const { data, setData, post } = useForm({
-    client_id: selectedClientId ?? '',
-});
-const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
+    const { data, setData, post } = useForm({
+        client_id: selectedClientId ?? '',
+        orders: [] as number[], // Agregamos el array de órdenes seleccionadas
+    });
+    const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
 
     // Sincronizamos el estado del formulario cuando cambien los props
     useEffect(() => {
@@ -30,6 +31,14 @@ const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
         }));
     }, [selectedClientId, setData]);
 
+    // Sincronizamos las órdenes seleccionadas con el formulario
+    useEffect(() => {
+        setData((prev) => ({
+            ...prev,
+            orders: selectedOrderIds,
+        }));
+    }, [selectedOrderIds, setData]);
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
         { title: 'Facturas', href: '/bills' },
@@ -38,7 +47,8 @@ const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
 
     const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const clientId = e.target.value;
-        setData((prev) => ({ ...prev, client_id: clientId, setSelectedOrderIds: [] }));
+        setData((prev) => ({ ...prev, client_id: clientId, orders: [] }));
+        setSelectedOrderIds([]); // Limpiamos las órdenes seleccionadas
         router.visit(`/bills/create?client_id=${clientId}`, {
             preserveState: true,
             preserveScroll: true,
@@ -52,6 +62,7 @@ const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
                 : [...prev, orderId]
         );
     };
+    
     const handleSelectAllOrders = () => {
         setSelectedOrderIds(clientOrders.map((order) => order.id));
     };

@@ -42,7 +42,7 @@ class StockMovement extends Model
 
     public function itemOrders()
     {
-        return $this->hasMany(ItemOrder::class);
+        return $this->hasMany(ItemOrder::class, 'stock_movement_id');
     }
 
 }

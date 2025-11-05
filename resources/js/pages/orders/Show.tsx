@@ -31,6 +31,11 @@ export default function Show() {
         reset();
     };
 
+    const TYPE = { 
+        2: 'Ingreso',
+        0: 'Egreso',
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="mx-auto max-w-6xl p-6">
@@ -233,7 +238,7 @@ export default function Show() {
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-                                                                {sm.type}
+                                                                {TYPE[sm.type]}
                                                             </td>
                                                             <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                                                                 {new Date(

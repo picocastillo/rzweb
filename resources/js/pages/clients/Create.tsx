@@ -29,7 +29,7 @@ export default function CreateClient() {
                 <h1 className="text-2xl font-semibold mb-4">Agregar Cliente</h1>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1">Nombre</label>
+                        <label className="block text-sm font-medium mb-1">Nombre Completo</label>
                         <input
                             type="text"
                             value={data.name}

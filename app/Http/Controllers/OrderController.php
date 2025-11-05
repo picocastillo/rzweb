@@ -55,7 +55,7 @@ class OrderController extends Controller
             'user_id' => auth()->id(),
         ]);
 
-        return redirect('/orders')->with('success', 'Order created successfully.');
+        return redirect('/orders')->with('success', 'Orden creada exitosamente!');
     }
 
     public function show(Order $order)
@@ -102,7 +102,7 @@ class OrderController extends Controller
             'type' => $request->type,
         ]);
 
-        return redirect()->back()->with('success', 'Stock movement recorded successfully.');
+        return redirect()->back()->with('success', 'Movimiento de stock registrado correctamente!');
     }
 
     public function edit(Order $order)
@@ -134,6 +134,6 @@ class OrderController extends Controller
     {
         $order->delete();
 
-        return redirect('/orders')->with('success', 'Order deleted successfully.');
+        return redirect('/orders')->with('success', 'Orden eliminada correctamente!');
     }
 }
