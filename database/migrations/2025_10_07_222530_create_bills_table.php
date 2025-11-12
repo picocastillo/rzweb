@@ -15,12 +15,8 @@ return new class extends Migration
             $table->increments('id');
             $table->unsignedInteger('client_id');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
-            $table->timestamp('date_from');
-            $table->timestamp('date_to');
+            $table->timestamp('date_from')->nullable();
             $table->float('amount');
-            $table->string('name');
-            $table->string('cuil');
-            $table->string('phone');
             $table->timestamps();
         });
     }

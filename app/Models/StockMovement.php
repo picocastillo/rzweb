@@ -17,7 +17,7 @@ class StockMovement extends Model
     protected $fillable = [
         'product_id',
         'type',
-        'is_billable',
+        'is_billed',
         'qty',
     ];
 
@@ -33,4 +33,16 @@ class StockMovement extends Model
             'created_at' => 'datetime',
         ];
     }
+
+    ////Relationships////
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function itemOrders()
+    {
+        return $this->hasMany(ItemOrder::class, 'stock_movement_id');
+    }
+
 }

@@ -32,4 +32,24 @@ class ItemOrder extends Model
             'created_at' => 'datetime',
         ];
     }
+
+    public function stockMovement()
+    {
+        return $this->belongsTo(StockMovement::class, 'stock_movement_id');
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'order_id');
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function getStockWithoutBilledAttribute()
+    {
+        return $this->qty - $this->stockMovement->qty;
+    }
 }
