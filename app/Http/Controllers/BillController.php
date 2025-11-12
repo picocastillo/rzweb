@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\ItemOrder;
 use App\Models\Order;
 use App\Models\StockMovement;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -79,11 +80,18 @@ class BillController extends Controller
             'orders.*' => 'required|exists:orders,id',
         ]);
 
-        Bill::createWithInitialState([
-            'client_id' => $validated['client_id'],
-            'orders' => $validated['orders'],
-        ]);
+        try {
+            Bill::createWithInitialState([
+                'client_id' => $validated['client_id'],
+                'orders' => $validated['orders'],
+            ]);
 
-        return redirect('/bills')->with('success', 'Factura creada exitosamente.');
+            return redirect('/bills')->with('success', 'Factura creada exitosamente.');
+        } catch (Exception $e) {
+            return redirect()->back()
+                ->with('error', $e->getMessage())
+                ->withInput();
+        }
+
     }
 }

@@ -72,7 +72,7 @@ class Product extends Model
         ]);
 
         // Actualizar stock actual del producto
-        $this->increment('current_stock', $finalQty);
+        //$this->increment('current_stock', $finalQty);
 
         return $movement;
     }
