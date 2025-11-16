@@ -136,4 +136,20 @@ class OrderController extends Controller
 
         return redirect('/orders')->with('success', 'Orden eliminada correctamente!');
     }
+
+    public function update(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'client_id' => 'required|exists:clients,id',
+            'address' => 'nullable|string|max:255',
+            'code' => 'nullable|string|max:100',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.qty' => 'required|numeric|min:1',
+        ]);
+
+        $order->update($validated);
+    }
 }

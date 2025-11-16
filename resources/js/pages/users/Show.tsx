@@ -9,51 +9,51 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 
-type Client = {
+type User = {
     id: number | string;
     name: string;
-    cuil?: string | null;
-    phone?: string | null;
+    role_name: string;
+    email: string;
 };
 
-export default function ShowClient({ client }: { client: Client }) {
+export default function ShowUser({ user }: { user: User }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Clientes', href: '/clients' },
-        { title: client.name, href: `/clients/${client.id}` },
+        { title: 'Usuarios', href: '/users' },
+        { title: user.name, href: `/users/${user.id}` },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={client.name} />
+            <Head title={user.name} />
 
             <div className="mx-auto max-w-lg p-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Cliente</CardTitle>
+                        <CardTitle>Usuario</CardTitle>
                         <CardDescription>
-                            Información del cliente {client.name}
+                            Información del usuario {user.name}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
                             <p>
-                                <strong>CUIL:</strong> {client.cuil ?? '-'}
+                                <strong>CUIL:</strong> {user.role_name ?? '-'}
                             </p>
                             <p>
-                                <strong>Teléfono:</strong> {client.phone ?? '-'}
+                                <strong>Teléfono:</strong> {user.email ?? '-'}
                             </p>
                         </div>
 
                         <div className="mt-6 flex gap-4">
                             <Link
-                                href={`/clients/${client.id}/edit`}
+                                href={`/users/${user.id}/edit`}
                                 className="rounded-lg bg-yellow-500 px-4 py-2 text-white hover:bg-yellow-600"
                             >
                                 Editar
                             </Link>
                             <Link
-                                href="/clients"
+                                href="/users"
                                 className="rounded-lg bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300"
                             >
                                 Volver
