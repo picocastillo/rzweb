@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
-import { Plus } from 'lucide-react';
+import { Edit3, Eye, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type Order = {
@@ -48,7 +48,6 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Codigo</th>
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Cliente</th>
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Estado</th>
-                                <th className="px-6 py-3 text-right text-sm font-medium text-gray-700 dark:text-gray-300">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
@@ -59,26 +58,26 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                     <td className="px-6 py-3">{order.code ?? '-'}</td>
                                     <td className="px-6 py-3">{order.name_client ?? '-'}</td>
                                     <td className="px-6 py-3">{order.name_last_state ?? '-'}</td>
-                                    <td className="px-6 py-3 text-right space-x-2">
+                                    <td className="px-6 py-3 space-x-2">
                                         <Button
                                             onClick={() => router.visit(`/orders/${order.id}`)}
                                             variant={'default'}
                                             
                                         >
-                                            Ver
+                                            <Eye size={16} />
                                         </Button>
                                         <Button
                                             onClick={() => router.visit(`/orders/${order.id}/edit`)}
                                             variant={'info'}
                                         >
-                                            Editar
+                                            <Edit3 size={16} />
                                         </Button>
                                         <Button
                                             
                                             onClick={() => router.delete(`/orders/${order.id}`)}
                                             variant={'destructive'}
                                         >
-                                            Eliminar
+                                            <Trash2 size={16} />
                                         </Button>
                                     </td>
                                 </tr>

@@ -94,4 +94,72 @@ class BillController extends Controller
         }
 
     }
+
+ public function show(Bill $bill)
+    {
+        // Cargar la factura con todas las relaciones necesarias
+        $bill->load([
+            'client',
+            'billItems.stockMovement.product.costs',
+            'billItems.stockMovement.product',
+        ]);
+
+        // Si necesitas información adicional de las órdenes relacionadas
+        // puedes cargarlas también si tu modelo Bill tiene relación con orders
+        if (method_exists($bill, 'orders')) {
+            $bill->load(['orders' => function($query) {
+                $query->with(['itemOrders.product']);
+            }]);
+        }
+
+        // Transformar los datos si es necesario para la vista
+        $billData = [
+            'id' => $bill->id,
+            'client_id' => $bill->client_id,
+            'date_from' => $bill->date_from,
+            'amount' => $bill->amount,
+            'created_at' => $bill->created_at,
+            'client' => $bill->client ? [
+                'id' => $bill->client->id,
+                'name' => $bill->client->name,
+                'cuil' => $bill->client->cuil,
+                'phone' => $bill->client->phone,
+            ] : null,
+            'bill_items' => $bill->billItems->map(function ($billItem) {
+                $stockMovement = $billItem->stockMovement;
+                $product = $stockMovement->product ?? null;
+                
+                return [
+                    'id' => $billItem->id,
+                    'bill_id' => $billItem->bill_id,
+                    'days' => $billItem->days,
+                    'stock_movement_id' => $billItem->stock_movement_id,
+                    'stock_movement' => $stockMovement ? [
+                        'id' => $stockMovement->id,
+                        'product_id' => $stockMovement->product_id,
+                        'type' => $stockMovement->type,
+                        'qty' => $stockMovement->qty,
+                        'created_at' => $stockMovement->created_at,
+                        'product' => $product ? [
+                            'id' => $product->id,
+                            'name' => $product->name,
+                            'current_cost' => $product->current_cost,
+                            'costs' => $product->costs->map(function ($cost) {
+                                return [
+                                    'id' => $cost->id,
+                                    'product_id' => $cost->product_id,
+                                    'price' => $cost->price,
+                                    'created_at' => $cost->created_at,
+                                ];
+                            }),
+                        ] : null,
+                    ] : null,
+                ];
+            }),
+        ];
+
+        return Inertia::render('bills/Show', [
+            'bill' => $billData,
+        ]);
+    }
 }

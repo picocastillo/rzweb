@@ -27,7 +27,14 @@ class OrderBillingSeeder extends Seeder
         //Roles
         Role::create(
              [
-                 'name' => 'admin',
+                'id' => 1,
+                'name' => 'admin',
+             ]
+        );
+        Role::create(
+             [
+                'id' => 2,
+                'name' => 'worker',
              ]
         );
         // 1. Crear usuario admin si no existe

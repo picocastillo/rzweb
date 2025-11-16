@@ -14,11 +14,17 @@ const TYPE_MOVEMENT = [
     'Salida Por Orden'//2
 ];
 
+const ROLES = [
+    1 => 'Admin',
+    2 => 'Trabajador',
+];
+
 
 function logg($n){
     Log::debug($n);
 }
 function getNameTypeMovement($idx){ return TYPE_MOVEMENT[$idx];}
 function getNameStateOrder($idx){ return STATES[$idx];}
+function getNameRoleUser($idx){ return ROLES[$idx];}
 
 
