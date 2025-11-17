@@ -2,17 +2,13 @@
 
 namespace App\Models;
 
-use DB;
 use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Order extends Model
 {
-    
-    
-   
-
     /**
      * The attributes that are mass assignable.
      *
@@ -29,7 +25,7 @@ class Order extends Model
         'is_active',
     ];
 
-    protected $appends = ['name_client', 'name_last_state'];
+    protected $appends = ['name_client', 'name_last_state', 'name_assigned_to'];
 
     /**
      * Get the attributes that should be cast.
@@ -50,14 +46,34 @@ class Order extends Model
         return $this->belongsTo(Client::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function states()
     {
         return $this->hasMany(OrderState::class);
     }
 
+    public function notes()
+    {
+        return $this->hasMany(Note::class);
+    }
+
+    public function files()
+    {
+        return $this->hasMany(File::class);
+    }
+
     public function itemOrders()
     {
         return $this->hasMany(ItemOrder::class);
+    }
+
+    public function assignedTo()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function stockMovements()
@@ -95,27 +111,29 @@ class Order extends Model
                     'order_id' => $order->id
                 ]);
 
-                foreach ($attributes['items'] as $value) {
-                    
-                    $stock = StockMovement::create([
-                        'product_id' => $value['product_id'],
-                        'qty' => $value['qty'],
-                        'type'=> 2, // Salida por orden
-                    ]);
+                if (!empty($attributes['items'])) {
+                    foreach ($attributes['items'] as $value) {
+                        
+                        $stock = StockMovement::create([
+                            'product_id' => $value['product_id'],
+                            'qty' => $value['qty'],
+                            'type'=> 2, // Salida por orden
+                        ]);
 
-                    ItemOrder::create([
-                        'product_id' => $value['product_id'],
-                        'qty' => $value['qty'],
-                        'order_id' => $order->id,
-                        'stock_movement_id' => $stock->id
-                    ]);
+                        ItemOrder::create([
+                            'product_id' => $value['product_id'],
+                            'qty' => $value['qty'],
+                            'order_id' => $order->id,
+                            'stock_movement_id' => $stock->id
+                        ]);
+                    }
                 }
 
                 return $order;
             });
         } catch (Exception $e) {
             // Loguear el error o manejarlo como quieras
-            \Log::error('Error al crear orden: ' . $e->getMessage());
+            Log::error('Error al crear orden: ' . $e->getMessage());
             throw $e; // re-lanzamos el error
         }
     }
@@ -162,7 +180,7 @@ class Order extends Model
                 return $stock;
             });
         } catch (Exception $e) {
-            \Log::error('Error al crear movimiento de stock: ' . $e->getMessage());
+            Log::error('Error al crear movimiento de stock: ' . $e->getMessage());
             throw $e; // el controlador puede capturarla
         }
     }
@@ -170,6 +188,11 @@ class Order extends Model
     public function getNameClientAttribute()
     {
         return $this->client_id ? $this->client->name : '-';
+    }
+
+    public function getNameAssignedToAttribute()
+    {
+        return $this->assignedTo?->name ?? null;
     }
 
     public function getNameLastStateAttribute()
@@ -187,6 +210,18 @@ class Order extends Model
         }
 
         return 'Desconocido';
+    }
+
+    public function assignTo($userId)
+    {
+        $this->assigned_to = $userId;
+        $this->last_state = 1;
+        $this->save();
+
+        $this->states()->create([
+            'name' => 1,
+            'order_id' => $this->id,
+        ]);
     }
 
 }

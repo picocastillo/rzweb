@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedInteger('client_id');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
+            $table->unsignedInteger('assigned_to')->nullable()->default(null);
+            $table->foreign('assigned_to')->references('id')->on('users')->onDelete('cascade');
            
             $table->string('last_state');
             $table->string('address');

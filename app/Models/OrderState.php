@@ -16,6 +16,7 @@ class OrderState extends Model
      */
     protected $fillable = [
         'order_id',
+        'name',
     ];
 
     /**
@@ -28,5 +29,17 @@ class OrderState extends Model
         return [
             'created_at' => 'datetime',
         ];
+    }
+
+    protected $appends = ['name_state'];
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function getNameStateAttribute()
+    {
+        return getNameStateOrder($this->name);
     }
 }

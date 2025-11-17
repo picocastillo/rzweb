@@ -22,5 +22,15 @@ Route::middleware(['auth', 'verified'])->prefix('orders')->group(function () {
     Route::post('/{order}/add-stock', [OrderController::class, 'addStock']);
 
     Route::post('/{order}/stock-movement', [OrderController::class, 'stockMovement']);
+
+    Route::post('/{order}/assign', [OrderController::class, 'assignOrder']);
+
+    Route::post('{order}/note', [OrderController::class, 'addNote']);
+
+    Route::put('/{order}/note/{note}', [OrderController::class, 'updateNote']);
+
+    Route::post('{order}/file', [OrderController::class, 'attachFile']);
+
+    Route::delete('/{order}/file/{file}', [OrderController::class, 'deleteFile']);
     
 });

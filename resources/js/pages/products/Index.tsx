@@ -81,13 +81,13 @@ export default function ProductsIndex({
                     <div className="flex gap-2">
                         <Button
                             onClick={() => setIsModalOpen(true)}
-                            variant={'success'}
+                            variant={'warning'}
                         >
                             <Plus size={18} /> Agregar Stock
                         </Button>
                         <Button
                             onClick={() => router.visit('/products/create')}
-                            variant={'warning'}
+                            variant={'success'}
                         >
                             <Plus size={18} /> Nuevo Producto
                         </Button>

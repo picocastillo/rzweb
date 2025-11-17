@@ -22,7 +22,7 @@ export default function EditClient({ client }: { client: Client }) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={breadcrumbs}> 
             <Head title={`Editar ${client.name}`} />
 
             <div className="max-w-lg mx-auto p-6">

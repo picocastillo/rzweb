@@ -12,6 +12,7 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\BillItem;
 use App\Models\ItemOrder;
+use App\Models\OrderState;
 use App\Models\StockMovement;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -27,7 +28,14 @@ class OrderBillingSeeder extends Seeder
         //Roles
         Role::create(
              [
-                 'name' => 'admin',
+                'id' => 1,
+                'name' => 'admin',
+             ]
+        );
+        Role::create(
+             [
+                'id' => 2,
+                'name' => 'worker',
              ]
         );
         // 1. Crear usuario admin si no existe
@@ -109,11 +117,16 @@ class OrderBillingSeeder extends Seeder
             'client_id' => $client->id,
             'code' => 'ORD-001',
             'address' => 'Av. Corrientes 1234, CABA',
-            'last_state' => 'Iniciada',
+            'last_state' => 0,
             'is_active' => true,
             'date_from' => Carbon::now()->subDays(16),
             'date_to' => Carbon::now()->addDays(5),
             'created_at' => Carbon::now()->subDays(15)
+        ]);
+
+        OrderState::create([
+            'order_id' => $order->id,
+            'name' => 0,
         ]);
 
         // Movimiento de SALIDA inicial (10 vallas salen del depósito)
@@ -189,12 +202,18 @@ class OrderBillingSeeder extends Seeder
             'client_id' => $client->id,
             'code' => 'ORD-002',
             'address' => 'Av. Rivadavia 5678, CABA',
-            'last_state' => 'Iniciada',
+            'last_state' => 0,
             'is_active' => false,
             'date_from' => Carbon::now()->subDays(30),
             'date_to' => Carbon::now()->subDays(10),
             'created_at' => Carbon::now()->subDays(30)
         ]);
+
+        OrderState::create([
+            'order_id' => $order->id,
+            'name' => 0,
+        ]);
+
 
         // Salida inicial
         $stockMovementOut = StockMovement::create([
@@ -267,11 +286,16 @@ class OrderBillingSeeder extends Seeder
             'client_id' => $client->id,
             'code' => 'ORD-003',
             'address' => 'Av. Santa Fe 9012, CABA',
-            'last_state' => 'Iniciada',
+            'last_state' => 0,
             'is_active' => true,
             'date_from' => Carbon::now()->subDays(7),
             'date_to' => Carbon::now()->addDays(23),
             'created_at' => Carbon::now()->subDays(7)
+        ]);
+
+        OrderState::create([
+            'order_id' => $order->id,
+            'name' => 0,
         ]);
 
         // Solo salida, sin devoluciones

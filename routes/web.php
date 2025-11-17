@@ -28,3 +28,4 @@ require __DIR__.'/clients.php';
 require __DIR__.'/products.php';
 require __DIR__.'/orders.php';
 require __DIR__.'/bills.php';
+require __DIR__.'/users.php';
