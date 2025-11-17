@@ -4,8 +4,10 @@ use Illuminate\Support\Facades\Log;
 
 
 const STATES = [
-    'Iniciada',//0
-    'Asignada'//1
+    'Iniciada', //0
+    'Asignada', //1
+    'En curso', //2
+    'Finalizada', //3
 ];
 
 const TYPE_MOVEMENT = [

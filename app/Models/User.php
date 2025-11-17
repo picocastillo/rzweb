@@ -56,6 +56,11 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function getRoleNameAttribute()
     {
         return ROLES[$this->role_id] ?? 'Desconocido';
