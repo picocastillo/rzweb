@@ -108,7 +108,6 @@ export default function ProductsIndex({
                                     Costo por dia
                                 </th>
                                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Acciones
                                 </th>
                             </tr>
                         </thead>

@@ -60,6 +60,8 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Estado
                                 </th>
+                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">

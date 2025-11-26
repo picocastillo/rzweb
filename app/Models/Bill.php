@@ -82,12 +82,6 @@ class Bill extends Model
                     ->whereHas('itemOrders', function($query) use ($selectedOrderIds) {
                         $query->whereIn('order_id', $selectedOrderIds);
                     });
-//                 dd([
-//     'sql' => $movementsQuery->toSql(),
-//     'bindings' => $movementsQuery->getBindings(),
-//     'count' => $movementsQuery->count(),
-//     'results' => $movementsQuery->get()
-// ]);
 
                 // Aplicar filtro de fecha según si existe factura anterior
                 if ($lastBill) {
@@ -113,25 +107,23 @@ class Bill extends Model
                 // For each movement, create a item billed and mark as billed the movement
                 $totalAmount = 0;
                 foreach ($all_movements as $item) {
+                    // La orden asociada al movimiento
+                    $order = $item->itemOrders->first()->order;
+
+                    // Fecha inicial del alquiler = la fecha de la orden
+                    $orderStart = Carbon::parse($order->date_from)->startOfDay();
+
+                    // Fecha del movimiento (salida parcial o total)
                     $movementDate = Carbon::parse($item->created_at)->startOfDay();
-                    $today = Carbon::today();
-                    $days = $movementDate->diffInDays($today);
-                    //dd($movementDate, $today, $days);
-                    // Si es 0 días, considerar al menos 1 día (opcional)
-                    //$days = max($days, 1);
+
+                    // Calcular días entre la fecha de la orden y la salida
+                    $days = $orderStart->diffInDays($movementDate);
 
                     BillItem::create([
                         'bill_id' => $bill->id,
                         'days' => $days,
                         'stock_movement_id' => $item->id,
                     ]);
-
-                    // StockMovement::create([
-                    //     'product_id' => $item->product_id,
-                    //     'type' => 0, // Ajuste por facturación
-                    //     'is_billed' => 1,
-                    //     'qty' => $item->qty,
-                    // ]);
 
                     //calculamos el amount en base a los dias y el costo actual del producto
                     $productCost = $item->product->current_cost ?? 0;

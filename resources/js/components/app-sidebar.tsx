@@ -15,7 +15,9 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { LayoutGrid, Users, ShoppingCart, ClipboardList, User2 } from 'lucide-react';
 import AppLogo from './app-logo';
-import { DarkModeToggleItem } from '@/components/ui/DarkModeToggleItem';
+//import { DarkModeToggleItem } from '@/components/ui/DarkModeToggleItem';
+import { usePage } from '@inertiajs/react';
+import AppearanceToggleDropdown from './appearance-dropdown';
 
 const mainNavItems: NavItem[] = [
     // {
@@ -25,7 +27,7 @@ const mainNavItems: NavItem[] = [
     // },
     {
         title: 'Usuarios',
-        href: '/users',
+        href: '/users', 
         icon: User2,
     },
     {
@@ -50,9 +52,26 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const mainNavItemsWorker: NavItem[] = [
+    // {
+    //     title: 'Inicio',
+    //     href: dashboard(),
+    //     icon: LayoutGrid,
+    // },
+    {
+        title: 'Ordenes',
+        href: '/orders/worker',
+        icon: ClipboardList,
+    },
+];
+
 const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
+    const { auth } = usePage().props;
+    const user = auth.user;
+    const roleName = user.role_name;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -68,12 +87,15 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                {roleName === 'Admin' && <NavMain items={mainNavItems} />}
+                {roleName === 'Trabajador' && <NavMain items={mainNavItemsWorker} />}
+                {/* <NavMain items={mainNavItems} /> */}
             </SidebarContent>
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                <DarkModeToggleItem />
+                {/* <DarkModeToggleItem /> */}
+                <AppearanceToggleDropdown />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

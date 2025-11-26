@@ -251,4 +251,34 @@ class OrderController extends Controller
         return back()->with('success', 'Archivo eliminado correctamente');
     }
 
+    public function indexForWorkers()
+    {
+        $worker = auth()->user();
+        //dd($worker);
+        
+        // Ordenes activas asignadas al trabajador
+        $assignedOrders = Order::where('assigned_to', $worker->id)
+            ->whereHas('states', function($query) {
+                $query->where('is_active', 1);
+            })
+            ->with(['client', 'states'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($order) {
+                return [
+                    'id' => $order->id,
+                    'code' => $order->code,
+                    'address' => $order->address ?? 'Dirección no disponible',
+                    'client_name' => $order->client->name ?? 'Cliente no disponible',
+                    'created_at' => $order->created_at->format('d/m/Y'),
+                    'status' => $order->current_state ?? 'Activa',
+                ];
+            });
+
+        return Inertia::render('orders/WorkerOrders', [
+            'orders' => $assignedOrders,
+            'worker_name' => $worker->name,
+            'total_orders' => $assignedOrders->count(),
+        ]);
+    }
 }

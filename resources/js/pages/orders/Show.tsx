@@ -9,6 +9,13 @@ import {
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
     Select,
     SelectContent,
     SelectGroup,
@@ -53,6 +60,16 @@ export default function Show() {
         { title: 'Órdenes', href: '/orders' },
         { title: `Orden #${order.code}`, href: `/orders/${order.id}` },
     ];
+
+    // const handleSubmit = (e) => {
+    //     e.preventDefault();
+    //     assignForm.post(`/orders/${order.id}/assign`, {
+    //         onSuccess: () => {
+    //             setShowAssignModal(false);
+    //             assignForm.reset();
+    //         },
+    //     });
+    // };
 
     const handleCloseModal = () => {
         setShowModal(false);
@@ -349,91 +366,94 @@ export default function Show() {
                             canManagePrivate={true}
                         />
                     </div>
+
+                    {/* NOTAS */}
+                    <OrderNotes
+                        orderId={order.id}
+                        notes={order.notes || []}
+                        canManagePrivate={true}
+                    />
                 </div>
 
-                {/* NOTAS */}
-                <OrderNotes
-                    orderId={order.id}
-                    notes={order.notes || []}
-                    canManagePrivate={true}
-                />
-
                 {/* Modales */}
-                {showAssignModal && (
-                    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-                        <div className="w-full max-w-md space-y-4 rounded-lg bg-white p-6 shadow-xl">
-                            <h2 className="text-lg font-semibold text-gray-900">
-                                Asignar trabajador
-                            </h2>
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    assignForm.post(
-                                        `/orders/${order.id}/assign`,
-                                        {
-                                            onSuccess: () => {
-                                                setShowAssignModal(false);
-                                                assignForm.reset();
-                                            },
-                                        },
-                                    );
-                                }}
-                                className="space-y-4"
-                            >
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">
-                                        Seleccionar trabajador
-                                    </label>
-                                    <Select
-                                        value={
-                                            assignForm.data.worker_id?.toString() ??
-                                            ''
-                                        }
-                                        onValueChange={(value) =>
-                                            assignForm.setData(
-                                                'worker_id',
-                                                Number(value),
-                                            )
-                                        }
-                                    >
-                                        <SelectTrigger className="mt-1 w-full">
-                                            <SelectValue placeholder="Elegir" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                <SelectLabel>
-                                                    Trabajadores disponibles
-                                                </SelectLabel>
-                                                {available_workers?.map((w) => (
-                                                    <SelectItem
-                                                        key={w.id}
-                                                        value={String(w.id)}
-                                                    >
-                                                        {w.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="flex justify-end space-x-2">
-                                    <Button
-                                        type="button"
-                                        variant="secondary"
-                                        onClick={() =>
-                                            setShowAssignModal(false)
-                                        }
-                                    >
-                                        Cancelar
-                                    </Button>
-                                    <Button type="submit" variant="success">
-                                        Asignar
-                                    </Button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                <Dialog
+                    open={showAssignModal}
+                    onOpenChange={setShowAssignModal}
+                >
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Asignar trabajador</DialogTitle>
+                        </DialogHeader>
+
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                assignForm.post(`/orders/${order.id}/assign`, {
+                                    onSuccess: () => {
+                                        setShowAssignModal(false);
+                                        assignForm.reset();
+                                    },
+                                });
+                            }}
+                            className="space-y-4"
+                        >
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">
+                                    Seleccionar trabajador
+                                </label>
+
+                                <Select
+                                    value={
+                                        assignForm.data.worker_id?.toString() ??
+                                        ''
+                                    }
+                                    onValueChange={(value) =>
+                                        assignForm.setData(
+                                            'worker_id',
+                                            Number(value),
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger className="mt-1 w-full">
+                                        <SelectValue placeholder="Elegir" />
+                                    </SelectTrigger>
+
+                                    {/* RADIX CONTENT – sin portal conflictivo */}
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>
+                                                Trabajadores disponibles
+                                            </SelectLabel>
+
+                                            {available_workers?.map((w) => (
+                                                <SelectItem
+                                                    key={w.id}
+                                                    value={String(w.id)}
+                                                >
+                                                    {w.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => setShowAssignModal(false)}
+                                >
+                                    Cancelar
+                                </Button>
+
+                                <Button type="submit" variant="success">
+                                    Asignar
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
 
                 {showModal && (
                     <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">

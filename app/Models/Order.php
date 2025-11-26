@@ -145,10 +145,11 @@ class Order extends Model
             if (isset($attributes['type']) && isset($attributes['order_id'])) {
                 $order = Order::with('itemOrders')->findOrFail($attributes['order_id']);
                 $itemOrder = $order->itemOrders->firstWhere('product_id', $attributes['product_id']);
+                $product = Product::findOrFail($attributes['product_id']);
 
                 if ($attributes['type'] == 2) {
                     // SALIDA — verificar si hay suficiente stock
-                    if (!$itemOrder || $itemOrder->qty < $attributes['qty']) {
+                    if ($product->current_stock < $attributes['qty']) {
                         throw new Exception('No hay suficiente stock en la orden para esta salida.');
                     }
                 } elseif ($attributes['type'] == 0) {
