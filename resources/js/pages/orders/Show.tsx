@@ -43,10 +43,13 @@ export default function Show() {
     const [openStock, setOpenStock] = useState(true);
     const [openStates, setOpenStates] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const { auth } = usePage().props;
+    const user = auth.user;
+    const roleName = user.role_name;
 
     const assignForm = useForm({
         worker_id: '',
-    });
+    }); 
 
     const { reset } = useForm({
         product_id: '',
@@ -272,30 +275,35 @@ export default function Show() {
 
                     {/* Card derecha: Estados */}
                     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                        <div className="mb-2 flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-gray-900">
-                                Trabajador
-                            </h2>
-                        </div>
-                        {/* Trabajador asignado (puede cambiar) */}
-                        <div className="mb-5 flex items-center justify-between rounded-md bg-gray-50 p-3">
-                            <div>
-                                <p className="text-xs text-gray-500">
-                                    Trabajador asignado
-                                </p>
-                                <p className="font-medium text-gray-900">
-                                    {order.name_assigned_to ?? 'Sin asignar'}
-                                </p>
+                        {roleName === 'Admin' && (
+                        <>    
+                            <div className="mb-2 flex items-center justify-between">
+                                <h2 className="text-lg font-semibold text-gray-900">
+                                    Trabajador
+                                </h2>
                             </div>
-                            <Button
-                                type="button"
-                                onClick={() => setShowAssignModal(true)}
-                                variant="info"
-                                size="sm"
-                            >
-                                {order.assigned_to ? 'Reasignar' : 'Asignar'}
-                            </Button>
-                        </div>
+
+                            {/* Trabajador asignado (puede cambiar) */}
+                            <div className="mb-5 flex items-center justify-between rounded-md bg-gray-50 p-3">
+                                <div>
+                                    <p className="text-xs text-gray-500">
+                                        Trabajador asignado
+                                    </p>
+                                    <p className="font-medium text-gray-900">
+                                        {order.name_assigned_to ?? 'Sin asignar'}
+                                    </p>
+                                </div>
+                                <Button
+                                    type="button"
+                                    onClick={() => setShowAssignModal(true)}
+                                    variant="info"
+                                    size="sm"
+                                >
+                                    {order.assigned_to ? 'Reasignar' : 'Asignar'}
+                                </Button>
+                            </div>
+                        </>
+                        )}
 
                         {/* Estado actual resaltado */}
                         <Collapsible

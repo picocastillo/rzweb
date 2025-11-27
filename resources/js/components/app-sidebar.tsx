@@ -20,11 +20,11 @@ import { usePage } from '@inertiajs/react';
 import AppearanceToggleDropdown from './appearance-dropdown';
 
 const mainNavItems: NavItem[] = [
-    // {
-    //     title: 'Inicio',
-    //     href: dashboard(),
-    //     icon: LayoutGrid,
-    // },
+    {
+        title: 'Inicio',
+        href: 'dashboard',
+        icon: LayoutGrid,
+    },
     {
         title: 'Usuarios',
         href: '/users', 
