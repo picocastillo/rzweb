@@ -198,19 +198,11 @@ class Order extends Model
 
     public function getNameLastStateAttribute()
     {
-        if (! isset($this->last_state)) {
-            return 'Desconocido';
-        }
-
-        if (function_exists('getNameStateOrder')) {
-            try {
-                return getNameStateOrder((int) $this->last_state) ?? 'Desconocido';
-            } catch (\Throwable $e) {
-                return 'Desconocido';
-            }
-        }
-
-        return 'Desconocido';
+        $lastState = $this->states()
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        return $lastState ? getNameStateOrder($lastState->name) : 'Pendiente';
     }
 
     public function assignTo($userId)

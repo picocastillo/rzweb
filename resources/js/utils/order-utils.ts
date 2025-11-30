@@ -25,8 +25,10 @@ export function getStatusVariant(status: string) {
             return 'default';
         case 'Asignada':
             return 'warning';
-        case 'En Curso':
+        case 'En curso':
             return 'success';
+        case 'Finalizada':
+            return 'destructive';
         default:
             return 'default';
     }

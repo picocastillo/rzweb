@@ -18,9 +18,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('order', [OrderController::class, 'index']);
-});
+// Route::middleware(['auth', 'verified'])->group(function () {
+//     Route::get('order', [OrderController::class, 'index']);
+// });
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

@@ -10,6 +10,8 @@ Route::middleware(['auth', 'verified'])->prefix('orders')->group(function () {
     Route::get('/', [OrderController::class, 'index']);
     Route::get('/create', [OrderController::class, 'create']);
     Route::post('/', [OrderController::class, 'store']);
+    Route::post('/{order}/start', [OrderController::class, 'initOrder']);
+    Route::post('/{order}/finish', [OrderController::class, 'finishOrder']);
 
     Route::get('/{order}/edit', [OrderController::class, 'edit']);
     Route::put('/{order}', [OrderController::class, 'update']);

@@ -156,7 +156,7 @@ export default function Dashboard({ stats, recentOrders, topProducts }: Dashboar
                         {/* Productos Más Alquilados */}
                         <div>
                             <h3 className="mb-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                                Productos Más Utilizados
+                                Productos En la Calle
                             </h3>
                             <div className="space-y-3">
                                 {topProducts.map((product) => (

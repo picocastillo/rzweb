@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\Order;
 use App\Models\Client;
 use App\Models\File;
+use App\Models\OrderState;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -280,5 +281,33 @@ class OrderController extends Controller
             'worker_name' => $worker->name,
             'total_orders' => $assignedOrders->count(),
         ]);
+    }
+
+    public function initOrder(Order $order) {
+
+        $user = auth()->user();
+
+        if ($user->role_name == "Trabajador") {
+            OrderState::create([
+                'name' => 2, // En curso
+                'order_id' => $order->id,
+            ]);
+            
+            return redirect()->back()->with('success', 'Orden iniciada correctamente');
+        }
+    }
+
+    public function finishOrder(Order $order) {
+
+        $user = auth()->user();
+
+        if ($user->role_name == "Trabajador") {
+            OrderState::create([
+                'name' => 3, // Finalizada
+                'order_id' => $order->id,
+            ]);
+
+            return redirect()->back()->with('success', 'Orden finalizada correctamente');
+        }
     }
 }

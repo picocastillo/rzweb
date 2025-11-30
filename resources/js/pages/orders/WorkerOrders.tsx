@@ -53,7 +53,7 @@ export default function WorkerOrders({ orders, worker_name, total_orders }: Work
                                 ¿Qué hacer aquí?
                             </p>
                             <p className="text-sm text-yellow-700 mt-1">
-                                Toca cualquier orden para ver los detalles y empezar a trabajar.
+                                Toca cualquier orden para ver los detalles,comenzar con la orden, agregar o quitar productos y finalizarla cuando hayas terminado.
                             </p>
                         </div>
                     </div>

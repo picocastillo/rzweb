@@ -34,7 +34,9 @@ Con esto obtengo el nombre del usuario autenticado para poder dividir las vistas
   -[012] Gestion de Notas y Archivos en ordenes.
   -[013] Posibilidad de crear una orden sin stock para luego ser gestionado por el trabajador.
 
-
+## [18/11/2025]
+  -[014] Posibilidad de iniciar y luego finalizar la orden como trabajador.
+  -[015] Explicaciones y mejoras en ui para Trabajador.
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 ### Historia de Usuario (Pruebas)
@@ -62,7 +64,6 @@ Con esto obtengo el nombre del usuario autenticado para poder dividir las vistas
   Seleccionamos la orden y facturamos. (Creada el 18/11 , facturada el 24/11) me dio 6 dias y el monto correctos ✅ OK
   Antes de facturar deben sacarse los productos con un movimiento de devolucion, salida de la orde
 
--Falta testear cuando se termina la fecha de la orden y se factura dias despues, que solo tome hasta donde llegue la orden ⏳ PEND
+-Falta testear cuando se termina la fecha de la orden y se factura dias despues ⏳ PEND
 -Falta testear cuando se factura mas de una orden de una sola vez ⏳ PEND
--Falta testear cuando se factura completa, despues de que termine la orden ⏳ PEND
 

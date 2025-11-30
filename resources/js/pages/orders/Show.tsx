@@ -33,7 +33,7 @@ import {
     getStatusVariant,
 } from '@/utils/order-utils';
 import { useForm, usePage } from '@inertiajs/react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Show() {
@@ -49,7 +49,7 @@ export default function Show() {
 
     const assignForm = useForm({
         worker_id: '',
-    }); 
+    });
 
     const { reset } = useForm({
         product_id: '',
@@ -60,7 +60,10 @@ export default function Show() {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Órdenes', href: '/orders' },
+        {
+            title: 'Órdenes',
+            href: roleName === 'Admin' ? '/orders' : '/orders/worker',
+        },
         { title: `Orden #${order.code}`, href: `/orders/${order.id}` },
     ];
 
@@ -73,6 +76,24 @@ export default function Show() {
     //         },
     //     });
     // };
+
+    const handleStartOrder = (e: { preventDefault: () => void }) => {
+        e.preventDefault();
+        assignForm.post(`/orders/${order.id}/start`, {
+            onSuccess: () => {
+                assignForm.reset();
+            },
+        });
+    };
+
+    const handleFinishOrder = (e: { preventDefault: () => void }) => {
+        e.preventDefault();
+        assignForm.post(`/orders/${order.id}/finish`, {
+            onSuccess: () => {
+                assignForm.reset();
+            },
+        });
+    };
 
     const handleCloseModal = () => {
         setShowModal(false);
@@ -116,6 +137,31 @@ export default function Show() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Card izquierda: Detalles y Movimientos */}
                     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                        {/* Boton para iniciar orden (solo Trabajador) */}
+                        {roleName === 'Trabajador' && (
+                            <div className="mb-4">
+                                {order.name_last_state === 'Asignada' && (
+                                    <Button
+                                        type="button"
+                                        onClick={handleStartOrder}
+                                        variant="default"
+                                    >
+                                        Iniciar Orden
+                                    </Button>
+                                )}
+
+                                {order.name_last_state === 'En curso' && (
+                                    <Button
+                                        type="button"
+                                        onClick={handleFinishOrder}
+                                        variant="default"
+                                    >
+                                        Finalizar Orden
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+
                         <h2 className="mb-2 text-lg font-semibold text-gray-900">
                             Detalles
                         </h2>
@@ -190,17 +236,28 @@ export default function Show() {
                                         )}
                                     </Button>
                                 </CollapsibleTrigger>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        type="button"
-                                        onClick={() => setShowModal(true)}
-                                        variant="success"
-                                        size="sm"
-                                    >
-                                        Agregar Movimiento
-                                    </Button>
-                                </div>
+                                <Button
+                                    type="button"
+                                    onClick={() => setShowModal(true)}
+                                    variant="success"
+                                    size="sm"
+                                    className="w-full text-center leading-4 whitespace-normal sm:w-auto"
+                                >
+                                    Agregar/Quitar Producto
+                                </Button>
                             </div>
+
+                            {/* Aclaración debajo del group */}
+                            {roleName === 'Trabajador' && (
+                                <div className="mt-2 flex items-start gap-2 text-xs text-gray-600">
+                                    <Info className="mt-[2px] h-4 w-4" />
+                                    <span>
+                                        Recuerda registrar cada movimiento, ya
+                                        sea ingresando productos al alquiler o
+                                        quitandolos.
+                                    </span>
+                                </div>
+                            )}
 
                             <CollapsibleContent>
                                 {order.stock_movements.length > 0 ? (
@@ -276,98 +333,107 @@ export default function Show() {
                     {/* Card derecha: Estados */}
                     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                         {roleName === 'Admin' && (
-                        <>    
-                            <div className="mb-2 flex items-center justify-between">
-                                <h2 className="text-lg font-semibold text-gray-900">
-                                    Trabajador
-                                </h2>
-                            </div>
-
-                            {/* Trabajador asignado (puede cambiar) */}
-                            <div className="mb-5 flex items-center justify-between rounded-md bg-gray-50 p-3">
-                                <div>
-                                    <p className="text-xs text-gray-500">
-                                        Trabajador asignado
-                                    </p>
-                                    <p className="font-medium text-gray-900">
-                                        {order.name_assigned_to ?? 'Sin asignar'}
-                                    </p>
+                            <>
+                                <div className="mb-2 flex items-center justify-between">
+                                    <h2 className="text-lg font-semibold text-gray-900">
+                                        Trabajador
+                                    </h2>
                                 </div>
-                                <Button
-                                    type="button"
-                                    onClick={() => setShowAssignModal(true)}
-                                    variant="info"
-                                    size="sm"
-                                >
-                                    {order.assigned_to ? 'Reasignar' : 'Asignar'}
-                                </Button>
-                            </div>
-                        </>
+
+                                {/* Trabajador asignado (puede cambiar) */}
+                                <div className="mb-5 flex items-center justify-between rounded-md bg-gray-50 p-3">
+                                    <div>
+                                        <p className="text-xs text-gray-500">
+                                            Trabajador asignado
+                                        </p>
+                                        <p className="font-medium text-gray-900">
+                                            {order.name_assigned_to ??
+                                                'Sin asignar'}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        onClick={() => setShowAssignModal(true)}
+                                        variant="info"
+                                        size="sm"
+                                    >
+                                        {order.assigned_to
+                                            ? 'Reasignar'
+                                            : 'Asignar'}
+                                    </Button>
+                                </div>
+                            </>
                         )}
 
-                        {/* Estado actual resaltado */}
-                        <Collapsible
-                            open={openStates}
-                            onOpenChange={setOpenStates}
-                        >
-                            <div className="mb-2 flex items-center">
-                                <h2 className="text-lg font-semibold text-gray-900">
-                                    Estados
-                                </h2>
-                                <CollapsibleTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                        {openStates ? (
-                                            <ChevronUp className="h-4 w-4" />
-                                        ) : (
-                                            <ChevronDown className="h-4 w-4" />
-                                        )}
-                                    </Button>
-                                </CollapsibleTrigger>
-                            </div>
+                        {roleName === 'Admin' && (
+                            <>
+                                {/* Estado actual resaltado */}
+                                <Collapsible
+                                    open={openStates}
+                                    onOpenChange={setOpenStates}
+                                >
+                                    <div className="mb-2 flex items-center">
+                                        <h2 className="text-lg font-semibold text-gray-900">
+                                            Estados
+                                        </h2>
+                                        <CollapsibleTrigger asChild>
+                                            <Button variant="ghost" size="sm">
+                                                {openStates ? (
+                                                    <ChevronUp className="h-4 w-4" />
+                                                ) : (
+                                                    <ChevronDown className="h-4 w-4" />
+                                                )}
+                                            </Button>
+                                        </CollapsibleTrigger>
+                                    </div>
 
-                            <CollapsibleContent>
-                                {/* Línea de tiempo de estados (cronológica) */}
-                                <ul className="space-y-3">
-                                    {[...order.states]
-                                        .sort(
-                                            (a, b) =>
-                                                new Date(
-                                                    a.created_at,
-                                                ).getTime() -
-                                                new Date(
-                                                    b.created_at,
-                                                ).getTime(),
-                                        )
-                                        .map((state) => (
-                                            <li
-                                                key={state.id}
-                                                className="flex items-start gap-3"
-                                            >
-                                                {/* Punto de la línea de tiempo */}
-                                                <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-500" />
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge
-                                                            variant={getStatusVariant(
-                                                                state.name_state,
-                                                            )}
-                                                        >
-                                                            {state.name_state}
-                                                        </Badge>
-                                                        <span className="text-xs text-gray-500">
-                                                            {new Date(
-                                                                state.created_at,
-                                                            ).toLocaleString(
-                                                                'es-ES',
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        ))}
-                                </ul>
-                            </CollapsibleContent>
-                        </Collapsible>
+                                    <CollapsibleContent>
+                                        {/* Línea de tiempo de estados (cronológica) */}
+                                        <ul className="space-y-3">
+                                            {[...order.states]
+                                                .sort(
+                                                    (a, b) =>
+                                                        new Date(
+                                                            a.created_at,
+                                                        ).getTime() -
+                                                        new Date(
+                                                            b.created_at,
+                                                        ).getTime(),
+                                                )
+                                                .map((state) => (
+                                                    <li
+                                                        key={state.id}
+                                                        className="flex items-start gap-3"
+                                                    >
+                                                        {/* Punto de la línea de tiempo */}
+                                                        <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-500" />
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge
+                                                                    variant={getStatusVariant(
+                                                                        state.name_state,
+                                                                    )}
+                                                                >
+                                                                    {
+                                                                        state.name_state
+                                                                    }
+                                                                </Badge>
+                                                                <span className="text-xs text-gray-500">
+                                                                    {new Date(
+                                                                        state.created_at,
+                                                                    ).toLocaleString(
+                                                                        'es-ES',
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                        </ul>
+                                    </CollapsibleContent>
+                                </Collapsible>
+                            </>
+                        )}
                         <OrderFiles
                             orderId={order.id}
                             files={order.files || []}
