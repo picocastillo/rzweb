@@ -24,6 +24,7 @@
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 ### Historia de Usuario (Pruebas)
+**Recordar siempre agregar movimientos de stock para quitar productos de la orden en su totalidad antes de la facturacion!!!**
 **Como** [Administrador]
 //TESTEADO
 - Navegar, asegurando que cada vista corresponda a un ABM o funcionalidad particular (Falta maquetear el menu principal o quitarlo).
