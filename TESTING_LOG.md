@@ -1,21 +1,5 @@
 # REGISTRO DE SEGUIMIENTO Y TESTING
 
-ESTADOS
-✅ OK: Prueba superada.
-
-❌ FAIL: Prueba fallida (se encontró un bug).
-
-⏳ PEND: Pendiente de probar.
-
-⚠️ RE-TEST: Falló antes y necesita ser re-testeado tras la corrección.
-
---- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-const { auth } = usePage().props;
-const user = auth.user;
-const roleName = user.role_name;
-
-Con esto obtengo el nombre del usuario autenticado para poder dividir las vistasEo
---- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 ### Tareas Completadas
 ## [12/11/2025]
   -[001] Se creo el menu sidebar para navegar por las distintas pantallas.
@@ -41,29 +25,42 @@ Con esto obtengo el nombre del usuario autenticado para poder dividir las vistas
 
 ### Historia de Usuario (Pruebas)
 **Como** [Administrador]
-- Navegar, asegurando que cada vista corresponda a un ABM o funcionalidad particular (Falta maquetear el menu principal o quitarlo). ✅ OK
+//TESTEADO
+- Navegar, asegurando que cada vista corresponda a un ABM o funcionalidad particular (Falta maquetear el menu principal o quitarlo).
 
-- Crear, editar y eliminar clientes desde el index. ✅ OK
-      Crear, editar, eliminar, agregar stock y precio por dia a los productos desde el index. ✅ OK
-      Crear, editar, eliminar y agregar movimientos a las ordenes desde el index (Falta poder editar fechas). ✅ OK
+- Crear, editar y eliminar clientes desde el index.
+      Crear, editar, eliminar, agregar stock y precio por dia a los productos desde el index.
+      Crear, editar, eliminar y agregar movimientos a las ordenes desde el index (Falta poder editar fechas).
 
-- Correr seeder, revisar numeros en productos, ordenes y facturas. ✅ OK
+- Correr seeder, revisar numeros en productos, ordenes y facturas.
 
-- Crear, editar, eliminar usuarios propios de la app. ✅ OK
+- Crear, editar, eliminar usuarios propios de la app.
 
-- Asignar y reasignar trabajador en una orden ✅ OK
+- Asignar y reasignar trabajador en una orden
 
-- Los estados cambian correctamente ✅ OK
+- Los estados cambian correctamente
 
-- Agregar y actualizar notas / Agregar y eliminar archivos ✅ OK
+- Agregar y actualizar notas / Agregar y eliminar archivos
+- Agregar y actualizar archivos / Agregar y eliminar archivos
 
-- Posibilidad de crear una orden sin stock. ✅ OK
+- Posibilidad de crear una orden sin stock.
+- Facturacion parcial, se agrega un movimiento de salida para luego facturar (Quitamos 5 productos de 10 de la orden)
+- Facturacion completa, antes que termine la fecha de la orden.
+
+//PENDIENTES
+- Falta testear cuando se termina la fecha de la orden y se factura dias despues de finalizada (Por mas que los movimientos se agreguen despues)
+- Falta testear cuando se factura mas de una orden de una sola vez
+
 
 **Como** [Trabajador]
-- Agregamos un movimiento de salida (Quitamos de la orden los productos). 
-  Seleccionamos la orden y facturamos. (Creada el 18/11 , facturada el 24/11) me dio 6 dias y el monto correctos ✅ OK
-  Antes de facturar deben sacarse los productos con un movimiento de devolucion, salida de la orde
+//PENDIENTES
 
--Falta testear cuando se termina la fecha de la orden y se factura dias despues ⏳ PEND
--Falta testear cuando se factura mas de una orden de una sola vez ⏳ PEND
+//TESTEADO
+- Agregamos un movimiento de salida (Quitamos de la orden los productos). 
+  Seleccionamos la orden y facturamos. (Creada el 18/11 , facturada el 24/11) me dio 6 dias y el monto correctos
+  Antes de facturar deben sacarse los productos con un movimiento de devolucion, salida de la orden
+- Agregar y actualizar notas / Agregar y eliminar archivos
+- Agregar y actualizar archivos / Agregar y eliminar archivos
+
+
 
