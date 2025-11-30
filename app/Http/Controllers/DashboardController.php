@@ -14,10 +14,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
 
-        if ($user->role_name == 'Admin') {     
-        
             // Estadísticas principales
             $activeOrders = Order::where('is_active', true)->count();
             
@@ -87,32 +84,5 @@ class DashboardController extends Controller
                 'topProducts' => $topProducts,
             ]);
 
-        }
-        else if ($user->role_name == 'Trabajador') {
-            $worker = $user;
-            $assignedOrders = Order::where('assigned_to', $worker->id)
-            ->whereHas('states', function($query) {
-                $query->where('is_active', 1);
-            })
-            ->with(['client', 'states'])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function($order) {
-                return [
-                    'id' => $order->id,
-                    'code' => $order->code,
-                    'address' => $order->address ?? 'Dirección no disponible',
-                    'client_name' => $order->client->name ?? 'Cliente no disponible',
-                    'created_at' => $order->created_at->format('d/m/Y'),
-                    'status' => $order->current_state ?? 'Activa',
-                ];
-            });
-
-            return Inertia::render('orders/WorkerOrders', [
-                'orders' => $assignedOrders,
-                'worker_name' => $worker->name,
-                'total_orders' => $assignedOrders->count(),
-            ]);
-        }
     }
 }
