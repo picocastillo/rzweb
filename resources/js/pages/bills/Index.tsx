@@ -123,6 +123,10 @@ export default function IndexBills({ bills = [] }: Props) {
                         Cómo funciona la facturación
                     </h2>
                     <ul className="space-y-1 text-sm">
+                        <li>
+                            • Recuerda que para facturar, primero debes
+                            quitar los artículos del alquiler.
+                        </li>
                         <li className="leading-relaxed">
                             • <strong>Facturación parcial:</strong>
                             <div className="mt-1 ml-4 space-y-1">
