@@ -47,9 +47,9 @@
 - Posibilidad de crear una orden sin stock.
 - Facturacion parcial, se agrega un movimiento de salida para luego facturar (Quitamos 5 productos de 10 de la orden)
 - Facturacion completa, antes que termine la fecha de la orden.
+- Facturacion cuando se termina la fecha de la orden y se factura dias despues de finalizada.
 
 //PENDIENTES
-- Falta testear cuando se termina la fecha de la orden y se factura dias despues de finalizada (Por mas que los movimientos se agreguen despues)
 - Falta testear cuando se factura mas de una orden de una sola vez
 
 

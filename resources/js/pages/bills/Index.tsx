@@ -117,6 +117,33 @@ export default function IndexBills({ bills = [] }: Props) {
                     </div>
                 </div>
 
+                {/* Billing Info */}
+                <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-900 shadow-sm">
+                    <h2 className="mb-2 text-lg font-semibold">
+                        Cómo funciona la facturación
+                    </h2>
+                    <ul className="space-y-1 text-sm">
+                        <li className="leading-relaxed">
+                            • <strong>Facturación parcial:</strong>
+                            <div className="mt-1 ml-4 space-y-1">
+                                <p>1. Quitar solo lo que se quiere facturar.</p>
+                                <p>
+                                    2. Si los artículos siguen en alquiler,
+                                    volver a agregarlos luego de facturar.
+                                </p>
+                            </div>
+                        </li>
+                        <li>
+                            • <strong>Facturación total:</strong> Quitar todas
+                            las unidades en alquiler para luego facturar.
+                        </li>
+                        <li>
+                            • <strong>Movimientos después del alquiler:</strong> Si el retiro se carga luego del fin de la orden, se
+                            factura únicamente el período contratado.
+                        </li>
+                    </ul>
+                </div>
+
                 {/* Filters */}
                 <div className="mb-6 rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900">
                     <div className="mb-4 flex items-center gap-2">
@@ -171,8 +198,7 @@ export default function IndexBills({ bills = [] }: Props) {
                                     <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                                         Período
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 bg-white">
