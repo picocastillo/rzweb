@@ -3,10 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Validation\Rule;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
@@ -22,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role_id'
     ];
 
     /**
@@ -34,6 +36,8 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = ['role_name'];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -44,6 +48,45 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+        ];
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function getRoleNameAttribute()
+    {
+        return ROLES[$this->role_id] ?? 'Desconocido';
+    }
+    public static function rulesCreate()
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'role_id' => 'nullable|exists:roles,id',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|min:6',
+        ];
+    }
+
+    public static function rulesUpdate($id)
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'role_id' => 'nullable|exists:roles,id',
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($id),
+            ],
+            'password' => 'nullable|min:6',
         ];
     }
 }

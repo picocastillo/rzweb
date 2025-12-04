@@ -13,16 +13,23 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, ShoppingCart, ClipboardList } from 'lucide-react';
+import { LayoutGrid, Users, ShoppingCart, ClipboardList, User2 } from 'lucide-react';
 import AppLogo from './app-logo';
-import { DarkModeToggleItem } from '@/components/ui/DarkModeToggleItem';
+//import { DarkModeToggleItem } from '@/components/ui/DarkModeToggleItem';
+import { usePage } from '@inertiajs/react';
+import AppearanceToggleDropdown from './appearance-dropdown';
 
 const mainNavItems: NavItem[] = [
-    // {
-    //     title: 'Inicio',
-    //     href: dashboard(),
-    //     icon: LayoutGrid,
-    // },
+    {
+        title: 'Inicio',
+        href: 'dashboard',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Usuarios',
+        href: '/users', 
+        icon: User2,
+    },
     {
         title: 'Clientes',
         href: '/clients',
@@ -45,16 +52,35 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const mainNavItemsWorker: NavItem[] = [
+    // {
+    //     title: 'Inicio',
+    //     href: dashboard(),
+    //     icon: LayoutGrid,
+    // },
+    {
+        title: 'Ordenes',
+        href: '/orders/worker',
+        icon: ClipboardList,
+    },
+];
+
 const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
+    const { auth } = usePage().props;
+    const user = auth.user;
+    const roleName = user.role_name;
+
+    const homeRoute = roleName === 'Admin' ? dashboard() : '/orders/worker';
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={homeRoute} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -63,12 +89,15 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                {roleName === 'Admin' && <NavMain items={mainNavItems} />}
+                {roleName === 'Trabajador' && <NavMain items={mainNavItemsWorker} />}
+                {/* <NavMain items={mainNavItems} /> */}
             </SidebarContent>
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                <DarkModeToggleItem />
+                {/* <DarkModeToggleItem /> */}
+                <AppearanceToggleDropdown />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

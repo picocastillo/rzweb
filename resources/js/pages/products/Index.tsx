@@ -81,13 +81,13 @@ export default function ProductsIndex({
                     <div className="flex gap-2">
                         <Button
                             onClick={() => setIsModalOpen(true)}
-                            variant={'success'}
+                            variant={'warning'}
                         >
                             <Plus size={18} /> Agregar Stock
                         </Button>
                         <Button
                             onClick={() => router.visit('/products/create')}
-                            variant={'warning'}
+                            variant={'success'}
                         >
                             <Plus size={18} /> Nuevo Producto
                         </Button>
@@ -108,7 +108,6 @@ export default function ProductsIndex({
                                     Costo por dia
                                 </th>
                                 <th className="px-6 py-3 text-center text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Acciones
                                 </th>
                             </tr>
                         </thead>

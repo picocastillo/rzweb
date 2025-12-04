@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
-import { Plus } from 'lucide-react';
+import { Edit3, Eye, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
 
@@ -42,7 +42,7 @@ export default function ClientsIndex({ clients }: { clients: Client[] }) {
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">CUIL</th>
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono</th>
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Email</th>
-                                <th className="px-6 py-3 text-right text-sm font-medium text-gray-700 dark:text-gray-300">Acciones</th>
+                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
@@ -52,26 +52,26 @@ export default function ClientsIndex({ clients }: { clients: Client[] }) {
                                     <td className="px-6 py-3">{client.cuil ?? '-'}</td>
                                     <td className="px-6 py-3">{client.phone ?? '-'}</td>
                                     <td className="px-6 py-3">{client.email ?? '-'}</td>
-                                    <td className="px-6 py-3 text-right space-x-2">
+                                    <td className="px-6 py-3 space-x-2">
                                         <Button
                                             onClick={() => router.visit(`/clients/${client.id}`)}
                                             variant={'default'}
                                             
                                         >
-                                            Ver
+                                            <Eye size={16} />
                                         </Button>
                                         <Button
                                             onClick={() => router.visit(`/clients/${client.id}/edit`)}
                                             variant={'info'}
                                         >
-                                            Editar
+                                            <Edit3 size={16} />
                                         </Button>
                                         <Button
                                             
                                             onClick={() => router.delete(`/clients/${client.id}`)}
                                             variant={'destructive'}
                                         >
-                                            Eliminar
+                                            <Trash2 size={16} />
                                         </Button>
                                     </td>
                                 </tr>

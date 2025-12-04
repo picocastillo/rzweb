@@ -51,7 +51,6 @@ export default function StockMovementModal({
                 new Set(order.stock_movements.map((sm) => sm.product_id)),
             );
 
-            // Filtramos para incluir solo los de la orden
             return products.filter((p) => orderProductIds.includes(p.id));
         }
 
