@@ -22,7 +22,7 @@ import AppearanceToggleDropdown from './appearance-dropdown';
 const mainNavItems: NavItem[] = [
     {
         title: 'Inicio',
-        href: 'dashboard',
+        href: '/dashboard',
         icon: LayoutGrid,
     },
     {
@@ -72,7 +72,9 @@ export function AppSidebar() {
     const user = auth.user;
     const roleName = user.role_name;
 
-    const homeRoute = roleName === 'Admin' ? dashboard() : '/orders/worker';
+    const homeRoute = roleName === 'Admin'
+    ? '/dashboard'
+    : '/orders/worker';
 
     return (
         <Sidebar collapsible="icon" variant="inset">

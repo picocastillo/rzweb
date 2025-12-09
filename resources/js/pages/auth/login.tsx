@@ -89,9 +89,9 @@ export default function Login({ status }: LoginProps) {
                                 data-test="login-button"
                             >
                                 {processing && (
-                                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                                    <LoaderCircle className="h-4 w-4 animate-spin mr-2" />
                                 )}
-                                Ingresar
+                                <span>Ingresar</span>
                             </Button>
                         </div>
 

@@ -118,7 +118,7 @@ export default function IndexBills({ bills = [] }: Props) {
                 </div>
 
                 {/* Billing Info */}
-                <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-900 shadow-sm">
+                {/* <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-900 shadow-sm">
                     <h2 className="mb-2 text-lg font-semibold">
                         Cómo funciona la facturación
                     </h2>
@@ -146,7 +146,7 @@ export default function IndexBills({ bills = [] }: Props) {
                             factura únicamente el período contratado.
                         </li>
                     </ul>
-                </div>
+                </div> */}
 
                 {/* Filters */}
                 <div className="mb-6 rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900">
