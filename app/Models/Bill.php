@@ -63,11 +63,12 @@ class Bill extends Model
                 // Obtenemos fechas
                 $clientId   = $attributes['client_id'];
                 $lastBill   = self::getLastBillForClient($clientId);
+
                 $startDate  = self::calculateStartDate($lastBill, $attributes);
 
                 // movimientos
                 $orderIds   = $attributes['orders'];
-                $movements  = self::getPendingMovements($orderIds, $lastBill, $startDate);
+                $movements  = self::getPendingMovements($orderIds);
 
                 if ($movements->isEmpty()) {
                     throw new Exception('No hay movimientos pendientes para facturar para este cliente');
@@ -103,7 +104,7 @@ class Bill extends Model
     private static function getLastBillForClient(int $clientId)
     {
         return Bill::where('client_id', $clientId)
-            ->latest('date_from')
+            ->latest('created_at')
             ->first();
     }
     // CALCULAMOS FECHA DE INICIO
@@ -112,68 +113,78 @@ class Bill extends Model
         $today = Carbon::today();
 
         if ($lastBill) {
-            return Carbon::parse($lastBill->created_at);
+            return Carbon::parse($lastBill->created_at)->startOfDay();
         }
 
-        return Carbon::parse($attributes['date'] ?? $today);
+        return Carbon::parse($attributes['date'] ?? $today)->startOfDay();
     }
     // MOVIMIENTOS PENDIENTES
-    private static function getPendingMovements(array $orderIds, $lastBill, Carbon $startDate)
+    private static function getPendingMovements(array $orderIds)
     {
-        $today = Carbon::today();
-
-        $query = StockMovement::where('type', 0)
+        return StockMovement::where('type', 2)
             ->where('is_billed', false)
             ->whereHas('itemOrders', function ($q) use ($orderIds) {
                 $q->whereIn('order_id', $orderIds);
-            });
-
-        if ($lastBill) {
-            return $query
-                ->whereBetween('created_at', [$startDate, $today->endOfDay()])
-                ->get();
-        }
-
-        return $query
-            ->where('created_at', '<=', $today->endOfDay())
+            })
             ->get();
     }
+
     // PROCESAMOS MOVIMIENTOS → CREAR ITEMS + ACUMULAR TOTAL
     private static function processBillMovements(Bill $bill, $movements)
     {
         $total = 0;
+        $today = Carbon::today()->startOfDay();
 
         foreach ($movements as $movement) {
 
             $order = $movement->itemOrders->first()->order;
 
-            $orderStart   = Carbon::parse($order->date_from)->startOfDay();
-            $orderEnd   = Carbon::parse($order->date_to)->startOfDay();
-            $movementDate = Carbon::parse($movement->created_at)->startOfDay();
+            // Fecha desde donde se facturan días
+            $billingStart = Carbon::parse($order->date_from)->startOfDay();
 
-            // 1. se factura despues del alquiler contratado
-            if ($movementDate->greaterThan($orderEnd)) {
-                $days = $orderStart->diffInDays($orderEnd);
-            }
-            // 2. facturacion normal
-            else {
-                $days = $orderStart->diffInDays($movementDate);
+            // Fecha final del contrato
+            $periodEnd = Carbon::parse($order->date_to)->startOfDay();
+
+            $billingEnd = $periodEnd->copy();
+            if ($today->lessThan($periodEnd)) {
+                $billingEnd = $today->copy();
             }
 
+            // Calcular días
+            $days = $billingStart->diffInDays($billingEnd) + 1;
+            if ($days < 0) $days = 0;
+
+            // Crear ítem en factura
             BillItem::create([
                 'bill_id'            => $bill->id,
                 'days'               => $days,
                 'stock_movement_id'  => $movement->id,
             ]);
 
+            // Subtotal
             $productCost = $movement->product->current_cost ?? 0;
             $subtotal    = $movement->qty * $days * $productCost;
             $total      += $subtotal;
 
             $movement->is_billed = true;
             $movement->save();
+            
+            if ($billingEnd->lessThan($periodEnd)) {
+
+                $newMovementDate = $billingEnd->copy()->endOfDay();
+
+                StockMovement::create([
+                    'product_id'  => $movement->product_id,
+                    'qty'         => $movement->qty,
+                    'type'        => 2,
+                    'is_billed'   => 0,
+                    'created_at'  => $newMovementDate,
+                ]);
+            }
+            
         }
 
         return $total;
     }
+
 }

@@ -51,33 +51,23 @@ export default function CreateUser({ roles }: CreateUserProps) {
                     </div>
 
                     <div>
-                        <label htmlFor="role-select" className="block text-sm font-medium mb-1">Rol</label>
-                        <Select
+                        <label htmlFor="role-select" className="block text-sm font-medium mb-1">
+                            Rol
+                        </label>
+                        <select
+                            id="role-select"
                             value={data.role_id?.toString() ?? ""}
-                            onValueChange={(value) => setData('role_id', Number(value))}
-                            disabled={processing} 
+                            onChange={(e) => setData('role_id', Number(e.target.value))}
+                            className="w-full rounded-lg border px-3 py-2 bg-white"
+                            disabled={processing}
                         >
-                            <SelectTrigger 
-                                id="role-select" 
-                                className="w-full"
-                                aria-invalid={!!errors.role_id} 
-                            >
-                                <SelectValue placeholder="Seleccionar un rol" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    <SelectLabel>Roles Disponibles</SelectLabel>
-                                    {roles.map((role) => (
-                                        <SelectItem 
-                                            key={role.id} 
-                                            value={String(role.id)} 
-                                        >
-                                            {role.role_name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
+                            <option value="">Seleccionar un rol</option>
+                            {roles.map((role) => (
+                                <option key={role.id} value={role.id}>
+                                    {role.role_name}
+                                </option>
+                            ))}
+                        </select>
                         {errors.role_id && <p className="text-red-600 text-sm mt-1">{errors.role_id}</p>}
                     </div>
 
