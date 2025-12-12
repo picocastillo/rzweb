@@ -76,11 +76,46 @@ class Bill extends Model
 
             $total = $movements->sum(function ($movement) use ($bill) {
 
-                $start = Carbon::parse($bill->date_from)->startOfDay();
-                $end   = Carbon::today()->startOfDay(); 
-
-                $days = $start->diffInDays($end);
-                if ($days < 0) $days = 0;
+                $itemOrder = $movement->itemOrders->first();
+                $orderId = $itemOrder->order_id;
+                $productId = $movement->product_id;
+                
+                // Buscar si existe un movimiento type 0 posterior del mismo producto en la misma orden
+                $hasOutput = StockMovement::where('type', 0)
+                    ->where('product_id', $productId)
+                    ->where('created_at', '>', $movement->created_at)
+                    ->whereHas('itemOrders', fn($q) => $q->where('order_id', $orderId))
+                    ->first();
+                
+                if ($hasOutput) {
+                    // 1. El artículo fue retirado, facturar días específicos
+                    $days = $movement->created_at->diffInDays($hasOutput->created_at);
+                } else {
+                    // 2. El artículo AÚN está en la orden
+                    // Verificar si hay factura anterior para este cliente
+                    $lastBill = Bill::where('client_id', $bill->client_id)
+                        ->where('id', '!=', $bill->id) // Excluir la factura actual
+                        ->latest('created_at')
+                        ->first();
+                    
+                    if ($lastBill) {
+                        // Si hay factura anterior, calculamos desde esa fecha
+                        $startDate = Carbon::parse($lastBill->created_at);
+                    } else {
+                        // Si NO hay factura anterior, desde que ingresó el movimiento
+                        $startDate = $movement->created_at;
+                    }
+                    
+                    $endDate = Carbon::now();
+                    $days = $startDate->diffInDays($endDate);
+                    
+                    //aca devolvemos a la orden de nuevo (para facturar parcial)
+                    StockMovement::create([
+                        'product_id'  => $movement->product_id,
+                        'qty'         => $movement->qty,
+                        'type'        => 2,
+                    ]);
+                }
 
                 BillItem::create([
                     'bill_id'           => $bill->id,
@@ -91,13 +126,6 @@ class Bill extends Model
                 $subtotal = $movement->qty * $days * ($movement->product->current_cost ?? 0);
 
                 $movement->update(['is_billed' => true]);
-
-                //aca devolvemos a la orden de nuevo (para facturar parcial)
-                StockMovement::create([
-                    'product_id'  => $movement->product_id,
-                    'qty'         => $movement->qty,
-                    'type'        => 2,
-                ]);
 
                 return $subtotal;
             });
