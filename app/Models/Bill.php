@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use Exception;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Bill extends Model
 {
@@ -38,7 +37,7 @@ class Bill extends Model
         ];
     }
 
-    //// Relationships ////
+    // // Relationships ////
     public function client()
     {
         return $this->belongsTo(Client::class);
@@ -61,7 +60,7 @@ class Bill extends Model
         return DB::transaction(function () use ($attributes) {
             $movements = StockMovement::where('type', 2)
                 ->where('is_billed', false)
-                ->whereHas('itemOrders', fn($q) => $q->whereIn('order_id', $attributes['orders']))
+                ->whereHas('itemOrders', fn ($q) => $q->whereIn('order_id', $attributes['orders']))
                 ->get();
 
             if ($movements->isEmpty()) {
@@ -70,8 +69,8 @@ class Bill extends Model
 
             $bill = Bill::create([
                 'client_id' => $attributes['client_id'],
-                'date_from' => self::getStartDate($attributes['client_id'], $attributes),
-                'amount'    => 0,
+                'date_from' => self::getStartDateForOrder($attributes['client_id'], $attributes),
+                'amount' => 0,
             ]);
 
             $total = $movements->sum(function ($movement) use ($bill) {
@@ -79,54 +78,40 @@ class Bill extends Model
                 $itemOrder = $movement->itemOrders->first();
                 $orderId = $itemOrder->order_id;
                 $productId = $movement->product_id;
-                
-                // Buscar si existe un movimiento type 0 posterior del mismo producto en la misma orden
+
+                // Buscamos si la orden tiene movimiento de salida (Devolucion) posterior a este movimiento de entrada
                 $hasOutput = StockMovement::where('type', 0)
                     ->where('product_id', $productId)
                     ->where('created_at', '>', $movement->created_at)
-                    ->whereHas('itemOrders', fn($q) => $q->where('order_id', $orderId))
+                    ->whereHas('itemOrders', fn ($q) => $q->where('order_id', $orderId))
                     ->first();
-                
-                $days = 0;
-                // 1. El artículo fue retirado, facturar días específicos    
+
+                $startDate = self::getStartDateForOrder($orderId);
+                $endDate = Carbon::now()->startOfDay();
+
+                // Caso 1: tuvo salida
                 if ($hasOutput) {
-                    $days = $movement->created_at->diffInDays($hasOutput->created_at);
+                    $endDate = $hasOutput->created_at->startOfDay();
+                }
 
-                    BillItem::create([
-                        'bill_id'           => $bill->id,
-                        'days'              => $days,
-                        'stock_movement_id' => $movement->id,
-                    ]);
+                $days = $startDate->diffInDays($endDate);
 
-                    $movement->update(['is_billed' => true]);
+                BillItem::create([
+                    'bill_id' => $bill->id,
+                    'days' => $days,
+                    'stock_movement_id' => $movement->id,
+                ]);
 
-                // 2. El artículo AÚN está en la orden
-                } else {
-                    // Verificamos si hay factura anterior para este cliente
-                    $lastBill = Bill::where('client_id', $bill->client_id)
-                        ->where('id', '!=', $bill->id) // Excluir la factura actual
-                        ->latest('created_at')
-                        ->first();
-                    
-                    $startDate = $lastBill 
-                        ? Carbon::parse($lastBill->created_at) 
-                        : $movement->created_at;
-                    $endDate = Carbon::now();
-                    $days = $startDate->diffInDays($endDate);
-                    
-                    BillItem::create([
-                        'bill_id'           => $bill->id,
-                        'days'              => $days,
-                        'stock_movement_id' => $movement->id,
-                    ]);
+                $movement->update(['is_billed' => true]);
 
-                    $movement->update(['is_billed' => true]);
-                    
-                    //aca devolvemos a la orden de nuevo (para facturar parcial)
+                // Caso 2: sigue en la orden → generar residual
+                if (! $hasOutput) {
                     $newMovement = StockMovement::create([
-                        'product_id'  => $movement->product_id,
-                        'qty'         => $movement->qty,
-                        'type'        => 2,
+                        'product_id' => $movement->product_id,
+                        'qty' => $movement->qty,
+                        'type' => 2,
+                        'is_billed' => false,
+                        'created_at' => now()->endOfDay(),
                     ]);
 
                     ItemOrder::create([
@@ -137,8 +122,7 @@ class Bill extends Model
                     ]);
                 }
 
-                $subtotal = $movement->qty * $days * ($movement->product->current_cost ?? 0);
-                return $subtotal;
+                return $movement->qty * $days * ($movement->product->current_cost ?? 0);
             });
 
             $bill->update(['amount' => $total]);
@@ -147,9 +131,12 @@ class Bill extends Model
         });
     }
 
-    private static function getStartDate(int $clientId, array $attributes)
+    private static function getStartDateForOrder(int $orderId)
     {
-        $lastBill = Bill::where('client_id', $clientId)
+        // 1. Ultima factura de ESTA orden
+        $lastBill = Bill::whereHas('billItems.stockMovement.itemOrders', function ($q) use ($orderId) {
+            $q->where('order_id', $orderId);
+        })
             ->latest('created_at')
             ->first();
 
@@ -157,13 +144,12 @@ class Bill extends Model
             return Carbon::parse($lastBill->created_at)->startOfDay();
         }
 
-        // Si no hay factura, tomamos el primer movimiento
+        // 2. Si nunca se facturo tomamos el primer movimiento de la orden
         $firstMovement = StockMovement::where('type', 2)
-            ->whereHas('itemOrders', fn($q) => $q->whereIn('order_id', $attributes['orders']))
+            ->whereHas('itemOrders', fn ($q) => $q->where('order_id', $orderId))
             ->oldest('created_at')
             ->first();
 
         return Carbon::parse($firstMovement->created_at)->startOfDay();
     }
-
 }

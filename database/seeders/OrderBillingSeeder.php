@@ -275,7 +275,7 @@ class OrderBillingSeeder extends Seeder
      * ESCENARIO 3: Orden sin devoluciones
      * - 15 cintas salieron
      * - 0 devueltas
-     * - NO se debe facturar nada aún
+     * - Si facturamos, se debe facturar 15 cintas y devolverlas para que sigan en la orden
      */
     private function createScenario3($admin, $client)
     {
@@ -315,6 +315,6 @@ class OrderBillingSeeder extends Seeder
             'created_at' => Carbon::now()->subDays(7)
         ]);
 
-        $this->command->info("📦 Escenario 3 creado: Orden {$order->code} - 15 cintas salieron, ninguna devuelta");
+        $this->command->info("📦 Escenario 3 creado: Orden {$order->code} - 15 cintas salieron, facturamos y volvieron a la orden");
     }
 }
