@@ -98,14 +98,14 @@ class OrderBillingSeeder extends Seeder
         // 6. ESCENARIO 3: Orden sin devoluciones (no se factura nada)
         $this->createScenario3($admin, $client);
 
-        $this->command->info('✅ Seeders de órdenes y facturación creados exitosamente!');
+        $this->command->info('Seeders de órdenes y facturación creados exitosamente!');
     }
 
     /**
      * ESCENARIO 1: Orden con devolución parcial
      * - 10 vallas salieron
-     * - 5 vallas volvieron (Type 0)
-     * - Se debe facturar: 5 vallas
+     * - 10 vallas volvieron (Type 0)
+     * - Se debe facturar: 10 vallas
      */
     private function createScenario1($admin, $client)
     {
@@ -147,11 +147,11 @@ class OrderBillingSeeder extends Seeder
             'created_at' => Carbon::now()->subDays(15)
         ]);
 
-        // Movimiento de DEVOLUCIÓN hace 5 días (5 vallas vuelven al depósito)
+        // Movimiento de DEVOLUCIÓN hace 5 días (10 vallas vuelven al depósito)
         $stockMovementReturn = StockMovement::create([
             'product_id' => $product->id,
             'type' => 0, // 0 = Devolución (vuelven al depósito) - SE DEBE FACTURAR
-            'qty' => 5,
+            'qty' => 10,
             'is_billed' => true,
             'created_at' => Carbon::now()->subDays(5)
         ]);
@@ -161,7 +161,7 @@ class OrderBillingSeeder extends Seeder
             'order_id' => $order->id,
             'product_id' => $product->id,
             'stock_movement_id' => $stockMovementReturn->id,
-            'qty' => 5,
+            'qty' => 10,
             'created_at' => Carbon::now()->subDays(5)
         ]);
 
@@ -184,7 +184,7 @@ class OrderBillingSeeder extends Seeder
             'days' => $days,
         ]);
 
-        $this->command->info("📦 Escenario 1 creado: Orden {$order->code} - 10 vallas salieron, 5 devueltas (facturables)");
+        $this->command->info("Escenario 1 creado: Orden {$order->code} - 10 vallas salieron, 10 devueltas (facturables)");
     }
 
     /**
@@ -268,7 +268,7 @@ class OrderBillingSeeder extends Seeder
             'days' => $days,
         ]);
 
-        $this->command->info("📦 Escenario 2 creado: Orden {$order->code} - 20 conos salieron y volvieron todos");
+        $this->command->info("Escenario 2 creado: Orden {$order->code} - 20 conos salieron y volvieron todos");
     }
 
     /**
@@ -315,6 +315,6 @@ class OrderBillingSeeder extends Seeder
             'created_at' => Carbon::now()->subDays(7)
         ]);
 
-        $this->command->info("📦 Escenario 3 creado: Orden {$order->code} - 15 cintas salieron, facturamos y volvieron a la orden");
+        $this->command->info("Escenario 3 creado: Orden {$order->code} - 15 cintas salieron, debe facturar y volver a la orden");
     }
 }

@@ -45,10 +45,10 @@
 - Agregar y actualizar archivos / Agregar y eliminar archivos
 
 - Posibilidad de crear una orden sin stock.
-- Facturacion parcial -> Facturamos antes que termine la orden, se factura hasta el dia en que se esta facturando.
-- Facturacion completa -> Cuando termina la orden o a fin de mes, facturamos todo (desde el date_from hasta el date_to de la orden)
 
---DUDA: En cuanto a los productos, debo devolverlos para sumarlos a las existencias, los quito antes o despues de facturar ? Debo hacerlo manualmente o cuando facturo los quito directamente ? 
+-Refactorizacion de la logica en el metodo para crear facturas. Contemplamos facturacion parcial y completa.
+1. Nos fijamos si hay factura anterior, si es asi, facturamos desde ahi, si no, desde el movimiento de entrada.
+2. Nos fijamos si hay movimiento de salida en la orden, si es asi, facturamos hasta ese movimiento, si no, facturamos hasta ahora que estamos facturando y devolvemos los productos a la orden para que sigan alquilados.
 
 //PENDIENTES
 - Falta testear cuando se factura mas de una orden de una sola vez
