@@ -21,6 +21,10 @@
 ## [18/11/2025]
   -[014] Posibilidad de iniciar y luego finalizar la orden como trabajador.
   -[015] Explicaciones y mejoras en ui para Trabajador.
+
+## [15/12/2025]
+  -[016] Refactoring del metodo para crear facturas
+  -[017] Arreglos en el show de una factura.
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 ### Historia de Usuario (Pruebas)
@@ -49,9 +53,10 @@
 -Refactorizacion de la logica en el metodo para crear facturas. Contemplamos facturacion parcial y completa.
 1. Nos fijamos si hay factura anterior, si es asi, facturamos desde ahi, si no, desde el movimiento de entrada.
 2. Nos fijamos si hay movimiento de salida en la orden, si es asi, facturamos hasta ese movimiento, si no, facturamos hasta ahora que estamos facturando y devolvemos los productos a la orden para que sigan alquilados.
+3. Si seleccionamos mas de una orden para facturar, se crea una factura por todas ellas.
 
 //PENDIENTES
-- Falta testear cuando se factura mas de una orden de una sola vez
+
 
 
 **Como** [Trabajador]

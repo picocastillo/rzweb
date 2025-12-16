@@ -78,6 +78,7 @@ class Bill extends Model
                 $itemOrder = $movement->itemOrders->first();
                 $orderId = $itemOrder->order_id;
                 $productId = $movement->product_id;
+                $order = $itemOrder->order;
 
                 // Buscamos si la orden tiene movimiento de salida (Devolucion) posterior a este movimiento de entrada
                 $hasOutput = StockMovement::where('type', 0)
@@ -92,6 +93,7 @@ class Bill extends Model
                 // Caso 1: tuvo salida
                 if ($hasOutput) {
                     $endDate = $hasOutput->created_at->startOfDay();
+                    $order->update(['is_active' => 0]);
                 }
 
                 $days = $startDate->diffInDays($endDate);

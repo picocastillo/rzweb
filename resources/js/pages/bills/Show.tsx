@@ -169,7 +169,7 @@ export default function ShowBill({ bill }: Props) {
                                 )}
                             </div>
                             {/* Información del Período */}
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            {/* <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div className="mb-4 flex items-center gap-2">
                                     <Calendar className="h-5 w-5 text-blue-600" />
                                     <h2 className="text-xl font-semibold text-gray-900">
@@ -194,7 +194,7 @@ export default function ShowBill({ bill }: Props) {
                                         </p>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Items Facturados */}
