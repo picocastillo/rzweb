@@ -104,7 +104,6 @@ class BillController extends Controller
             'billItems.stockMovement.product',
         ]);
 
-        // Si necesitas información adicional de las órdenes relacionadas
         // puedes cargarlas también si tu modelo Bill tiene relación con orders
         if (method_exists($bill, 'orders')) {
             $bill->load(['orders' => function($query) {

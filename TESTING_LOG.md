@@ -21,6 +21,10 @@
 ## [18/11/2025]
   -[014] Posibilidad de iniciar y luego finalizar la orden como trabajador.
   -[015] Explicaciones y mejoras en ui para Trabajador.
+
+## [15/12/2025]
+  -[016] Refactoring del metodo para crear facturas
+  -[017] Arreglos en el show de una factura.
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 ### Historia de Usuario (Pruebas)
@@ -45,21 +49,20 @@
 - Agregar y actualizar archivos / Agregar y eliminar archivos
 
 - Posibilidad de crear una orden sin stock.
-- Facturacion parcial, se agrega un movimiento de salida para luego facturar (Quitamos 5 productos de 10 de la orden)
-- Facturacion completa, antes que termine la fecha de la orden.
-- Facturacion cuando se termina la fecha de la orden y se factura dias despues de finalizada.
+
+-Refactorizacion de la logica en el metodo para crear facturas. Contemplamos facturacion parcial y completa.
+1. Nos fijamos si hay factura anterior, si es asi, facturamos desde ahi, si no, desde el movimiento de entrada.
+2. Nos fijamos si hay movimiento de salida en la orden, si es asi, facturamos hasta ese movimiento, si no, facturamos hasta ahora que estamos facturando y devolvemos los productos a la orden para que sigan alquilados.
+3. Si seleccionamos mas de una orden para facturar, se crea una factura por todas ellas.
 
 //PENDIENTES
-- Falta testear cuando se factura mas de una orden de una sola vez
+
 
 
 **Como** [Trabajador]
 //PENDIENTES
 
 //TESTEADO
-- Agregamos un movimiento de salida (Quitamos de la orden los productos). 
-  Seleccionamos la orden y facturamos. (Creada el 18/11 , facturada el 24/11) me dio 6 dias y el monto correctos
-  Antes de facturar deben sacarse los productos con un movimiento de devolucion, salida de la orden
 - Agregar y actualizar notas / Agregar y eliminar archivos
 - Agregar y actualizar archivos / Agregar y eliminar archivos
 

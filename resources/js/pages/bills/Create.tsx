@@ -320,7 +320,8 @@ export default function Create({
                             }
                             className="rounded-md bg-green-600 px-6 py-2 text-white hover:bg-green-700 disabled:bg-gray-400"
                         >
-                            Crear Factura ({selectedOrderIds.length} órdenes)
+                            Crear Factura 
+                            {/* ({selectedOrderIds.length} órdenes) */}
                         </button>
                     </div>
                 </form>

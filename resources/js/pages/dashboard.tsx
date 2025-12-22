@@ -58,7 +58,7 @@ export default function Dashboard({ stats, recentOrders, topProducts }: Dashboar
                                 <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                                     Órdenes Activas
                                 </p>
-                                <p className="mt-2 text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                                <p className="mt-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
                                     {stats.activeOrders}
                                 </p>
                             </div>
@@ -81,7 +81,7 @@ export default function Dashboard({ stats, recentOrders, topProducts }: Dashboar
                                 <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                                     Facturación Pendiente
                                 </p>
-                                <p className="mt-2 text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                                <p className="mt-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
                                     {stats.pendingBills}
                                 </p>
                             </div>
@@ -101,7 +101,7 @@ export default function Dashboard({ stats, recentOrders, topProducts }: Dashboar
                                 <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                                     Ingresos Totales
                                 </p>
-                                <p className="mt-2 text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                                <p className="mt-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
                                     {formatCurrency(stats.totalRevenue)}
                                 </p>
                             </div>

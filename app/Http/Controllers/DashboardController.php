@@ -18,7 +18,7 @@ class DashboardController extends Controller
             // Estadísticas principales
             $activeOrders = Order::where('is_active', true)->count();
             
-            $pendingBills = StockMovement::where('type', 0)
+            $pendingBills = StockMovement::where('type', 2)
                 ->where('is_billed', false)
                 ->count();
             

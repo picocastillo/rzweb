@@ -98,14 +98,14 @@ class OrderBillingSeeder extends Seeder
         // 6. ESCENARIO 3: Orden sin devoluciones (no se factura nada)
         $this->createScenario3($admin, $client);
 
-        $this->command->info('✅ Seeders de órdenes y facturación creados exitosamente!');
+        $this->command->info('Seeders de órdenes y facturación creados exitosamente!');
     }
 
     /**
      * ESCENARIO 1: Orden con devolución parcial
      * - 10 vallas salieron
-     * - 5 vallas volvieron (Type 0)
-     * - Se debe facturar: 5 vallas
+     * - 10 vallas volvieron (Type 0)
+     * - Se debe facturar: 10 vallas
      */
     private function createScenario1($admin, $client)
     {
@@ -118,7 +118,7 @@ class OrderBillingSeeder extends Seeder
             'code' => 'ORD-001',
             'address' => 'Av. Corrientes 1234, CABA',
             'last_state' => 0,
-            'is_active' => true,
+            'is_active' => false,
             'date_from' => Carbon::now()->subDays(16),
             'date_to' => Carbon::now()->addDays(5),
             'created_at' => Carbon::now()->subDays(15)
@@ -134,7 +134,7 @@ class OrderBillingSeeder extends Seeder
             'product_id' => $product->id,
             'type' => 2, // 2 = Salida del depósito (entrada a la orden)
             'qty' => 10,
-            'is_billed' => false,
+            'is_billed' => true,
             'created_at' => Carbon::now()->subDays(15)
         ]);
 
@@ -147,12 +147,12 @@ class OrderBillingSeeder extends Seeder
             'created_at' => Carbon::now()->subDays(15)
         ]);
 
-        // Movimiento de DEVOLUCIÓN hace 5 días (5 vallas vuelven al depósito)
+        // Movimiento de DEVOLUCIÓN hace 5 días (10 vallas vuelven al depósito)
         $stockMovementReturn = StockMovement::create([
             'product_id' => $product->id,
             'type' => 0, // 0 = Devolución (vuelven al depósito) - SE DEBE FACTURAR
-            'qty' => 5,
-            'is_billed' => true,
+            'qty' => 10,
+            'is_billed' => false,
             'created_at' => Carbon::now()->subDays(5)
         ]);
 
@@ -161,7 +161,7 @@ class OrderBillingSeeder extends Seeder
             'order_id' => $order->id,
             'product_id' => $product->id,
             'stock_movement_id' => $stockMovementReturn->id,
-            'qty' => 5,
+            'qty' => 10,
             'created_at' => Carbon::now()->subDays(5)
         ]);
 
@@ -173,9 +173,8 @@ class OrderBillingSeeder extends Seeder
         // crear bill por los 5 devueltos
         $bill = Bill::create([
             'client_id' => $client->id,
-            'date_from' => $order->date_from,
+            'date_from' => $stockMovementOut->created_at,
             'amount' => $amount,
-            'created_at' => $stockMovementReturn->created_at,
         ]);
 
         BillItem::create([
@@ -184,7 +183,7 @@ class OrderBillingSeeder extends Seeder
             'days' => $days,
         ]);
 
-        $this->command->info("📦 Escenario 1 creado: Orden {$order->code} - 10 vallas salieron, 5 devueltas (facturables)");
+        $this->command->info("Escenario 1 creado: Orden {$order->code} - 10 vallas salieron, 10 devueltas (facturables)");
     }
 
     /**
@@ -203,7 +202,7 @@ class OrderBillingSeeder extends Seeder
             'code' => 'ORD-002',
             'address' => 'Av. Rivadavia 5678, CABA',
             'last_state' => 0,
-            'is_active' => false,
+            'is_active' => true,
             'date_from' => Carbon::now()->subDays(30),
             'date_to' => Carbon::now()->subDays(10),
             'created_at' => Carbon::now()->subDays(30)
@@ -237,7 +236,7 @@ class OrderBillingSeeder extends Seeder
             'product_id' => $product->id,
             'type' => 0,
             'qty' => 20,
-            'is_billed' => true,
+            'is_billed' => false,
             'created_at' => Carbon::now()->subDays(10)
         ]);
 
@@ -249,38 +248,19 @@ class OrderBillingSeeder extends Seeder
             'created_at' => Carbon::now()->subDays(10)
         ]);
 
-        $cost = Cost::where('product_id', $product->id)->latest()->first();
-        // calcular días entre salida y devolución
-        $days = Carbon::now()->subDays(30)->diffInDays(Carbon::now()->subDays(10));
-        $amount = $cost->price * $days * $stockMovementReturn->qty;
-
-        // crear bill total
-        $bill = Bill::create([
-            'client_id' => $client->id,
-            'date_from' => $order->date_from,
-            'amount' => $amount,
-            'created_at' => $stockMovementReturn->created_at,
-        ]);
-
-        BillItem::create([
-            'bill_id' => $bill->id,
-            'stock_movement_id' => $stockMovementReturn->id,
-            'days' => $days,
-        ]);
-
-        $this->command->info("📦 Escenario 2 creado: Orden {$order->code} - 20 conos salieron y volvieron todos");
+        $this->command->info("Escenario 2 creado: Orden {$order->code} - 20 conos salieron y volvieron todos");
     }
 
     /**
      * ESCENARIO 3: Orden sin devoluciones
      * - 15 cintas salieron
      * - 0 devueltas
-     * - NO se debe facturar nada aún
-     */
+     * - Si facturamos, se debe facturar 15 cintas y devolverlas para que sigan en la orden
+    */
     private function createScenario3($admin, $client)
     {
         $product = Product::where('name', 'Chapones')->first();
-        
+
         $order = Order::create([
             'user_id' => $admin->id,
             'client_id' => $client->id,
@@ -288,9 +268,9 @@ class OrderBillingSeeder extends Seeder
             'address' => 'Av. Santa Fe 9012, CABA',
             'last_state' => 0,
             'is_active' => true,
-            'date_from' => Carbon::now()->subDays(7),
-            'date_to' => Carbon::now()->addDays(23),
-            'created_at' => Carbon::now()->subDays(7)
+            'date_from' => Carbon::now()->subDays(20),
+            'date_to'   => Carbon::now()->addDays(23),
+            'created_at'=> Carbon::now()->subDays(20),
         ]);
 
         OrderState::create([
@@ -298,13 +278,13 @@ class OrderBillingSeeder extends Seeder
             'name' => 0,
         ]);
 
-        // Solo salida, sin devoluciones
+        // Salida inicial (hace 20 días)
         $stockMovementOut = StockMovement::create([
             'product_id' => $product->id,
-            'type' => 2,
-            'qty' => 15,
-            'is_billed' => false,
-            'created_at' => Carbon::now()->subDays(7)
+            'type'       => 2,
+            'qty'        => 15,
+            'is_billed'  => false,
+            'created_at' => Carbon::now()->subDays(20),
         ]);
 
         ItemOrder::create([
@@ -312,9 +292,20 @@ class OrderBillingSeeder extends Seeder
             'product_id' => $product->id,
             'stock_movement_id' => $stockMovementOut->id,
             'qty' => 15,
-            'created_at' => Carbon::now()->subDays(7)
+            'created_at' => Carbon::now()->subDays(20),
         ]);
 
-        $this->command->info("📦 Escenario 3 creado: Orden {$order->code} - 15 cintas salieron, ninguna devuelta");
+        // 👉 FACTURA PREVIA (hace 10 días)
+        $previousBill = Bill::create([
+            'client_id' => $client->id,
+            'date_from' => Carbon::now()->subDays(20),
+            'amount'    => 0,
+            'created_at'=> Carbon::now()->subDays(10),
+        ]);
+
+        $this->command->info(
+            "Escenario 3 creado: Orden {$order->code}"
+        );
     }
+
 }
