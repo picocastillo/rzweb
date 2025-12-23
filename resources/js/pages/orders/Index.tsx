@@ -98,7 +98,7 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                         >
                                             <Eye size={16} />
                                         </Button>
-                                        <Button
+                                        {/* <Button
                                             onClick={() =>
                                                 router.visit(
                                                     `/orders/${order.id}/edit`,
@@ -107,7 +107,7 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                             variant={'info'}
                                         >
                                             <Edit3 size={16} />
-                                        </Button>
+                                        </Button> */}
                                         <Button
                                             onClick={() =>
                                                 router.delete(
