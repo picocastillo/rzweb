@@ -5,16 +5,16 @@ namespace Tests\Unit;
 use App\Models\Bill;
 use App\Models\Client;
 use App\Models\Cost;
+use App\Models\ItemOrder;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\User;
 use App\Models\Role;
 use App\Models\StockMovement;
-use App\Models\ItemOrder;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Illuminate\Support\Facades\Hash;
+use Tests\TestCase;
 
 class BillTest extends TestCase
 {
@@ -37,10 +37,10 @@ class BillTest extends TestCase
     {
         // Arrange
         Role::forceCreate(
-             [
+            [
                 'id' => 1,
                 'name' => 'admin',
-             ]
+            ]
         );
         $admin = User::firstOrCreate(
             ['email' => 'admin@test.com'],
@@ -134,10 +134,10 @@ class BillTest extends TestCase
     {
         // Arrange
         Role::forceCreate(
-             [
+            [
                 'id' => 1,
                 'name' => 'admin',
-             ]
+            ]
         );
         $admin = User::firstOrCreate(
             ['email' => 'admin@test.com'],
@@ -209,10 +209,10 @@ class BillTest extends TestCase
     {
         // Arrange
         Role::forceCreate(
-             [
+            [
                 'id' => 1,
                 'name' => 'admin',
-             ]
+            ]
         );
         $admin = User::firstOrCreate(
             ['email' => 'admin@test.com'],
@@ -280,10 +280,10 @@ class BillTest extends TestCase
     public function test_lanza_excepcion_si_no_hay_movimientos_pendientes()
     {
         Role::forceCreate(
-             [
+            [
                 'id' => 1,
                 'name' => 'admin',
-             ]
+            ]
         );
         $admin = User::firstOrCreate(
             ['email' => 'admin@test.com'],
@@ -320,5 +320,91 @@ class BillTest extends TestCase
             'client_id' => $client->id,
             'orders' => [$order->id],
         ]);
+    }
+
+    public function test_factura_varios_movimientos_y_crea_multiples_billitems()
+    {
+        // Arrange
+        Role::forceCreate(
+            [
+                'id' => 1,
+                'name' => 'admin',
+            ]
+        );
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@test.com'],
+            [
+                'name' => 'Admin',
+                'role_id' => 1,
+                'password' => Hash::make('asdasd'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $client = Client::firstOrCreate(
+            ['email' => 'cliente@test.com'],
+            [
+                'name' => 'Cliente Test',
+                'cuil' => '20-12345678-9',
+                'phone' => '+54 9 11 1234-5678',
+            ]
+        );
+
+        // CORRECCIÓN: Creamos el costo en la tabla relacionada, no en el producto
+        $product = $this->createProductWithCost(100);
+
+        $order = Order::create([
+            'user_id' => $admin->id,
+            'client_id' => $client->id,
+            'code' => 'ORD-001',
+            'address' => 'Av. Corrientes 1234, CABA',
+            'last_state' => 0,
+            'is_active' => true,
+            'date_from' => '2025-01-10',
+            'date_to' => '2025-01-20',
+        ]);
+
+        // Movimiento 1
+        Carbon::setTestNow('2025-01-01 10:00:00');
+        $m1 = StockMovement::create([
+            'product_id' => $product->id,
+            'qty' => 2,
+            'type' => 2,
+            'order_id' => $order->id,
+        ]);
+        ItemOrder::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'qty' => 2,
+            'stock_movement_id' => $m1->id,
+        ]);
+
+        // Movimiento 2
+        Carbon::setTestNow('2025-01-03 10:00:00');
+        $m2 = StockMovement::create([
+            'product_id' => $product->id,
+            'qty' => 1,
+            'type' => 2,
+            'order_id' => $order->id,
+        ]);
+        ItemOrder::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'qty' => 1,
+            'stock_movement_id' => $m2->id,
+        ]);
+
+        // Factura
+        Carbon::setTestNow('2025-01-10 10:00:00');
+        $bill = Bill::createWithInitialState([
+            'client_id' => $client->id,
+            'orders' => [$order->id],
+        ]);
+
+        $this->assertCount(2, $bill->billItems);
+        $this->assertEquals(9, $bill->billItems[0]->days);
+        $this->assertEquals(7, $bill->billItems[1]->days);
+
+        // Total = (2×9×100) + (1×7×100)
+        $this->assertEquals(2500, $bill->amount);
     }
 }

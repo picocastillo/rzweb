@@ -67,16 +67,6 @@ export default function Show() {
         { title: `Orden #${order.code}`, href: `/orders/${order.id}` },
     ];
 
-    // const handleSubmit = (e) => {
-    //     e.preventDefault();
-    //     assignForm.post(`/orders/${order.id}/assign`, {
-    //         onSuccess: () => {
-    //             setShowAssignModal(false);
-    //             assignForm.reset();
-    //         },
-    //     });
-    // };
-
     const handleStartOrder = (e: { preventDefault: () => void }) => {
         e.preventDefault();
         assignForm.post(`/orders/${order.id}/start`, {
@@ -109,14 +99,14 @@ export default function Show() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="mx-auto max-w-7xl p-6">
                 {/* Header de la orden */}
-                <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <div className="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4">
+                <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+                    <div className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     Orden #{order.code}
                                 </h1>
-                                <p className="mt-1 text-gray-600">
+                                <p className="mt-1 text-gray-600 dark:text-gray-400">
                                     Creada el {formatDate(order.date_from)}
                                 </p>
                             </div>
@@ -136,7 +126,7 @@ export default function Show() {
                 {/* Contenido en dos columnas */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Card izquierda: Detalles y Movimientos */}
-                    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
                         {/* Boton para iniciar orden (solo Trabajador) */}
                         {roleName === 'Trabajador' && (
                             <div className="mb-4">
@@ -162,53 +152,53 @@ export default function Show() {
                             </div>
                         )}
 
-                        <h2 className="mb-2 text-lg font-semibold text-gray-900">
+                        <h2 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
                             Detalles
                         </h2>
                         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {/* Información del cliente */}
-                            <div className="rounded-lg bg-gray-50 p-4">
-                                <h3 className="mb-2 font-semibold text-gray-900">
+                            <div className="rounded-lg bg-gray-50 dark:bg-gray-700 p-4">
+                                <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">
                                     Información del Cliente
                                 </h3>
-                                <p className="text-sm text-gray-500">Nombre</p>
-                                <p className="text-black">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Nombre</p>
+                                <p className="text-black dark:text-white">
                                     {order.client.name}
                                 </p>
-                                <p className="mt-2 text-sm text-gray-500">
+                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                                     Teléfono
                                 </p>
-                                <p className="text-black">
-                                    {order.client.phone}
+                                <p className="text-black dark:text-white">
+                                    {order.client.phone ? order.client.phone : 'Sin definir'}
                                 </p>
                             </div>
 
                             {/* Información del alquiler */}
-                            <div className="rounded-lg bg-gray-50 p-4">
-                                <h3 className="mb-2 font-semibold text-gray-900">
+                            <div className="rounded-lg bg-gray-50 dark:bg-gray-700 p-4">
+                                <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">
                                     Detalles del Alquiler
                                 </h3>
                                 <div className="flex justify-between">
-                                    <span className="text-sm text-gray-500">
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
                                         Fecha de inicio:
                                     </span>
-                                    <span className="text-black">
+                                    <span className="text-black dark:text-white">
                                         {formatDate(order.date_from)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-sm text-gray-500">
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
                                         Fecha de fin:
                                     </span>
-                                    <span className="text-black">
+                                    <span className="text-black dark:text-white">
                                         {formatDate(order.date_to)}
                                     </span>
                                 </div>
-                                <div className="mt-2 flex justify-between border-t border-gray-200 pt-2">
-                                    <span className="text-sm text-gray-500">
+                                <div className="mt-2 flex justify-between border-t border-gray-200 dark:border-gray-600 pt-2">
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
                                         Duración:
                                     </span>
-                                    <span className="text-black">
+                                    <span className="text-black dark:text-white">
                                         {calculateRentalDays(
                                             order.date_from,
                                             order.date_to,
@@ -223,8 +213,8 @@ export default function Show() {
                             open={openStock}
                             onOpenChange={setOpenStock}
                         >
-                            <div className="mb-2 flex items-center">
-                                <h2 className="text-lg font-semibold text-gray-900">
+                            <div className="mb-2 flex items-center gap-2 flex-wrap">
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                                     Movimientos de Stock
                                 </h2>
                                 <CollapsibleTrigger asChild>
@@ -241,7 +231,7 @@ export default function Show() {
                                     onClick={() => setShowModal(true)}
                                     variant="success"
                                     size="sm"
-                                    className="w-full text-center leading-4 whitespace-normal sm:w-auto"
+                                    className="whitespace-normal sm:whitespace-nowrap"
                                 >
                                     Agregar/Quitar Producto
                                 </Button>
@@ -249,7 +239,7 @@ export default function Show() {
 
                             {/* Aclaración debajo del group */}
                             {roleName === 'Trabajador' && (
-                                <div className="mt-2 flex items-start gap-2 text-xs text-gray-600">
+                                <div className="mt-2 flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
                                     <Info className="mt-[2px] h-4 w-4" />
                                     <span>
                                         Recuerda registrar cada movimiento, ya
@@ -261,32 +251,32 @@ export default function Show() {
 
                             <CollapsibleContent>
                                 {order.stock_movements.length > 0 ? (
-                                    <div className="overflow-hidden rounded-lg border border-gray-200">
-                                        <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-gray-50">
+                                    <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                            <thead className="bg-gray-50 dark:bg-gray-700">
                                                 <tr>
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
                                                         Producto
                                                     </th>
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
                                                         Cantidad
                                                     </th>
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
                                                         Tipo
                                                     </th>
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
                                                         Fecha
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-gray-200 bg-white">
+                                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
                                                 {order.stock_movements.map(
                                                     (sm) => (
                                                         <tr
                                                             key={sm.id}
-                                                            className="hover:bg-gray-50"
+                                                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
                                                         >
-                                                            <td className="px-4 py-2 text-sm text-gray-900">
+                                                            <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
                                                                 {
                                                                     sm.product
                                                                         .name
@@ -294,7 +284,7 @@ export default function Show() {
                                                             </td>
                                                             <td className="px-4 py-2 text-sm">
                                                                 <span
-                                                                    className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${sm.qty > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                                                                    className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${sm.qty > 0 ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'}`}
                                                                 >
                                                                     {sm.qty > 0
                                                                         ? '+'
@@ -302,10 +292,10 @@ export default function Show() {
                                                                     {sm.qty}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-4 py-2 text-sm text-gray-500">
+                                                            <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
                                                                 {TYPE[sm.type]}
                                                             </td>
-                                                            <td className="px-4 py-2 text-sm text-gray-500">
+                                                            <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
                                                                 {new Date(
                                                                     sm.created_at,
                                                                 ).toLocaleString(
@@ -319,8 +309,8 @@ export default function Show() {
                                         </table>
                                     </div>
                                 ) : (
-                                    <div className="rounded-lg border border-gray-200 bg-gray-50 py-8 text-center">
-                                        <p className="text-sm text-gray-500">
+                                    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 py-8 text-center">
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
                                             No hay movimientos de stock
                                             registrados.
                                         </p>
@@ -331,22 +321,22 @@ export default function Show() {
                     </div>
 
                     {/* Card derecha: Estados */}
-                    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
                         {roleName === 'Admin' && (
                             <>
                                 <div className="mb-2 flex items-center justify-between">
-                                    <h2 className="text-lg font-semibold text-gray-900">
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                                         Trabajador
                                     </h2>
                                 </div>
 
                                 {/* Trabajador asignado (puede cambiar) */}
-                                <div className="mb-5 flex items-center justify-between rounded-md bg-gray-50 p-3">
+                                <div className="mb-5 flex items-center justify-between rounded-md bg-gray-50 dark:bg-gray-700 p-3">
                                     <div>
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
                                             Trabajador asignado
                                         </p>
-                                        <p className="font-medium text-gray-900">
+                                        <p className="font-medium text-gray-900 dark:text-white">
                                             {order.name_assigned_to ??
                                                 'Sin asignar'}
                                         </p>
@@ -372,8 +362,8 @@ export default function Show() {
                                     open={openStates}
                                     onOpenChange={setOpenStates}
                                 >
-                                    <div className="mb-2 flex items-center">
-                                        <h2 className="text-lg font-semibold text-gray-900">
+                                    <div className="mb-2 flex items-center gap-2">
+                                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                                             Estados
                                         </h2>
                                         <CollapsibleTrigger asChild>
@@ -418,7 +408,7 @@ export default function Show() {
                                                                         state.name_state
                                                                     }
                                                                 </Badge>
-                                                                <span className="text-xs text-gray-500">
+                                                                <span className="text-xs text-gray-500 dark:text-gray-400">
                                                                     {new Date(
                                                                         state.created_at,
                                                                     ).toLocaleString(
@@ -454,9 +444,11 @@ export default function Show() {
                     open={showAssignModal}
                     onOpenChange={setShowAssignModal}
                 >
-                    <DialogContent className="max-w-md">
+                    <DialogContent className="max-w-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                         <DialogHeader>
-                            <DialogTitle>Asignar trabajador</DialogTitle>
+                            <DialogTitle className="text-gray-900 dark:text-white">
+                                Asignar trabajador
+                            </DialogTitle>
                         </DialogHeader>
 
                         <form
@@ -472,44 +464,42 @@ export default function Show() {
                             className="space-y-4"
                         >
                             <div>
-                                <label className="text-sm font-medium text-gray-700">
-                                    Seleccionar trabajador
+                                <label
+                                    htmlFor="worker_id"
+                                    className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    Seleccionar trabajador *
                                 </label>
 
-                                <Select
-                                    value={
-                                        assignForm.data.worker_id?.toString() ??
-                                        ''
-                                    }
-                                    onValueChange={(value) =>
+                                <select
+                                    id="worker_id"
+                                    name="worker_id"
+                                    value={assignForm.data.worker_id ?? ''}
+                                    onChange={(e) =>
                                         assignForm.setData(
                                             'worker_id',
-                                            Number(value),
+                                            Number(e.target.value)
                                         )
                                     }
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    required
                                 >
-                                    <SelectTrigger className="mt-1 w-full">
-                                        <SelectValue placeholder="Elegir" />
-                                    </SelectTrigger>
+                                    <option value="">
+                                        Seleccionar trabajador
+                                    </option>
 
-                                    {/* RADIX CONTENT – sin portal conflictivo */}
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectLabel>
-                                                Trabajadores disponibles
-                                            </SelectLabel>
+                                    {available_workers?.map((w) => (
+                                        <option key={w.id} value={w.id}>
+                                            {w.name}
+                                        </option>
+                                    ))}
+                                </select>
 
-                                            {available_workers?.map((w) => (
-                                                <SelectItem
-                                                    key={w.id}
-                                                    value={String(w.id)}
-                                                >
-                                                    {w.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
+                                {assignForm.errors.worker_id && (
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {assignForm.errors.worker_id}
+                                    </p>
+                                )}
                             </div>
 
                             <DialogFooter>
@@ -521,7 +511,7 @@ export default function Show() {
                                     Cancelar
                                 </Button>
 
-                                <Button type="submit" variant="success">
+                                <Button type="submit" variant="success" disabled={!assignForm.data.worker_id}>
                                     Asignar
                                 </Button>
                             </DialogFooter>
@@ -529,9 +519,10 @@ export default function Show() {
                     </DialogContent>
                 </Dialog>
 
+
                 {showModal && (
-                    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-                        <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-70 p-4">
+                        <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-800 shadow-xl">
                             <StockMovementModal
                                 order={order}
                                 products={products}

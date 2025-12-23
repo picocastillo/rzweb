@@ -4,6 +4,16 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, useForm, router } from '@inertiajs/react';
 import { DollarSign, Edit, Eye, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 
 type Product = {
     id: number;
@@ -143,7 +153,7 @@ export default function ProductsIndex({
                                             <Edit size={16} />
                                         </Button>
                                         <Button
-                                        title='Agregar Costo'
+                                            title='Agregar Costo'
                                             onClick={() => {
                                                 reset();
                                                 setIsModalCostOpen(true);
@@ -156,16 +166,48 @@ export default function ProductsIndex({
                                         >
                                             <DollarSign size={16} className="mr-1" />
                                         </Button>
-                                        <Button
-                                            type="button"
-                                            onClick={() => router.delete(`/products/${product.id}`, {
-                                                preserveScroll: true,
-                                            })}
-                                            title="Eliminar"
-                                            variant={'destructive'}
-                                        >
-                                            <Trash2 size={16} />
-                                        </Button>
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="destructive">
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </DialogTrigger>
+
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>
+                                                        Confirmar eliminación
+                                                    </DialogTitle>
+                                                    <DialogDescription>
+                                                        ¿Eliminar{' '}
+                                                        <strong>
+                                                            {product.name}
+                                                        </strong>
+                                                        ? Esta acción no se
+                                                        puede deshacer.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+
+                                                <DialogFooter>
+                                                    <DialogClose asChild>
+                                                        <Button variant="outline">
+                                                            Cancelar
+                                                        </Button>
+                                                    </DialogClose>
+
+                                                    <Button
+                                                        variant="destructive"
+                                                        onClick={() =>
+                                                            router.delete(
+                                                                `/products/${product.id}`,
+                                                            )
+                                                        }
+                                                    >
+                                                        Sí, eliminar
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
                                     </td>
                                 </tr>
                             ))}
@@ -190,7 +232,7 @@ export default function ProductsIndex({
                                 <X size={24} />
                             </button>
                         </div>
-                        
+
                         <form onSubmit={handleSubmit} className="space-y-4 p-6">
                             <div>
                                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">

@@ -83,7 +83,7 @@ export default function EditClient({ client }: { client: Client }) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                                className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
                             >
                                 {processing ? 'Actualizando...' : 'Actualizar'}
                             </button>

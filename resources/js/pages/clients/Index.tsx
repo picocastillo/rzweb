@@ -4,6 +4,16 @@ import { type BreadcrumbItem } from '@/types';
 import { Edit3, Eye, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 
 type Client = {
     id: number | string;
@@ -26,12 +36,12 @@ export default function ClientsIndex({ clients }: { clients: Client[] }) {
             <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h1 className="text-2xl font-semibold">Clientes</h1>
-                        <Button
-                            variant="success"
-                            onClick={() => router.visit('/clients/create')}
-                        >            
-                            <Plus size={18} /> Nuevo Cliente
-                        </Button>
+                    <Button
+                        variant="success"
+                        onClick={() => router.visit('/clients/create')}
+                    >
+                        <Plus size={18} /> Nuevo Cliente
+                    </Button>
                 </div>
 
                 <div className="overflow-x-auto border rounded-lg">
@@ -56,7 +66,7 @@ export default function ClientsIndex({ clients }: { clients: Client[] }) {
                                         <Button
                                             onClick={() => router.visit(`/clients/${client.id}`)}
                                             variant={'default'}
-                                            
+
                                         >
                                             <Eye size={16} />
                                         </Button>
@@ -66,13 +76,48 @@ export default function ClientsIndex({ clients }: { clients: Client[] }) {
                                         >
                                             <Edit3 size={16} />
                                         </Button>
-                                        <Button
-                                            
-                                            onClick={() => router.delete(`/clients/${client.id}`)}
-                                            variant={'destructive'}
-                                        >
-                                            <Trash2 size={16} />
-                                        </Button>
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="destructive">
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </DialogTrigger>
+
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>
+                                                        Confirmar eliminación
+                                                    </DialogTitle>
+                                                    <DialogDescription>
+                                                        ¿Eliminar cliente{' '}
+                                                        <strong>
+                                                            {client.name}
+                                                        </strong>
+                                                        ? Esta acción no se
+                                                        puede deshacer.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+
+                                                <DialogFooter>
+                                                    <DialogClose asChild>
+                                                        <Button variant="outline">
+                                                            Cancelar
+                                                        </Button>
+                                                    </DialogClose>
+
+                                                    <Button
+                                                        variant="destructive"
+                                                        onClick={() =>
+                                                            router.delete(
+                                                                `/clients/${client.id}`,
+                                                            )
+                                                        }
+                                                    >
+                                                        Sí, eliminar
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
                                     </td>
                                 </tr>
                             ))}
