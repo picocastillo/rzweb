@@ -8,6 +8,7 @@ export default function EditClient({ client }: { client: Client }) {
         name: client.name || '',
         cuil: client.cuil || '',
         phone: client.phone || '',
+        email: client.email || '',   
     });
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -66,6 +67,17 @@ export default function EditClient({ client }: { client: Client }) {
                                     className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                                 />
                                 {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    value={data.email}
+                                    onChange={(e) => setData('email', e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                                />
+                                {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
                             </div>
 
                             <button

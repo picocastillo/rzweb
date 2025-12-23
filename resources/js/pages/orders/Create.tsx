@@ -119,7 +119,7 @@ export default function CreateOrder({ clients, products }: { clients: Client[]; 
 
                                 {/* Código */}
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium mb-2">Código</label>
+                                    <label className="block text-sm font-medium mb-2">Código(Opcional)</label>
                                     <input
                                         type="text"
                                         value={data.code}
@@ -133,20 +133,19 @@ export default function CreateOrder({ clients, products }: { clients: Client[]; 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {/* Fecha inicio */}
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">Fecha inicio</label>
+                                        <label className="block text-sm font-medium mb-2">Fecha inicio(Opcional)</label>
                                         <input
                                             type="date"
                                             value={data.date_from}
                                             onChange={(e) => setData('date_from', e.target.value)}
                                             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 dark:bg-gray-700 dark:text-white"
-                                            required
                                         />
                                         {errors.date_from && <p className="text-red-600 text-sm mt-1">{errors.date_from}</p>}
                                     </div>
 
                                     {/* Fecha fin */}
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">Fecha fin</label>
+                                        <label className="block text-sm font-medium mb-2">Fecha fin(Opcional)</label>
                                         <input
                                             type="date"
                                             value={data.date_to}

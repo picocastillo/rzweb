@@ -47,6 +47,7 @@ type Client = {
     name: string;
     cuil?: string | null;
     phone?: string | null;
+    email?: string | null;
 };
 
 interface Client {

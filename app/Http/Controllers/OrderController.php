@@ -47,7 +47,7 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'address' => 'nullable|string|max:255',
+            'address' => 'required|string|max:255',
             'code' => 'nullable|string|max:100',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',

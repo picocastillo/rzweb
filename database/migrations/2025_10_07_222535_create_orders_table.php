@@ -20,11 +20,11 @@ return new class extends Migration
             $table->unsignedInteger('assigned_to')->nullable()->default(null);
             $table->foreign('assigned_to')->references('id')->on('users')->onDelete('cascade');
            
-            $table->string('last_state');
+            $table->string('last_state')->nullable();
             $table->string('address');
-            $table->string('code');
-            $table->date('date_from');
-            $table->date('date_to');
+            $table->string('code')->nullable();
+            $table->date('date_from')->nullable();
+            $table->date('date_to')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

@@ -106,7 +106,7 @@ class Bill extends Model
 
                 $movement->update(['is_billed' => true]);
 
-                // Caso 2: sigue en la orden → generar residual
+                // Caso 2: sigue en la orden, generamos residual
                 if (! $hasOutput) {
                     $newMovement = StockMovement::create([
                         'product_id' => $movement->product_id,
