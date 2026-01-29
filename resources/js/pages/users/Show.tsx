@@ -38,10 +38,10 @@ export default function ShowUser({ user }: { user: User }) {
                     <CardContent>
                         <div className="space-y-3">
                             <p>
-                                <strong>CUIL:</strong> {user.role_name ?? '-'}
+                                <strong>Email:</strong> {user.email ?? '-'}
                             </p>
                             <p>
-                                <strong>Teléfono:</strong> {user.email ?? '-'}
+                                <strong>Tipo de usuario:</strong> {user.role_name ?? '-'}
                             </p>
                         </div>
 

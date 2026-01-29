@@ -37,7 +37,7 @@ export default function EditUser({ user, roles }: { user: User; roles: Role[] })
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}> 
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Editar ${user.name}`} />
 
             <div className="max-w-lg mx-auto p-6">
@@ -68,28 +68,20 @@ export default function EditUser({ user, roles }: { user: User; roles: Role[] })
                                 <label htmlFor="role-select" className="block text-sm font-medium mb-1">
                                     Rol
                                 </label>
-
-                                <Select
-                                    value={String(data.role_id)}
-                                    onValueChange={(value) => setData('role_id', Number(value))}
+                                <select
+                                    id="role-select"
+                                    value={data.role_id?.toString() ?? ""}
+                                    onChange={(e) => setData('role_id', Number(e.target.value))}
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                     disabled={processing}
                                 >
-                                    <SelectTrigger id="role-select" className="w-full">
-                                        <SelectValue placeholder="Seleccionar un rol" />
-                                    </SelectTrigger>
-
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectLabel>Roles Disponibles</SelectLabel>
-                                            {roles.map((role) => (
-                                                <SelectItem key={role.id} value={String(role.id)}>
-                                                    {role.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-
+                                    <option value="">Seleccionar un rol</option>
+                                    {roles.map((role) => (
+                                        <option key={role.id} value={role.id}>
+                                            {role.name}
+                                        </option>
+                                    ))}
+                                </select>
                                 {errors.role_id && <p className="text-red-600 text-sm mt-1">{errors.role_id}</p>}
                             </div>
 
@@ -119,7 +111,7 @@ export default function EditUser({ user, roles }: { user: User; roles: Role[] })
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                                className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
                             >
                                 {processing ? 'Actualizando...' : 'Actualizar'}
                             </button>
