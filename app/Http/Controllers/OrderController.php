@@ -287,7 +287,7 @@ class OrderController extends Controller
 
         $user = auth()->user();
 
-        if ($user->role_name == "Trabajador") {
+        if ($user->role_name == "Trabajador" || $user->role_name == "Admin") {
             OrderState::create([
                 'name' => 2, // En curso
                 'order_id' => $order->id,
@@ -301,7 +301,7 @@ class OrderController extends Controller
 
         $user = auth()->user();
 
-        if ($user->role_name == "Trabajador") {
+        if ($user->role_name == "Trabajador" || $user->role_name == "Admin") {
             OrderState::create([
                 'name' => 3, // Finalizada
                 'order_id' => $order->id,

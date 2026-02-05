@@ -119,7 +119,7 @@ export default function Show() {
                     {/* Card izquierda: Detalles y Movimientos */}
                     <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
                         {/* Boton para iniciar orden (solo Trabajador) */}
-                        {roleName === 'Trabajador' && (
+                        
                             <div className="mb-4">
                                 {order.name_last_state === 'Asignada' && (
                                     <Button
@@ -141,7 +141,7 @@ export default function Show() {
                                     </Button>
                                 )}
                             </div>
-                        )}
+                        
 
                         <h2 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
                             Detalles
