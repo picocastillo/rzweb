@@ -6,7 +6,6 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
-use function App\Helpers\TYPE_MOVEMENT;
 
 class ProductController extends Controller
 {

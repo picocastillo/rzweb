@@ -292,6 +292,8 @@ class OrderController extends Controller
                 'name' => 2, // En curso
                 'order_id' => $order->id,
             ]);
+
+            $order->update(['last_state' => 2]);
             
             return redirect()->back()->with('success', 'Orden iniciada correctamente');
         }
@@ -306,6 +308,8 @@ class OrderController extends Controller
                 'name' => 3, // Finalizada
                 'order_id' => $order->id,
             ]);
+
+            $order->update(['last_state' => 3]);
 
             return redirect()->back()->with('success', 'Orden finalizada correctamente');
         }

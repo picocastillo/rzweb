@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\StockMovement;
 use App\Models\Client;
-use App\Models\Order;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rules\In;
 use Inertia\Inertia;
 
 class ReportController extends Controller
@@ -47,6 +45,7 @@ class ReportController extends Controller
             })
             ->orderBy('created_at', 'desc')
             ->get();
+            
 
         // Agrupamos y transformamos
         $groupedMovements = $this->groupAndTransformMovements($movements);
