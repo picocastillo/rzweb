@@ -15,8 +15,8 @@ import {
     DropdownMenuCheckboxItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Search, X } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { Search } from 'lucide-react';
+import { useState } from 'react';
 import { calculateRentalDays, getStatusVariant } from '@/utils/order-utils';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';

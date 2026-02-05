@@ -21,45 +21,51 @@ class ReportController extends Controller
                     $q->where('client_id', $request->client_id);
                 });
             })
+            // Filtro por estado de orden
             ->when($request->status, function ($query) use ($request) {
                 $query->whereHas('itemOrders.order', function ($q) use ($request) {
                     $q->where('last_state', $request->status);
                 });
             })
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        $this->transformMovements($movements);
-
-        return Inertia::render('reports/Index', [
-            'movements' => $movements,
-            'clients' => $clients,
-            'filters' => $request->only(['client_id', 'status']),
-            'orderStates' => $this->getOrderStates(),
-        ]);
-    }
-
-    public function searchByAddress(Request $request)
-    {
-        $request->validate([
-            'query' => 'required|string|min:2'
-        ]);
-
-        $searchTerm = $request->input('query');
-
-        $movements = $this->getMovementsQuery()
-            ->whereHas('itemOrders.order', function ($q) use ($searchTerm) {
-                $q->where('address', 'LIKE', '%' . $searchTerm . '%');
+            // Filtro por fecha de inicio
+            ->when($request->start_date, function ($query) use ($request) {
+                $query->whereHas('itemOrders.order', function ($q) use ($request) {
+                    $q->whereDate('date_from', '>=', $request->start_date);
+                });
+            })
+            // Filtro por fecha de fin
+            ->when($request->end_date, function ($query) use ($request) {
+                $query->whereHas('itemOrders.order', function ($q) use ($request) {
+                    $q->whereDate('date_to', '<=', $request->end_date);
+                });
+            })
+            // Filtro por dirección
+            ->when($request->address, function ($query) use ($request) {
+                $query->whereHas('itemOrders.order', function ($q) use ($request) {
+                    $q->where('address', 'like', '%' . $request->address . '%');
+                });
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->get();
 
-        $this->transformMovements($movements);
+        // Agrupamos y transformamos
+        $groupedMovements = $this->groupAndTransformMovements($movements);
+        
+        // Paginamos manualmente
+        $page = $request->get('page', 1);
+        $perPage = 20;
+        $paginatedMovements = new \Illuminate\Pagination\LengthAwarePaginator(
+            $groupedMovements->forPage($page, $perPage),
+            $groupedMovements->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         return Inertia::render('reports/Index', [
-            'movements' => $movements,
-            'clients' => Client::orderBy('name')->get(['id', 'name']),
-            'filters' => $request->only(['query']),
+            'movements' => $paginatedMovements,
+            'clients' => $clients,
+            'filters' => $request->only(['client_id', 'status', 'start_date', 'end_date', 'address']),
             'orderStates' => $this->getOrderStates(),
         ]);
     }
@@ -82,24 +88,52 @@ class ReportController extends Controller
     }
 
     /**
-     * Transforma la colección de movimientos
+     * Agrupa movimientos por orden e item, separando instalación y retiro
      */
-    private function transformMovements($movements)
+    private function groupAndTransformMovements($movements)
     {
-        $movements->getCollection()->transform(function ($movement) {
+        // Agrupar por order_id + product_id
+        $grouped = $movements->groupBy(function($movement) {
             $itemOrder = $movement->itemOrders->first();
-            
-            return [
-                'id' => $movement->id,
-                'product_id' => $movement->product_id,
-                'type' => $movement->type,
-                'qty' => $movement->qty,
-                'is_billed' => $movement->is_billed,
-                'created_at' => $movement->created_at,
-                'product' => $movement->product,
-                'order' => $itemOrder ? $itemOrder->order : null,
-            ];
+            return $itemOrder?->order_id . '_' . $movement->product_id;
         });
+
+        $result = collect();
+
+        foreach ($grouped as $key => $movementGroup) {
+            $itemOrder = $movementGroup->first()->itemOrders->first();
+            
+            if (!$itemOrder || !$itemOrder->order) continue;
+
+            // Buscamos movimiento de salida (type = 2) e ingreso (type = 0)
+            $outMovement = $movementGroup->firstWhere('type', 2);
+            $inMovement = $movementGroup->firstWhere('type', 0);
+            
+            $order = $itemOrder->order;
+            $product = $movementGroup->first()->product;
+
+            $result->push([
+                'id' => $movementGroup->first()->id,
+                'product_id' => $product->id,
+                'type' => $movementGroup->first()->type,
+                'qty' => $movementGroup->sum('qty'), // Suma de cantidades
+                'created_at' => $outMovement?->created_at ?? $inMovement?->created_at,
+                'product' => [
+                    'name' => $product->name,
+                    'current_cost' => $product->current_cost,
+                ],
+                'order' => [
+                    'id' => $order->id,
+                    'client' => $order->client,
+                    'address' => $order->address,
+                    'name_last_state' => $order->name_last_state,
+                    'date_from' => $outMovement?->created_at, // Instalación (type = 2)
+                    'date_to' => $inMovement?->created_at,     // Retiro (type = 0)
+                ],
+            ]);
+        }
+
+        return $result->sortByDesc('created_at')->values();
     }
 
     /**
