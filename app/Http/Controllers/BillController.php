@@ -7,10 +7,8 @@ use App\Models\Bill;
 use App\Models\Client;
 use App\Models\ItemOrder;
 use App\Models\Order;
-use App\Models\StockMovement;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class BillController extends Controller
 {
