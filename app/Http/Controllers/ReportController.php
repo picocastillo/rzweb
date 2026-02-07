@@ -13,31 +13,42 @@ class ReportController extends Controller
     {
         $clients = Client::orderBy('name')->get(['id', 'name']);
         
+        // Determinamos el tipo de vista: 'general' o 'daily'
+        $viewType = $request->get('view_type', 'general');
+        
+        if ($viewType === 'daily') {
+            return $this->dailyReport($request, $clients);
+        }
+        
+        return $this->generalReport($request, $clients);
+    }
+
+    /**
+     * Informe general (vista original)
+     */
+    private function generalReport(Request $request, $clients)
+    {
         $movements = $this->getMovementsQuery()
             ->when($request->client_id, function ($query) use ($request) {
                 $query->whereHas('itemOrders.order', function ($q) use ($request) {
                     $q->where('client_id', $request->client_id);
                 });
             })
-            // Filtro por estado de orden
             ->when($request->status, function ($query) use ($request) {
                 $query->whereHas('itemOrders.order', function ($q) use ($request) {
                     $q->where('last_state', $request->status);
                 });
             })
-            // Filtro por fecha de inicio
             ->when($request->start_date, function ($query) use ($request) {
                 $query->whereHas('itemOrders.order', function ($q) use ($request) {
                     $q->whereDate('date_from', '>=', $request->start_date);
                 });
             })
-            // Filtro por fecha de fin
             ->when($request->end_date, function ($query) use ($request) {
                 $query->whereHas('itemOrders.order', function ($q) use ($request) {
                     $q->whereDate('date_to', '<=', $request->end_date);
                 });
             })
-            // Filtro por dirección
             ->when($request->address, function ($query) use ($request) {
                 $query->whereHas('itemOrders.order', function ($q) use ($request) {
                     $q->where('address', 'like', '%' . $request->address . '%');
@@ -45,12 +56,9 @@ class ReportController extends Controller
             })
             ->orderBy('created_at', 'desc')
             ->get();
-            
 
-        // Agrupamos y transformamos
         $groupedMovements = $this->groupAndTransformMovements($movements);
         
-        // Paginamos manualmente
         $page = $request->get('page', 1);
         $perPage = 20;
         $paginatedMovements = new \Illuminate\Pagination\LengthAwarePaginator(
@@ -66,7 +74,88 @@ class ReportController extends Controller
             'clients' => $clients,
             'filters' => $request->only(['client_id', 'status', 'start_date', 'end_date', 'address']),
             'orderStates' => $this->getOrderStates(),
+            'viewType' => 'general',
         ]);
+    }
+
+    /**
+     * Informe diario con separación de instalaciones y retiros
+     */
+    private function dailyReport(Request $request, $clients)
+    {
+        $date = $request->get('daily_date', now()->format('Y-m-d'));
+        $clientId = $request->get('client_id');
+
+        // Movimientos de instalación (type = 2 - salida de stock)
+        $installations = $this->getMovementsQuery()
+            ->where('type', 2)
+            ->whereDate('created_at', $date)
+            ->when($clientId, function ($query) use ($clientId) {
+                $query->whereHas('itemOrders.order', function ($q) use ($clientId) {
+                    $q->where('client_id', $clientId);
+                });
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        // Movimientos de retiro (type = 0 - ingreso a stock)
+        $removals = $this->getMovementsQuery()
+            ->where('type', 0)
+            ->whereDate('created_at', $date)
+            ->when($clientId, function ($query) use ($clientId) {
+                $query->whereHas('itemOrders.order', function ($q) use ($clientId) {
+                    $q->where('client_id', $clientId);
+                });
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        // Transformar movimientos para la vista
+        $installationsFormatted = $this->formatDailyMovements($installations);
+        $removalsFormatted = $this->formatDailyMovements($removals);
+
+        return Inertia::render('reports/Index', [
+            'installations' => $installationsFormatted,
+            'removals' => $removalsFormatted,
+            'clients' => $clients,
+            'filters' => [
+                'daily_date' => $date,
+                'client_id' => $clientId,
+            ],
+            'viewType' => 'daily',
+        ]);
+    }
+
+    /**
+     * Formatea movimientos para el informe diario
+     */
+    private function formatDailyMovements($movements)
+    {
+        return $movements->map(function ($movement) {
+            $itemOrder = $movement->itemOrders->first();
+            $order = $itemOrder?->order;
+
+            return [
+                'id' => $movement->id,
+                'created_at' => $movement->created_at,
+                'qty' => $movement->qty,
+                'product' => [
+                    'id' => $movement->product->id,
+                    'name' => $movement->product->name,
+                    //'current_cost' => $movement->product->current_cost,
+                ],
+                'order' => $order ? [
+                    'id' => $order->id,
+                    'address' => $order->address,
+                    'name_last_state' => $order->name_last_state,
+                    'client' => [
+                        'id' => $order->client->id,
+                        'name' => $order->client->name,
+                    ],
+                    'code' => $order->code,
+                ] : null,
+            ];
+        })->values();
     }
 
     /**
@@ -78,7 +167,7 @@ class ReportController extends Controller
             ->has('itemOrders')
             ->with([
                 'product:id,name',
-                'itemOrders.order:id,client_id,address,date_from,date_to,last_state',
+                'itemOrders.order:id,client_id,address,date_from,date_to,last_state,code',
                 'itemOrders.order.client:id,name',
                 'itemOrders.order.states' => function($query) {
                     $query->orderBy('id', 'desc')->limit(1);
@@ -91,7 +180,6 @@ class ReportController extends Controller
      */
     private function groupAndTransformMovements($movements)
     {
-        // Agrupar por order_id + product_id
         $grouped = $movements->groupBy(function($movement) {
             $itemOrder = $movement->itemOrders->first();
             return $itemOrder?->order_id . '_' . $movement->product_id;
@@ -104,7 +192,6 @@ class ReportController extends Controller
             
             if (!$itemOrder || !$itemOrder->order) continue;
 
-            // Buscamos movimiento de salida (type = 2) e ingreso (type = 0)
             $outMovement = $movementGroup->firstWhere('type', 2);
             $inMovement = $movementGroup->firstWhere('type', 0);
             
@@ -115,19 +202,20 @@ class ReportController extends Controller
                 'id' => $movementGroup->first()->id,
                 'product_id' => $product->id,
                 'type' => $movementGroup->first()->type,
-                'qty' => $movementGroup->sum('qty'), // Suma de cantidades
+                'qty' => $movementGroup->sum('qty'),
                 'created_at' => $outMovement?->created_at ?? $inMovement?->created_at,
                 'product' => [
                     'name' => $product->name,
-                    'current_cost' => $product->current_cost,
+                    //'current_cost' => $product->current_cost,
                 ],
                 'order' => [
                     'id' => $order->id,
                     'client' => $order->client,
                     'address' => $order->address,
                     'name_last_state' => $order->name_last_state,
-                    'date_from' => $outMovement?->created_at, // Instalación (type = 2)
-                    'date_to' => $inMovement?->created_at,     // Retiro (type = 0)
+                    'date_from' => $outMovement?->created_at,
+                    'date_to' => $inMovement?->created_at,
+                    'code' => $order->code,
                 ],
             ]);
         }

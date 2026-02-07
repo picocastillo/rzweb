@@ -10,12 +10,11 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { LayoutGrid, Users, ShoppingCart, ClipboardList, User2, BarChart3 } from 'lucide-react';
 import AppLogo from './app-logo';
-//import { DarkModeToggleItem } from '@/components/ui/DarkModeToggleItem';
+import { DarkModeToggleItem } from '@/components/ui/DarkModeToggleItem';
 import { usePage } from '@inertiajs/react';
 import AppearanceToggleDropdown from './appearance-dropdown';
 
@@ -109,8 +108,8 @@ export function AppSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                {/* <DarkModeToggleItem /> */}
-                <AppearanceToggleDropdown />
+                <DarkModeToggleItem />
+                {/* <AppearanceToggleDropdown /> */}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
