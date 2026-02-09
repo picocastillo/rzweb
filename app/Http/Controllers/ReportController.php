@@ -13,7 +13,7 @@ class ReportController extends Controller
     {
         $clients = Client::orderBy('name')->get(['id', 'name']);
         
-        // Determinamos el tipo de vista: 'general' o 'daily'
+        // Determinar el tipo de vista: 'general' o 'daily'
         $viewType = $request->get('view_type', 'general');
         
         if ($viewType === 'daily') {
@@ -142,17 +142,18 @@ class ReportController extends Controller
                 'product' => [
                     'id' => $movement->product->id,
                     'name' => $movement->product->name,
+                    //'code' => $movement->product->code ?? null, // Asumiendo que tienes un campo 'code' en products
                     //'current_cost' => $movement->product->current_cost,
                 ],
                 'order' => $order ? [
                     'id' => $order->id,
+                    'code' => $order->code ?? null,
                     'address' => $order->address,
                     'name_last_state' => $order->name_last_state,
                     'client' => [
                         'id' => $order->client->id,
                         'name' => $order->client->name,
                     ],
-                    'code' => $order->code,
                 ] : null,
             ];
         })->values();
@@ -167,7 +168,7 @@ class ReportController extends Controller
             ->has('itemOrders')
             ->with([
                 'product:id,name',
-                'itemOrders.order:id,client_id,address,date_from,date_to,last_state,code',
+                'itemOrders.order:id,code,client_id,address,date_from,date_to,last_state',
                 'itemOrders.order.client:id,name',
                 'itemOrders.order.states' => function($query) {
                     $query->orderBy('id', 'desc')->limit(1);
@@ -215,7 +216,6 @@ class ReportController extends Controller
                     'name_last_state' => $order->name_last_state,
                     'date_from' => $outMovement?->created_at,
                     'date_to' => $inMovement?->created_at,
-                    'code' => $order->code,
                 ],
             ]);
         }
