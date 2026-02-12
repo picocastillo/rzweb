@@ -2,6 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
+import { DailyReportTable } from '@/components/reports/DailyReporttable';
 import {
     Select,
     SelectContent,
@@ -15,11 +16,12 @@ import {
     DropdownMenuCheckboxItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Search } from 'lucide-react';
+import { Search, Calendar, List } from 'lucide-react';
 import { useState } from 'react';
 import { calculateRentalDays, getStatusVariant } from '@/utils/order-utils';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Client = {
     id: number;
@@ -48,6 +50,15 @@ type StockMovement = {
     product: Product;
     qty: number;
     order?: Order;
+    created_at?: string;
+};
+
+type DailyMovement = {
+    id: number;
+    created_at: string;
+    qty: number;
+    product: Product;
+    order: Order | null;
 };
 
 type OrderStateOption = {
@@ -56,17 +67,26 @@ type OrderStateOption = {
 };
 
 type Props = {
-    movements: {
+    movements?: {
         data: StockMovement[];
     };
+    installations?: DailyMovement[];
+    removals?: DailyMovement[];
     clients: Client[];
-    orderStates: OrderStateOption[];
+    orderStates?: OrderStateOption[];
+    viewType: 'general' | 'daily';
+    filters: {
+        client_id?: string;
+        status?: string;
+        start_date?: string;
+        end_date?: string;
+        address?: string;
+        daily_date?: string;
+    };
 };
 
-// Define las columnas disponibles
 const COLUMNS = {
     order_id: { label: '# Orden', defaultVisible: true },
-    action: { label: 'Acción', defaultVisible: true },
     product: { label: 'Producto', defaultVisible: true },
     price: { label: 'Precio', defaultVisible: true },
     quantity: { label: 'Cant', defaultVisible: true },
@@ -78,17 +98,47 @@ const COLUMNS = {
     days: { label: '# Días', defaultVisible: true },
 };
 
-export default function Index({ movements, clients, orderStates }: Props) {
-    const [selectedClient, setSelectedClient] = useState<string>('');
-    const [selectedStatus, setSelectedStatus] = useState<string>('');
-    const [startDate, setStartDate] = useState<string>('');
-    const [endDate, setEndDate] = useState<string>('');
-    const [addressSearch, setAddressSearch] = useState<string>('');
+const DAILY_COLUMNS = {
+    time: { label: 'Hora', defaultVisible: true },
+    order_id: { label: '# Orden', defaultVisible: true },
+    product: { label: 'Producto', defaultVisible: true },
+    quantity: { label: 'Cant', defaultVisible: true },
+    client: { label: 'Cliente', defaultVisible: true },
+    address: { label: 'Dirección', defaultVisible: true },
+    status: { label: 'Estado', defaultVisible: true },
+};
 
-    // Estado para columnas visibles
+export default function Index({ 
+    movements, 
+    installations, 
+    removals, 
+    clients, 
+    orderStates, 
+    viewType,
+    filters 
+}: Props) {
+    const [currentViewType, setCurrentViewType] = useState<'general' | 'daily'>(viewType);
+    
+    // Estados para vista general
+    const [selectedClient, setSelectedClient] = useState<string>(filters.client_id || '');
+    const [selectedStatus, setSelectedStatus] = useState<string>(filters.status || '');
+    const [startDate, setStartDate] = useState<string>(filters.start_date || '');
+    const [addressSearch, setAddressSearch] = useState<string>(filters.address || '');
     const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
         Object.keys(COLUMNS).reduce((acc, key) => {
             acc[key] = COLUMNS[key as keyof typeof COLUMNS].defaultVisible;
+            return acc;
+        }, {} as Record<string, boolean>)
+    );
+
+    // Estados para vista diaria
+    const [dailyDate, setDailyDate] = useState<string>(
+        filters.daily_date || new Date().toISOString().split('T')[0]
+    );
+    const [dailyClient, setDailyClient] = useState<string>(filters.client_id || '');
+    const [visibleDailyColumns, setVisibleDailyColumns] = useState<Record<string, boolean>>(
+        Object.keys(DAILY_COLUMNS).reduce((acc, key) => {
+            acc[key] = DAILY_COLUMNS[key as keyof typeof DAILY_COLUMNS].defaultVisible;
             return acc;
         }, {} as Record<string, boolean>)
     );
@@ -98,15 +148,35 @@ export default function Index({ movements, clients, orderStates }: Props) {
         return new Date(date).toLocaleDateString('es-AR');
     };
 
-    const handleFilter = () => {
+    const formatTime = (datetime?: string) => {
+        if (!datetime) return '-';
+        return new Date(datetime).toLocaleTimeString('es-AR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+    };
+
+    const handleGeneralFilter = () => {
         router.get(
             '/reports',
             {
+                view_type: 'general',
                 client_id: selectedClient || undefined,
                 status: selectedStatus || undefined,
                 start_date: startDate || undefined,
-                end_date: endDate || undefined,
                 address: addressSearch || undefined,
+            },
+            { preserveState: true }
+        );
+    };
+
+    const handleDailyFilter = () => {
+        router.get(
+            '/reports',
+            {
+                view_type: 'daily',
+                daily_date: dailyDate,
+                client_id: dailyClient || undefined,
             },
             { preserveState: true }
         );
@@ -119,6 +189,18 @@ export default function Index({ movements, clients, orderStates }: Props) {
         }));
     };
 
+    const toggleDailyColumn = (columnKey: string) => {
+        setVisibleDailyColumns((prev) => ({
+            ...prev,
+            [columnKey]: !prev[columnKey],
+        }));
+    };
+
+    const switchViewType = (type: 'general' | 'daily') => {
+        setCurrentViewType(type);
+        router.get('/reports', { view_type: type }, { preserveState: false });
+    };
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
         { title: 'Informes', href: '/reports' },
@@ -129,298 +211,392 @@ export default function Index({ movements, clients, orderStates }: Props) {
             <Head title="Informes" />
 
             <div className="p-6">
-                <h1 className="text-2xl font-bold mb-6 dark:text-white">
-                    Informes de Movimientos
-                </h1>
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold dark:text-white">
+                        Informes
+                    </h1>
 
-                {/* Filtros */}
-                <div className="mb-2 grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Fecha Inicio
-                        </Label>
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm"
-                            placeholder="Seleccionar fecha"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Fecha Fin
-                        </Label>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm"
-                            placeholder="Seleccionar fecha"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Dirección
-                        </Label>
-                        <input
-                            type="text"
-                            value={addressSearch}
-                            onChange={(e) => setAddressSearch(e.target.value)}
-                            placeholder="Buscar dirección"
-                            className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm"
-                        />
-                    </div>
-
-                    <div />
-                </div>
-
-                <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Cliente
-                        </Label>
-                        <Select value={selectedClient} onValueChange={setSelectedClient}>
-                            <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                                <SelectValue placeholder="Seleccionar cliente" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos los clientes</SelectItem>
-                                {clients.map((client) => (
-                                    <SelectItem key={client.id} value={client.id.toString()}>
-                                        {client.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Estado
-                        </Label>
-                        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                            <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                                <SelectValue placeholder="Seleccionar estado" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos los estados</SelectItem>
-                                {orderStates.map((state) => (
-                                    <SelectItem key={state.value} value={state.value}>
-                                        {state.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="flex items-end">
-                        <Button onClick={handleFilter} className="mt-2">
-                            <Search className="w-4 h-4 mr-2" />
-                            Buscar
+                    {/* Toggle entre vistas */}
+                    <div className="flex gap-2">
+                        <Button
+                            variant={currentViewType === 'general' ? 'default' : 'outline'}
+                            onClick={() => switchViewType('general')}
+                        >
+                            <List className="w-4 h-4 mr-2" />
+                            Vista General
+                        </Button>
+                        <Button
+                            variant={currentViewType === 'daily' ? 'default' : 'outline'}
+                            onClick={() => switchViewType('daily')}
+                        >
+                            <Calendar className="w-4 h-4 mr-2" />
+                            Vista Diaria
                         </Button>
                     </div>
                 </div>
 
-                {/* Botones de acción */}
-                <div className="mb-4 flex gap-2 flex-wrap">
-                    <Button variant="outline" size="sm">
-                        Mostrar 10 filas
-                    </Button>
+                {/* VISTA GENERAL */}
+                {currentViewType === 'general' && (
+                    <>
+                        {/* Filtros vista general */}
+                        <div className="mb-2 grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Fecha Inicio
+                                </Label>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm"
+                                />
+                            </div>
 
-                    {/* Botón de Columnas Visibles con Dropdown */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
-                                Columnas Visibles
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-56">
-                            {Object.entries(COLUMNS).map(([key, column]) => (
-                                <DropdownMenuCheckboxItem
-                                    key={key}
-                                    checked={visibleColumns[key]}
-                                    onCheckedChange={() => toggleColumn(key)}
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Dirección
+                                </Label>
+                                <input
+                                    type="text"
+                                    value={addressSearch}
+                                    onChange={(e) => setAddressSearch(e.target.value)}
+                                    placeholder="Buscar dirección"
+                                    className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Cliente
+                                </Label>
+                                <Select
+                                    value={selectedClient}
+                                    onValueChange={setSelectedClient}
                                 >
-                                    {column.label}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                    <SelectTrigger className="border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                                        <SelectValue placeholder="Seleccionar cliente" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            Todos los clientes
+                                        </SelectItem>
+                                        {clients.map((client) => (
+                                            <SelectItem
+                                                key={client.id}
+                                                value={client.id.toString()}
+                                            >
+                                                {client.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                    <Button variant="outline" size="sm">
-                        Copiar
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        EXCEL
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        IMPRIMIR
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        PDF
-                    </Button>
-                </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Estado
+                                </Label>
+                                <Select
+                                    value={selectedStatus}
+                                    onValueChange={setSelectedStatus}
+                                >
+                                    <SelectTrigger className="border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                                        <SelectValue placeholder="Seleccionar estado" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            Todos los estados
+                                        </SelectItem>
+                                        {orderStates?.map((state) => (
+                                            <SelectItem
+                                                key={state.value}
+                                                value={state.value}
+                                            >
+                                                {state.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                {/* Tabla */}
-                <div className="overflow-x-auto border rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-                        <thead className="bg-gray-50 dark:bg-gray-900">
-                            <tr>
-                                {visibleColumns.order_id && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        # Orden
-                                    </th>
-                                )}
-                                {visibleColumns.action && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        Acción
-                                    </th>
-                                )}
-                                {visibleColumns.product && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        Producto
-                                    </th>
-                                )}
-                                {visibleColumns.price && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        Precio
-                                    </th>
-                                )}
-                                {visibleColumns.quantity && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        Cant
-                                    </th>
-                                )}
-                                {visibleColumns.status && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        Estado
-                                    </th>
-                                )}
-                                {visibleColumns.client && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        Cliente
-                                    </th>
-                                )}
-                                {visibleColumns.address && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        Dirección
-                                    </th>
-                                )}
-                                {visibleColumns.date_from && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        Instalación
-                                    </th>
-                                )}
-                                {visibleColumns.date_to && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        Retiro
-                                    </th>
-                                )}
-                                {visibleColumns.days && (
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
-                                        # Días
-                                    </th>
-                                )}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-950">
-                            {movements.data.length > 0 ? (
-                                movements.data.map((movement) => (
-                                    <tr
-                                        key={movement.id}
-                                        className="hover:bg-gray-50 dark:hover:bg-gray-900"
-                                    >
+                            <div className="flex items-end">
+                                <Button onClick={handleGeneralFilter} className="mt-2">
+                                    <Search className="w-4 h-4 mr-2" />
+                                    Buscar
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="mb-4 flex gap-2 flex-wrap">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                        Columnas Visibles
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-56">
+                                    {Object.entries(COLUMNS).map(([key, column]) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={key}
+                                            checked={visibleColumns[key]}
+                                            onCheckedChange={() => toggleColumn(key)}
+                                        >
+                                            {column.label}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+
+                        {/* Tabla vista general */}
+                        <div className="overflow-x-auto border rounded-lg">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                                <thead className="bg-gray-50 dark:bg-gray-900">
+                                    <tr>
                                         {visibleColumns.order_id && (
-                                            <td className="px-4 py-3 text-sm">
-                                                {movement.order?.id || '-'}
-                                            </td>
-                                        )}
-                                        {visibleColumns.action && (
-                                            <td className="px-4 py-3">
-                                                <Button
-                                                    size="sm"
-                                                    className="bg-cyan-500 hover:bg-cyan-600 text-xs"
-                                                >
-                                                    Acción ▼
-                                                </Button>
-                                            </td>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                                # Orden
+                                            </th>
                                         )}
                                         {visibleColumns.product && (
-                                            <td className="px-4 py-3 text-sm">
-                                                {movement.product.name}
-                                            </td>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                                Producto
+                                            </th>
                                         )}
                                         {visibleColumns.price && (
-                                            <td className="px-4 py-3 text-sm">
-                                                {movement.product.current_cost
-                                                    ? `$ ${movement.product.current_cost.toFixed(2)}`
-                                                    : '-'}
-                                            </td>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                                Precio
+                                            </th>
                                         )}
                                         {visibleColumns.quantity && (
-                                            <td className="px-4 py-3 text-sm text-center">
-                                                {movement.qty}
-                                            </td>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                                Cant
+                                            </th>
                                         )}
                                         {visibleColumns.status && (
-                                            <td className="px-4 py-3">
-                                                {movement.order ? (
-                                                    <Badge variant={getStatusVariant(movement.order.name_last_state)}>
-                                                        {movement.order.name_last_state}
-                                                    </Badge>
-                                                ) : (
-                                                    <span className="text-gray-400 text-xs">Sin orden</span>
-                                                )}
-                                            </td>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                                Estado
+                                            </th>
                                         )}
                                         {visibleColumns.client && (
-                                            <td className="px-4 py-3 text-sm">
-                                                {movement.order?.client?.name || '-'}
-                                            </td>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                                Cliente
+                                            </th>
                                         )}
                                         {visibleColumns.address && (
-                                            <td className="px-4 py-3 text-sm">
-                                                {movement.order?.address || '-'}
-                                            </td>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                                Dirección
+                                            </th>
                                         )}
                                         {visibleColumns.date_from && (
-                                            <td className="px-4 py-3 text-sm">
-                                                {formatDate(movement.order?.date_from)}
-                                            </td>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                                Instalación
+                                            </th>
                                         )}
                                         {visibleColumns.date_to && (
-                                            <td className="px-4 py-3 text-sm">
-                                                {formatDate(movement.order?.date_to)}
-                                            </td>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                                Retiro
+                                            </th>
                                         )}
                                         {visibleColumns.days && (
-                                            <td className="px-4 py-3 text-sm text-center">
-                                                {movement.order?.date_from && movement.order?.date_to
-                                                    ? calculateRentalDays(
-                                                        movement.order.date_from,
-                                                        movement.order.date_to
-                                                    )
-                                                    : '-'}
-                                            </td>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                                # Días
+                                            </th>
                                         )}
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td
-                                        colSpan={Object.values(visibleColumns).filter(Boolean).length}
-                                        className="px-4 py-8 text-center text-gray-500"
-                                    >
-                                        No hay movimientos para mostrar
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-950">
+                                    {movements && movements.data.length > 0 ? (
+                                        movements.data.map((movement) => (
+                                            <tr
+                                                key={movement.id}
+                                                className="hover:bg-gray-50 dark:hover:bg-gray-900"
+                                            >
+                                                {visibleColumns.order_id && (
+                                                    <td className="px-4 py-3 text-sm">
+                                                        {movement.order?.id || '-'}
+                                                    </td>
+                                                )}
+                                                {visibleColumns.product && (
+                                                    <td className="px-4 py-3 text-sm">
+                                                        {movement.product.name}
+                                                    </td>
+                                                )}
+                                                {visibleColumns.price && (
+                                                    <td className="px-4 py-3 text-sm">
+                                                        {movement.product.current_cost
+                                                            ? `$ ${movement.product.current_cost.toFixed(2)}`
+                                                            : '-'}
+                                                    </td>
+                                                )}
+                                                {visibleColumns.quantity && (
+                                                    <td className="px-4 py-3 text-sm text-center">
+                                                        {movement.qty}
+                                                    </td>
+                                                )}
+                                                {visibleColumns.status && (
+                                                    <td className="px-4 py-3">
+                                                        {movement.order ? (
+                                                            <Badge variant={getStatusVariant(movement.order.name_last_state)}>
+                                                                {movement.order.name_last_state}
+                                                            </Badge>
+                                                        ) : (
+                                                            <span className="text-gray-400 text-xs">Sin orden</span>
+                                                        )}
+                                                    </td>
+                                                )}
+                                                {visibleColumns.client && (
+                                                    <td className="px-4 py-3 text-sm">
+                                                        {movement.order?.client?.name || '-'}
+                                                    </td>
+                                                )}
+                                                {visibleColumns.address && (
+                                                    <td className="px-4 py-3 text-sm">
+                                                        {movement.order?.address || '-'}
+                                                    </td>
+                                                )}
+                                                {visibleColumns.date_from && (
+                                                    <td className="px-4 py-3 text-sm">
+                                                        {formatDate(movement.order?.date_from)}
+                                                    </td>
+                                                )}
+                                                {visibleColumns.date_to && (
+                                                    <td className="px-4 py-3 text-sm">
+                                                        {formatDate(movement.order?.date_to)}
+                                                    </td>
+                                                )}
+                                                {visibleColumns.days && (
+                                                    <td className="px-4 py-3 text-sm text-center">
+                                                        {movement.order?.date_from && movement.order?.date_to
+                                                            ? calculateRentalDays(
+                                                                movement.order.date_from,
+                                                                movement.order.date_to
+                                                            )
+                                                            : '-'}
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan={Object.values(visibleColumns).filter(Boolean).length}
+                                                className="px-4 py-8 text-center text-gray-500"
+                                            >
+                                                No hay movimientos para mostrar
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
+
+                {/* VISTA DIARIA */}
+                {currentViewType === 'daily' && (
+                    <>
+                        {/* Filtros vista diaria */}
+                        <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Fecha
+                                </Label>
+                                <input
+                                    type="date"
+                                    value={dailyDate}
+                                    onChange={(e) => setDailyDate(e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Cliente
+                                </Label>
+                                <Select
+                                    value={dailyClient}
+                                    onValueChange={setDailyClient}
+                                >
+                                    <SelectTrigger className="border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                                        <SelectValue placeholder="Seleccionar cliente" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            Todos los clientes
+                                        </SelectItem>
+                                        {clients.map((client) => (
+                                            <SelectItem
+                                                key={client.id}
+                                                value={client.id.toString()}
+                                            >
+                                                {client.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="flex items-end">
+                                <Button onClick={handleDailyFilter} className="mt-2">
+                                    <Search className="w-4 h-4 mr-2" />
+                                    Buscar
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="mb-4 flex gap-2 flex-wrap">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                        Columnas Visibles
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-56">
+                                    {Object.entries(DAILY_COLUMNS).map(([key, column]) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={key}
+                                            checked={visibleDailyColumns[key]}
+                                            onCheckedChange={() => toggleDailyColumn(key)}
+                                        >
+                                            {column.label}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+
+                        {/* Tabs para Instalaciones y Retiros */}
+                        <Tabs defaultValue="installations" className="w-full">
+                            <TabsList className="mb-4">
+                                <TabsTrigger value="installations">
+                                    Instalaciones ({installations?.length || 0})
+                                </TabsTrigger>
+                                <TabsTrigger value="removals">
+                                    Retiros ({removals?.length || 0})
+                                </TabsTrigger>
+                            </TabsList>
+
+                            {/* Tabla de Instalaciones */}
+                            <TabsContent value="installations">
+                                <DailyReportTable 
+                                    movements={installations || []} 
+                                    title="Instalaciones"
+                                />
+                            </TabsContent>
+
+                            {/* Tabla de Retiros */}
+                            <TabsContent value="removals">
+                                <DailyReportTable 
+                                    movements={removals || []} 
+                                    title="Retiros"
+                                />
+                            </TabsContent>
+                        </Tabs>
+                    </>
+                )}
             </div>
         </AppLayout>
     );
