@@ -17,12 +17,17 @@ use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
 {
-    public function index()
+public function index(Request $request)
     {
-        $orders = Order::with('client')->get();
+        $orders = Order::with('client')
+            ->when($request->search, function ($query, $search) {
+                $query->where('address', 'like', "%{$search}%");
+            })
+            ->get();
 
         return Inertia::render('orders/Index', [
             'orders' => $orders,
+            'filters' => $request->only('search'),
         ]);
     }
 
