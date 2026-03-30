@@ -52,9 +52,10 @@ class Bill extends Model
     // /Functions
     // ////////////////
     public static function createWithInitialState(array $attributes = [])
-    {
+{
+    try {
         if (empty($attributes['orders'] ?? [])) {
-            throw new Exception('Debe seleccionar al menos una orden para facturar');
+            throw new \Exception('Debe seleccionar al menos una orden para facturar');
         }
 
         return DB::transaction(function () use ($attributes) {
@@ -64,7 +65,7 @@ class Bill extends Model
                 ->get();
 
             if ($movements->isEmpty()) {
-                throw new Exception('No hay movimientos pendientes para facturar');
+                throw new \Exception('No hay movimientos pendientes para facturar');
             }
 
             $bill = Bill::create([
@@ -73,14 +74,12 @@ class Bill extends Model
                 'amount' => 0,
             ]);
 
-            $total = $movements->sum(function ($movement) use ($bill) {
-
+            $total = $movements->sum(function ($movement) use ($bill, $attributes) {
                 $itemOrder = $movement->itemOrders->first();
                 $orderId = $itemOrder->order_id;
                 $productId = $movement->product_id;
                 $order = $itemOrder->order;
 
-                // Buscamos si la orden tiene movimiento de salida (Devolucion) posterior a este movimiento de entrada
                 $hasOutput = StockMovement::where('type', 0)
                     ->where('product_id', $productId)
                     ->where('created_at', '>', $movement->created_at)
@@ -88,9 +87,8 @@ class Bill extends Model
                     ->first();
 
                 $startDate = self::getStartDateForOrder($orderId);
-                $endDate = Carbon::now()->startOfDay();
+                $endDate = \Carbon\Carbon::now()->startOfDay();
 
-                // Caso 1: tuvo salida
                 if ($hasOutput) {
                     $endDate = $hasOutput->created_at->startOfDay();
                     $order->update(['is_active' => 0]);
@@ -106,7 +104,6 @@ class Bill extends Model
 
                 $movement->update(['is_billed' => true]);
 
-                // Caso 2: sigue en la orden → generar residual
                 if (! $hasOutput) {
                     $newMovement = StockMovement::create([
                         'product_id' => $movement->product_id,
@@ -131,7 +128,19 @@ class Bill extends Model
 
             return $bill;
         });
+
+    } catch (\Exception $e) {
+        // This logs the specific file and line number to storage/logs/laravel.log
+        \Log::error("Error billing orders: " . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'attributes' => $attributes
+        ]);
+
+        // Re-throw or return a custom error message to the UI
+        throw new \Exception("Error en la facturación (Línea {$e->getLine()}): " . $e->getMessage());
     }
+}
 
     private static function getStartDateForOrder(int $orderId)
     {
@@ -147,11 +156,11 @@ class Bill extends Model
         }
 
         // 2. Si nunca se facturo tomamos el primer movimiento de la orden
-        $firstMovement = StockMovement::where('type', 2)
-            ->whereHas('itemOrders', fn ($q) => $q->where('order_id', $orderId))
-            ->oldest('created_at')
-            ->first();
+        // $firstMovement = StockMovement::where('type', 2)->whereHas('itemOrders', fn ($q) => $q->where('order_id', $orderId))->oldest('created_at')->first();
 
-        return Carbon::parse($firstMovement->created_at)->startOfDay();
+        // return Carbon::parse($firstMovement->created_at)->startOfDay();
+
+        // Retornamos el inicio del día del 1 de enero de 2026
+        return \Carbon\Carbon::create(2025, 1, 1)->startOfDay();
     }
 }
