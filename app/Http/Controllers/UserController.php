@@ -103,6 +103,6 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $user->delete();
-        return redirect('/clients')->with('success', 'Cliente eliminado correctamente!');
+        return redirect('/users')->with('success', 'Usuario eliminado correctamente!');
     }
 }

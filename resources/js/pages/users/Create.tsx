@@ -58,7 +58,7 @@ export default function CreateUser({ roles }: CreateUserProps) {
                             id="role-select"
                             value={data.role_id?.toString() ?? ""}
                             onChange={(e) => setData('role_id', Number(e.target.value))}
-                            className="w-full rounded-lg border px-3 py-2 bg-white"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                             disabled={processing}
                         >
                             <option value="">Seleccionar un rol</option>
@@ -79,6 +79,7 @@ export default function CreateUser({ roles }: CreateUserProps) {
                             onChange={(e) => setData('email', e.target.value)}
                             className="w-full rounded-lg border px-3 py-2"
                         />
+                        {errors.email && <p className="text-red-600 text-sm">{errors.email}</p>}
                     </div>
 
                     <div>
@@ -89,6 +90,7 @@ export default function CreateUser({ roles }: CreateUserProps) {
                             onChange={(e) => setData('password', e.target.value)}
                             className="w-full rounded-lg border px-3 py-2"
                         />
+                        {errors.password && <p className="text-red-600 text-sm">{errors.password}</p>}
                     </div>
 
                     <button

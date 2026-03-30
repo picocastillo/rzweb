@@ -10,46 +10,56 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, ShoppingCart, ClipboardList, User2 } from 'lucide-react';
+import { LayoutGrid, Users, ShoppingCart, ClipboardList, User2, BarChart3 } from 'lucide-react';
 import AppLogo from './app-logo';
-//import { DarkModeToggleItem } from '@/components/ui/DarkModeToggleItem';
+import { DarkModeToggleItem } from '@/components/ui/DarkModeToggleItem';
 import { usePage } from '@inertiajs/react';
 import AppearanceToggleDropdown from './appearance-dropdown';
 
 const mainNavItems: NavItem[] = [
-    {
-        title: 'Inicio',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Usuarios',
-        href: '/users', 
-        icon: User2,
-    },
-    {
-        title: 'Clientes',
-        href: '/clients',
-        icon: Users,
-    },
-    {
-        title: 'Ordenes',
-        href: '/orders',
-        icon: ClipboardList,
-    },
-    {
-        title: 'Productos',
-        href: '/products',
-        icon: ShoppingCart,
-    },
-    {
-        title: 'Reportes',
-        href: '/bills',
-        icon: LayoutGrid,
-    },
+  {
+    title: 'Inicio',
+    href: '/dashboard',
+    icon: LayoutGrid,
+  },
+
+  // Gestión
+  {
+    title: 'Clientes',
+    href: '/clients',
+    icon: Users,
+  },
+  {
+    title: 'Usuarios',
+    href: '/users',
+    icon: User2,
+  },
+
+  // Operación
+  {
+    title: 'Ordenes',
+    href: '/orders',
+    icon: ClipboardList,
+  },
+  {
+    title: 'Productos',
+    href: '/products',
+    icon: ShoppingCart,
+  },
+
+  // Análisis
+  {
+    title: 'Informes',
+    href: '/reports',
+    icon: BarChart3,
+  },
+  {
+    title: 'Facturas',
+    href: '/bills',
+    icon: LayoutGrid,
+  },
 ];
 
 const mainNavItemsWorker: NavItem[] = [
@@ -98,8 +108,8 @@ export function AppSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                {/* <DarkModeToggleItem /> */}
-                <AppearanceToggleDropdown />
+                <DarkModeToggleItem />
+                {/* <AppearanceToggleDropdown /> */}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

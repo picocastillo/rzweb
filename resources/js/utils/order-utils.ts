@@ -1,12 +1,42 @@
 // Función para formatear fechas
-export const formatDate = (dateString: string | Date): string => {
-    let finalDateString = dateString;
-    if (typeof dateString === 'string' && dateString.length === 10) {
-        finalDateString = `${dateString}T12:00:00`; 
+export const formatDate = (
+    dateString?: string | Date | null
+): string => {
+    if (!dateString) {
+        return 'No definida';
     }
-    
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(finalDateString).toLocaleDateString('ES-AR', options);
+
+    let date: Date;
+
+    if (typeof dateString === 'string') {
+        // Evita strings vacíos o inválidos
+        if (!dateString.trim()) {
+            return 'No definida';
+        }
+
+        // Si viene como YYYY-MM-DD
+        const finalDateString =
+            dateString.length === 10
+                ? `${dateString}T12:00:00`
+                : dateString;
+
+        date = new Date(finalDateString);
+    } else {
+        date = dateString;
+    }
+
+    // Validación real de fecha
+    if (isNaN(date.getTime())) {
+        return 'No definida';
+    }
+
+    const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    };
+
+    return date.toLocaleDateString('es-AR', options);
 };
 
 // Función para calcular días de alquiler

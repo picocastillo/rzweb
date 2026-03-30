@@ -7,7 +7,6 @@ use App\Models\Client;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\StockMovement;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DashboardController extends Controller

@@ -120,8 +120,8 @@ export default function ShowBill({ bill }: Props) {
                     <div className="mt-3 flex items-center">
                         <div className="flex items-center gap-4">
                             <div>
-                                <FileText className="h-8 w-8 text-blue-600" />
-                                <p className="mt-2 text-sm text-gray-600">
+                                <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                                     Detalles completos de la factura #{bill.id}
                                 </p>
                             </div>
@@ -132,37 +132,37 @@ export default function ShowBill({ bill }: Props) {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     {/* Información Principal */}
                     <div className="space-y-6 lg:col-span-2">
-                        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
                             {/* Información del Cliente */}
                             <div className="mb-4 flex items-center gap-2">
-                                <User className="h-5 w-5 text-blue-600" />
-                                <h2 className="text-xl font-semibold text-gray-900">
+                                <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                                     Información del Cliente
                                 </h2>
                             </div>
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-500">
+                                    <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
                                         Nombre
                                     </label>
-                                    <p className="mt-1 text-lg font-medium text-gray-900">
+                                    <p className="mt-1 text-lg font-medium text-gray-900 dark:text-white">
                                         {bill.client?.name || 'N/A'}
                                     </p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-500">
+                                    <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
                                         CUIL
                                     </label>
-                                    <p className="mt-1 text-lg font-medium text-gray-900">
+                                    <p className="mt-1 text-lg font-medium text-gray-900 dark:text-white">
                                         {bill.client?.cuil || 'N/A'}
                                     </p>
                                 </div>
                                 {bill.client?.phone && (
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-500">
+                                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
                                             Teléfono
                                         </label>
-                                        <p className="mt-1 text-lg font-medium text-gray-900">
+                                        <p className="mt-1 text-lg font-medium text-gray-900 dark:text-white">
                                             {bill.client.phone}
                                         </p>
                                     </div>
@@ -198,37 +198,37 @@ export default function ShowBill({ bill }: Props) {
                         </div>
 
                         {/* Items Facturados */}
-                        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
                             <div className="mb-4 flex items-center gap-2">
-                                <Package className="h-5 w-5 text-blue-600" />
-                                <h2 className="text-xl font-semibold text-gray-900">
+                                <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                                     Items Facturados ({billItems.length})
                                 </h2>
                             </div>
 
                             {billItems.length > 0 ? (
-                                <div className="overflow-hidden rounded-lg border border-gray-200">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
+                                <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead className="bg-gray-50 dark:bg-gray-900">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">
                                                     Producto
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">
                                                     Cantidad
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">
                                                     Días
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">
                                                     Costo/día
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400 uppercase">
                                                     Subtotal
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-200 bg-white">
+                                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
                                             {billItems.map((item) => {
                                                 if (
                                                     !item?.stock_movement
@@ -262,12 +262,12 @@ export default function ShowBill({ bill }: Props) {
                                                 return (
                                                     <tr
                                                         key={item.id}
-                                                        className="hover:bg-gray-50"
+                                                        className="hover:bg-gray-50 dark:hover:bg-gray-700"
                                                     >
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="flex items-center">
-                                                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100">
-                                                                    <span className="font-medium text-blue-600">
+                                                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                                                                    <span className="font-medium text-blue-600 dark:text-blue-300">
                                                                         {(
                                                                             product.name ||
                                                                             'P'
@@ -279,7 +279,7 @@ export default function ShowBill({ bill }: Props) {
                                                                     </span>
                                                                 </div>
                                                                 <div className="ml-4">
-                                                                    <div className="text-sm font-medium text-gray-900">
+                                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
                                                                         {product.name ||
                                                                             'Sin nombre'}
                                                                     </div>
@@ -287,19 +287,19 @@ export default function ShowBill({ bill }: Props) {
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                                            <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:text-blue-300">
                                                                 {qty}
                                                             </span>
                                                         </td>
-                                                        <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+                                                        <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-white">
                                                             {days} día(s)
                                                         </td>
-                                                        <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+                                                        <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-white">
                                                             {formatCurrency(
                                                                 cost,
                                                             )}
                                                         </td>
-                                                        <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
+                                                        <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-white">
                                                             {formatCurrency(
                                                                 subtotal,
                                                             )}
@@ -308,15 +308,15 @@ export default function ShowBill({ bill }: Props) {
                                                 );
                                             })}
                                         </tbody>
-                                        <tfoot className="bg-gray-50">
+                                        <tfoot className="bg-gray-50 dark:bg-gray-900">
                                             <tr>
                                                 <td
                                                     colSpan={4}
-                                                    className="px-6 py-4 text-right text-sm font-medium text-gray-900"
+                                                    className="px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-white"
                                                 >
                                                     Total:
                                                 </td>
-                                                <td className="px-6 py-4 text-sm font-bold text-gray-900">
+                                                <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
                                                     {formatCurrency(
                                                         bill.amount,
                                                     )}
@@ -326,9 +326,9 @@ export default function ShowBill({ bill }: Props) {
                                     </table>
                                 </div>
                             ) : (
-                                <div className="rounded-lg border border-gray-200 bg-gray-50 py-12 text-center">
-                                    <Package className="mx-auto h-12 w-12 text-gray-400" />
-                                    <p className="mt-2 text-sm text-gray-500">
+                                <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 py-12 text-center">
+                                    <Package className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                                         No hay items en esta factura
                                     </p>
                                 </div>

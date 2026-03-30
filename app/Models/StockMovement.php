@@ -45,4 +45,16 @@ class StockMovement extends Model
         return $this->hasMany(ItemOrder::class, 'stock_movement_id');
     }
 
+    public function order()
+    {
+        return $this->hasOneThrough(
+            Order::class,
+            ItemOrder::class,
+            'stock_movement_id',
+            'id',                
+            'id',   
+            'order_id'          
+        );
+    }
+
 }

@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { getStatusVariant } from '@/utils/order-utils';
-import { Head, router } from '@inertiajs/react';
-import { Edit3, Eye, Plus, Trash2 } from 'lucide-react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Edit3, Eye, Plus, Trash2, Search, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 type Order = {
     name_last_state: string;
@@ -20,11 +21,28 @@ type Order = {
     is_active: boolean;
 };
 
-export default function OrdersIndex({ orders }: { orders: Order[] }) {
+export default function OrdersIndex({
+    orders,
+    filters,
+}: {
+    orders: Order[];
+    filters: { search?: string };
+}) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
         { title: 'Ordenes', href: '/orders' },
     ];
+
+        const [search, setSearch] = useState(filters.search ?? '');
+
+    // Debounce: espera 400ms antes de navegar
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            router.get('/orders', { search }, { preserveState: true, replace: true });
+        }, 400);
+
+        return () => clearTimeout(timeout);
+    }, [search]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -33,12 +51,36 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
             <div className="p-6">
                 <div className="mb-4 flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">Ordenes</h1>
+
                     <Button
                         variant="success"
                         onClick={() => router.visit('/orders/create')}
                     >
                         <Plus size={18} /> Nueva Orden
                     </Button>
+                </div>
+
+                {/* Buscador — ancho completo, margen inferior antes de la tabla */}
+                <div className="relative mb-4 w-full">
+                    <Search
+                        size={16}
+                        className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Buscar por dirección..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full rounded-md border py-2 pr-10 pl-9 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900"
+                    />
+                    {search && (
+                        <button
+                            onClick={() => setSearch('')}
+                            className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            <X size={16} />
+                        </button>
+                    )}
                 </div>
 
                 <div className="overflow-x-auto rounded-lg border">
@@ -98,7 +140,7 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                         >
                                             <Eye size={16} />
                                         </Button>
-                                        <Button
+                                        {/* <Button
                                             onClick={() =>
                                                 router.visit(
                                                     `/orders/${order.id}/edit`,
@@ -107,7 +149,7 @@ export default function OrdersIndex({ orders }: { orders: Order[] }) {
                                             variant={'info'}
                                         >
                                             <Edit3 size={16} />
-                                        </Button>
+                                        </Button> */}
                                         <Button
                                             onClick={() =>
                                                 router.delete(

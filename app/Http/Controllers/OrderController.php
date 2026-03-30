@@ -17,12 +17,17 @@ use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
 {
-    public function index()
+public function index(Request $request)
     {
-        $orders = Order::with('client')->get();
+        $orders = Order::with('client')
+            ->when($request->search, function ($query, $search) {
+                $query->where('address', 'like', "%{$search}%");
+            })
+            ->get();
 
         return Inertia::render('orders/Index', [
             'orders' => $orders,
+            'filters' => $request->only('search'),
         ]);
     }
 
@@ -47,7 +52,7 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'address' => 'nullable|string|max:255',
+            'address' => 'required|string|max:255',
             'code' => 'nullable|string|max:100',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
@@ -287,11 +292,13 @@ class OrderController extends Controller
 
         $user = auth()->user();
 
-        if ($user->role_name == "Trabajador") {
+        if ($user->role_name == "Trabajador" || $user->role_name == "Admin") {
             OrderState::create([
                 'name' => 2, // En curso
                 'order_id' => $order->id,
             ]);
+
+            $order->update(['last_state' => 2]);
             
             return redirect()->back()->with('success', 'Orden iniciada correctamente');
         }
@@ -301,11 +308,13 @@ class OrderController extends Controller
 
         $user = auth()->user();
 
-        if ($user->role_name == "Trabajador") {
+        if ($user->role_name == "Trabajador" || $user->role_name == "Admin") {
             OrderState::create([
                 'name' => 3, // Finalizada
                 'order_id' => $order->id,
             ]);
+
+            $order->update(['last_state' => 3]);
 
             return redirect()->back()->with('success', 'Orden finalizada correctamente');
         }

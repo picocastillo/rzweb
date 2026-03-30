@@ -60,6 +60,8 @@ export default function UsersIndex({ users }: { users: User[]; role: Role }) {
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Email
                                 </th>
+                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">

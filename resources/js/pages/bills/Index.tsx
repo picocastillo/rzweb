@@ -117,37 +117,6 @@ export default function IndexBills({ bills = [] }: Props) {
                     </div>
                 </div>
 
-                {/* Billing Info */}
-                {/* <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-900 shadow-sm">
-                    <h2 className="mb-2 text-lg font-semibold">
-                        Cómo funciona la facturación
-                    </h2>
-                    <ul className="space-y-1 text-sm">
-                        <li>
-                            • Recuerda que para facturar, primero debes
-                            quitar los artículos del alquiler.
-                        </li>
-                        <li className="leading-relaxed">
-                            • <strong>Facturación parcial:</strong>
-                            <div className="mt-1 ml-4 space-y-1">
-                                <p>1. Quitar solo lo que se quiere facturar.</p>
-                                <p>
-                                    2. Si los artículos siguen en alquiler,
-                                    volver a agregarlos luego de facturar.
-                                </p>
-                            </div>
-                        </li>
-                        <li>
-                            • <strong>Facturación total:</strong> Quitar todas
-                            las unidades en alquiler para luego facturar.
-                        </li>
-                        <li>
-                            • <strong>Movimientos después del alquiler:</strong> Si el retiro se carga luego del fin de la orden, se
-                            factura únicamente el período contratado.
-                        </li>
-                    </ul>
-                </div> */}
-
                 {/* Filters */}
                 <div className="mb-6 rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900">
                     <div className="mb-4 flex items-center gap-2">
@@ -188,47 +157,47 @@ export default function IndexBills({ bills = [] }: Props) {
                 </div>
 
                 {/* Bills Table */}
-                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
                     {filteredBills.length > 0 ? (
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead className="bg-gray-50 dark:bg-gray-900">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 uppercase">
                                         ID Factura
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 uppercase">
                                         Cliente
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 uppercase">
                                         Período
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"></th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 uppercase"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white">
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
                                 {filteredBills.map((bill) => {
                                     if (!bill || !bill.client) return null;
 
                                     return (
                                         <tr
                                             key={bill.id}
-                                            className="transition-colors hover:bg-gray-50"
+                                            className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+                                                <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-sm font-medium text-blue-800 dark:text-blue-300">
                                                     #{bill.id}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">
+                                                <div className="text-sm font-medium text-gray-900 dark:text-white">
                                                     {bill.client.name || 'N/A'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">
+                                                <div className="text-sm text-gray-900 dark:text-white">
                                                     {formatDate(bill.date_from)}
                                                 </div>
-                                                <div className="text-xs text-gray-500">
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">
                                                     al{' '}
                                                     {formatDate(
                                                         bill.created_at,
@@ -253,12 +222,12 @@ export default function IndexBills({ bills = [] }: Props) {
                             </tbody>
                         </table>
                     ) : (
-                        <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 py-12 text-center">
-                            <FileText className="mx-auto h-12 w-12 text-gray-400" />
-                            <h3 className="mt-2 text-sm font-medium text-gray-900">
+                        <div className="rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 py-12 text-center">
+                            <FileText className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
                                 No hay facturas
                             </h3>
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 {searchTerm
                                     ? 'No se encontraron facturas con esos criterios de búsqueda'
                                     : 'Comienza creando tu primera factura'}
@@ -268,7 +237,7 @@ export default function IndexBills({ bills = [] }: Props) {
                                     onClick={() =>
                                         router.visit('/bills/create')
                                     }
-                                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 dark:bg-blue-700 px-4 py-2 text-sm text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
                                 >
                                     <Plus className="h-4 w-4" />
                                     Nueva Factura
