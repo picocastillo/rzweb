@@ -1,8 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import { Client, ItemOrder, Order, type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import React, { useState, useEffect } from 'react';
-import { ItemOrder, Order, Client } from '@/types';
+import React, { useEffect, useState } from 'react';
 
 interface Props {
     clients: Client[];
@@ -56,13 +55,13 @@ export default function Create({
     };
 
     const handleOrderToggle = (orderId: number) => {
-        setSelectedOrderIds(prev => 
+        setSelectedOrderIds((prev) =>
             prev.includes(orderId)
-                ? prev.filter(id => id !== orderId)
-                : [...prev, orderId]
+                ? prev.filter((id) => id !== orderId)
+                : [...prev, orderId],
         );
     };
-    
+
     const handleSelectAllOrders = () => {
         setSelectedOrderIds(clientOrders.map((order) => order.id));
     };
@@ -84,31 +83,29 @@ export default function Create({
           )
         : [];
 
-    // Obtenemos todos los items de las órdenes seleccionadas
-    const selectedOrdersItems = selectedOrderIds.length > 0
-        ? items.filter(item => selectedOrderIds.includes(item.order_id))
+    // Ítems de todas las órdenes del cliente (tabla única con selección por orden)
+    const clientOrderItems = data.client_id
+        ? items.filter((item) =>
+              clientOrders.some((o) => o.id === item.order_id),
+          )
         : [];
 
-    // Obtenemos dias de los productos en alquiler
+    const orderForItem = (item: ItemOrder): Order | undefined =>
+        orders.find((o) => o.id === item.order_id);
+
+    // Días: misma regla que facturación (salida tipo 2 → regreso tipo 0, o hasta hoy)
     const calculateDaysInRental = (itemId: number): number => {
-        const item = items.find(i => i.id === itemId);
+        const item = items.find((i) => i.id === itemId);
         if (!item) return 0;
+        if (item.rental_days != null) return item.rental_days;
 
-        const order = orders.find(o => o.id === item.order_id);
-        if (!order) return 0;
-
-        const dateFrom = new Date(order.date_from);
-        const dateTo = new Date(order.date_to);
-        const diffTime = Math.abs(dateTo.getTime() - dateFrom.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        return diffDays;
-    }
+        return 0;
+    };
 
     const subTotal = (item: ItemOrder): number => {
         const days = calculateDaysInRental(item.id);
         return (item.current_cost ?? 0) * item.quantity * days;
-    }
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -163,87 +160,132 @@ export default function Create({
                             </div>
 
                             <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                                {selectedOrderIds.length} de {clientOrders.length}{' '}
-                                órdenes seleccionadas
+                                {selectedOrderIds.length} de{' '}
+                                {clientOrders.length} órdenes seleccionadas
                             </div>
 
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                {clientOrders.map((order) => (
-                                    <div
-                                        key={order.id}
-                                        className={`cursor-pointer rounded-lg border p-4 transition-all ${
-                                            selectedOrderIds.includes(order.id)
-                                                ? 'border-green-500 bg-green-50 ring-2 ring-green-500 dark:bg-green-900/20'
-                                                : 'border-gray-300 hover:border-green-300 dark:border-gray-600 dark:hover:border-green-700'
-                                        }`}
-                                        onClick={() =>
-                                            handleOrderToggle(order.id)
-                                        }
-                                    >
-                                        <div className="mb-2 flex items-start justify-between">
-                                            <h3 className="font-semibold text-gray-900 dark:text-white">
-                                                {order.code}
-                                            </h3>
-                                            <div className="flex items-center space-x-2">
-                                                {selectedOrderIds.includes(
-                                                    order.id,
-                                                ) && (
-                                                    <span className="rounded-full bg-green-500 px-2 py-1 text-xs text-white">
-                                                        Seleccionada
-                                                    </span>
-                                                )}
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedOrderIds.includes(
-                                                        order.id,
-                                                    )}
-                                                    onChange={() =>
-                                                        handleOrderToggle(
-                                                            order.id,
-                                                        )
+                            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead className="bg-gray-100 dark:bg-gray-800">
+                                        <tr>
+                                            <th
+                                                scope="col"
+                                                className="w-12 px-3 py-3 text-left text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+                                            >
+                                                <span className="sr-only">
+                                                    Incluir orden
+                                                </span>
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-3 py-3 text-left text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+                                            >
+                                                Producto
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-3 py-3 text-right text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+                                            >
+                                                Cantidad
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-3 py-3 text-right text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+                                            >
+                                                Costo
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-3 py-3 text-right text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+                                            >
+                                                Días
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-3 py-3 text-left text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+                                            >
+                                                Dirección
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-3 py-3 text-right text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+                                            >
+                                                Subtotal
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                                        {clientOrderItems.map((item) => {
+                                            const order = orderForItem(item);
+                                            const isSelected =
+                                                selectedOrderIds.includes(
+                                                    item.order_id,
+                                                );
+                                            return (
+                                                <tr
+                                                    key={item.id}
+                                                    className={
+                                                        isSelected
+                                                            ? 'bg-green-50 dark:bg-green-900/20'
+                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                                                     }
-                                                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                                                    onClick={(e) =>
-                                                        e.stopPropagation()
-                                                    }
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                                            <p>
-                                                <span className="font-medium">
-                                                    Estado:
-                                                </span>{' '}
-                                                {order.last_state}
-                                            </p>
-                                            <p>
-                                                <span className="font-medium">
-                                                    Dirección:
-                                                </span>{' '}
-                                                {order.address}
-                                            </p>
-                                            <p>
-                                                <span className="font-medium">
-                                                    Desde:
-                                                </span>{' '}
-                                                {order.date_from}
-                                            </p>
-                                            <p>
-                                                <span className="font-medium">
-                                                    Hasta:
-                                                </span>{' '}
-                                                {order.date_to}
-                                            </p>
-                                            <p>
-                                                <span className="font-medium">
-                                                    Estado:
-                                                </span>{' '}
-                                                {order.is_active ? 'Activa' : 'Inactiva'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
+                                                >
+                                                    <td className="px-3 py-3 whitespace-nowrap">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() =>
+                                                                handleOrderToggle(
+                                                                    item.order_id,
+                                                                )
+                                                            }
+                                                            className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600"
+                                                            aria-label={`Incluir orden ${order?.code ?? item.order_id}`}
+                                                        />
+                                                    </td>
+                                                    <td className="px-3 py-3 text-sm text-gray-900 dark:text-white">
+                                                        {item.product_name}
+                                                    </td>
+                                                    <td className="px-3 py-3 text-right text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                                        {item.quantity}
+                                                    </td>
+                                                    <td className="px-3 py-3 text-right text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                                        {(
+                                                            item.current_cost ??
+                                                            0
+                                                        ).toFixed(2)}
+                                                    </td>
+                                                    <td className="px-3 py-3 text-right text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                                        {item.rental_days !=
+                                                        null
+                                                            ? calculateDaysInRental(
+                                                                  item.id,
+                                                              )
+                                                            : '—'}
+                                                    </td>
+                                                    <td className="max-w-xs px-3 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                                        {order?.address ?? '—'}
+                                                    </td>
+                                                    <td className="px-3 py-3 text-right text-sm font-medium whitespace-nowrap text-gray-900 dark:text-white">
+                                                        {item.rental_days !=
+                                                        null
+                                                            ? subTotal(
+                                                                  item,
+                                                              ).toFixed(2)
+                                                            : '—'}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
+                            {clientOrderItems.length === 0 && (
+                                <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    No hay productos en las órdenes de este
+                                    cliente.
+                                </p>
+                            )}
                         </div>
                     )}
 
@@ -255,52 +297,6 @@ export default function Create({
                             <p className="py-4 text-center text-gray-500 dark:text-gray-400">
                                 No se encontraron órdenes para este cliente.
                             </p>
-                        </div>
-                    )}
-
-                    {/* PRODUCTOS */}
-                    {selectedOrdersItems.length > 0 && (
-                        <div className="rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900">
-                            <h2 className="mb-4 text-lg font-semibold">
-                                Productos de las Órdenes Seleccionadas (
-                                {selectedOrderIds.length} órdenes)
-                            </h2>
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead>
-                                    <tr>
-                                        <th className="px-4 py-2 text-left text-sm font-semibold">
-                                            Producto
-                                        </th>
-                                        <th className="px-4 py-2 text-center text-sm font-semibold">
-                                            Pendiente
-                                        </th>
-                                        <th className="px-4 py-2 text-center text-sm font-semibold">
-                                            Dias en Alquiler
-                                        </th>
-                                        <th className="px-4 py-2 text-center text-sm font-semibold">
-                                            Subtotal
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {selectedOrdersItems.map((item) => (
-                                        <tr key={item.id} className="border-t">
-                                            <td className="px-4 py-2">
-                                                {item.product_name}
-                                            </td>
-                                            <td className="px-4 py-2 text-center">
-                                                {item.quantity}
-                                            </td>
-                                            <td className="px-4 py-2 text-center">
-                                                {calculateDaysInRental(item.id)}
-                                            </td>
-                                            <td className="px-4 py-2 text-center">
-                                                {subTotal(item).toFixed(2)}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
                         </div>
                     )}
 
@@ -320,7 +316,7 @@ export default function Create({
                             }
                             className="rounded-md bg-green-600 px-6 py-2 text-white hover:bg-green-700 disabled:bg-gray-400"
                         >
-                            Crear Factura 
+                            Crear Factura
                             {/* ({selectedOrderIds.length} órdenes) */}
                         </button>
                     </div>

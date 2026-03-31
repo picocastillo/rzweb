@@ -7,6 +7,7 @@ use App\Models\Bill;
 use App\Models\Client;
 use App\Models\ItemOrder;
 use App\Models\Order;
+use App\Models\StockMovement;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -44,9 +45,17 @@ class BillController extends Controller
             
             if ($orderIds->isNotEmpty()) {
                 $items = ItemOrder::whereIn('order_id', $orderIds)
-                    ->with('product')
+                    ->with(['product', 'stockMovement'])
                     ->get()
                     ->map(function ($item) {
+                        $movement = $item->stockMovement;
+                        $rentalDays = null;
+                        if ($movement instanceof StockMovement && (int) $movement->type === 2) {
+                            $rentalDays = $movement->rentalDaysBetweenSalidaAndRegreso(
+                                (int) $item->order_id,
+                            );
+                        }
+
                         return [
                             'id' => $item->id,
                             'order_id' => $item->order_id,
@@ -54,6 +63,7 @@ class BillController extends Controller
                             'product_name' => $item->product->name ?? 'Producto no encontrado',
                             'quantity' => $item->qty,
                             'current_cost' => $item->product->current_cost ?? 0,
+                            'rental_days' => $rentalDays,
                         ];
                     });
             }

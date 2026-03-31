@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -55,6 +56,36 @@ class StockMovement extends Model
             'id',   
             'order_id'          
         );
+    }
+
+    /**
+     * Primer movimiento "Regreso por orden" (tipo 0) posterior a esta salida,
+     * misma orden y producto.
+     */
+    public static function firstRegresoAfterSalida(self $salida, int $orderId): ?self
+    {
+        return static::query()
+            ->where('type', 0)
+            ->where('product_id', $salida->product_id)
+            ->where('created_at', '>', $salida->created_at)
+            ->whereHas('itemOrders', fn ($q) => $q->where('order_id', $orderId))
+            ->oldest('created_at')
+            ->first();
+    }
+
+    /**
+     * Días entre esta salida (tipo 2) y el regreso (tipo 0) siguiente,
+     * o hasta hoy si el material sigue en la orden.
+     */
+    public function rentalDaysBetweenSalidaAndRegreso(int $orderId): int
+    {
+        $start = Carbon::parse($this->created_at)->startOfDay();
+        $regreso = static::firstRegresoAfterSalida($this, $orderId);
+        $end = $regreso !== null
+            ? Carbon::parse($regreso->created_at)->startOfDay()
+            : Carbon::now()->startOfDay();
+
+        return $start->diffInDays($end);
     }
 
 }

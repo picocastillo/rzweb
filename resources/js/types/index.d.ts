@@ -76,4 +76,5 @@ interface ItemOrder {
     product_name: string;
     quantity: number;
     current_cost?: number;
+    rental_days?: number | null;
 }

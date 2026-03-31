@@ -68,33 +68,32 @@ class Bill extends Model
                 throw new \Exception('No hay movimientos pendientes para facturar');
             }
 
+            $earliestBillDate = null;
+            foreach ($attributes['orders'] as $oid) {
+                $start = self::getStartDateForOrder((int) $oid);
+                if ($earliestBillDate === null || $start->lt($earliestBillDate)) {
+                    $earliestBillDate = $start;
+                }
+            }
+
             $bill = Bill::create([
                 'client_id' => $attributes['client_id'],
-                'date_from' => self::getStartDateForOrder($attributes['client_id'], $attributes),
+                'date_from' => $earliestBillDate,
                 'amount' => 0,
             ]);
 
             $total = $movements->sum(function ($movement) use ($bill, $attributes) {
                 $itemOrder = $movement->itemOrders->first();
                 $orderId = $itemOrder->order_id;
-                $productId = $movement->product_id;
                 $order = $itemOrder->order;
 
-                $hasOutput = StockMovement::where('type', 0)
-                    ->where('product_id', $productId)
-                    ->where('created_at', '>', $movement->created_at)
-                    ->whereHas('itemOrders', fn ($q) => $q->where('order_id', $orderId))
-                    ->first();
+                $regreso = StockMovement::firstRegresoAfterSalida($movement, $orderId);
 
-                $startDate = self::getStartDateForOrder($orderId);
-                $endDate = \Carbon\Carbon::now()->startOfDay();
+                $days = $movement->rentalDaysBetweenSalidaAndRegreso($orderId);
 
-                if ($hasOutput) {
-                    $endDate = $hasOutput->created_at->startOfDay();
+                if ($regreso) {
                     $order->update(['is_active' => 0]);
                 }
-
-                $days = $startDate->diffInDays($endDate);
 
                 BillItem::create([
                     'bill_id' => $bill->id,
@@ -104,7 +103,7 @@ class Bill extends Model
 
                 $movement->update(['is_billed' => true]);
 
-                if (! $hasOutput) {
+                if (! $regreso) {
                     $newMovement = StockMovement::create([
                         'product_id' => $movement->product_id,
                         'qty' => $movement->qty,
@@ -155,12 +154,24 @@ class Bill extends Model
             return Carbon::parse($lastBill->created_at)->startOfDay();
         }
 
-        // 2. Si nunca se facturo tomamos el primer movimiento de la orden
-        // $firstMovement = StockMovement::where('type', 2)->whereHas('itemOrders', fn ($q) => $q->where('order_id', $orderId))->oldest('created_at')->first();
+        // 2. Sin facturas previas: inicio del alquiler según la orden (date_from)
+        $order = Order::find($orderId);
+        if ($order && $order->date_from) {
+            return Carbon::parse($order->date_from)->startOfDay();
+        }
 
-        // return Carbon::parse($firstMovement->created_at)->startOfDay();
+        // 3. Respaldo: primer movimiento de salida (tipo 2) de la orden
+        $firstMovement = StockMovement::where('type', 2)
+            ->whereHas('itemOrders', fn ($q) => $q->where('order_id', $orderId))
+            ->oldest('created_at')
+            ->first();
 
-        // Retornamos el inicio del día del 1 de enero de 2026
-        return \Carbon\Carbon::create(2025, 1, 1)->startOfDay();
+        if ($firstMovement) {
+            return Carbon::parse($firstMovement->created_at)->startOfDay();
+        }
+
+        throw new Exception(
+            "No se pudo determinar la fecha de inicio para la orden {$orderId}."
+        );
     }
 }
