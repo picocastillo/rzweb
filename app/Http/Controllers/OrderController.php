@@ -23,6 +23,7 @@ public function index(Request $request)
             ->when($request->search, function ($query, $search) {
                 $query->where('address', 'like', "%{$search}%");
             })
+            ->orderBy('id', 'desc')
             ->get();
 
         return Inertia::render('orders/Index', [
