@@ -122,6 +122,7 @@ public function index(Request $request)
             'product_id' => 'required|exists:products,id',
             'qty' => 'required|numeric|min:1',
             'type' => 'required|in:0,2', // 0: entrada, 2: salida
+            'movement_date' => 'nullable|date',
         ]);
 
         Order::addMovementStock([
@@ -129,6 +130,7 @@ public function index(Request $request)
             'product_id' => $request->product_id,
             'qty' => $request->qty,
             'type' => $request->type,
+            'movement_date' => $request->input('movement_date'),
         ]);
 
         return redirect()->back()->with('success', 'Movimiento de stock registrado correctamente!');

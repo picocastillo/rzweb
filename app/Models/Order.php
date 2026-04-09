@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -178,6 +179,15 @@ class Order extends Model
                     'qty' => $attributes['qty'],
                     'type' => $attributes['type'] ?? 0, // por defecto entrada
                 ]);
+
+                if (! empty($attributes['movement_date'])) {
+                    $at = Carbon::parse($attributes['movement_date'], config('app.timezone'))
+                        ->setTimeFromTimeString(now()->format('H:i:s'));
+                    $stock->forceFill([
+                        'created_at' => $at,
+                        'updated_at' => $at,
+                    ])->save();
+                }
 
                 // Registrar en ItemOrder si hay orden asociada
                 if (isset($attributes['order_id'])) {
