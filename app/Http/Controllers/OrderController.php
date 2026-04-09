@@ -8,8 +8,10 @@ use Inertia\Inertia;
 use App\Models\Order;
 use App\Models\Client;
 use App\Models\File;
+use App\Models\ItemOrder;
 use App\Models\OrderState;
 use App\Models\Product;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -125,7 +127,7 @@ public function index(Request $request)
             'movement_date' => 'nullable|date',
         ]);
 
-        Order::addMovementStock([
+        $result = Order::addMovementStock([
             'order_id' => $orderId,
             'product_id' => $request->product_id,
             'qty' => $request->qty,
@@ -133,7 +135,13 @@ public function index(Request $request)
             'movement_date' => $request->input('movement_date'),
         ]);
 
-        return redirect()->back()->with('success', 'Movimiento de stock registrado correctamente!');
+        $redirect = redirect()->back()->with('success', 'Movimiento de stock registrado correctamente!');
+
+        if (! empty($result['warning'])) {
+            $redirect->with('warning', $result['warning']);
+        }
+
+        return $redirect;
     }
 
     public function edit(Order $order)
@@ -321,12 +329,40 @@ public function index(Request $request)
         $user = auth()->user();
 
         if ($user->role_name == "Trabajador" || $user->role_name == "Admin") {
-            OrderState::create([
-                'name' => 3, // Finalizada
-                'order_id' => $order->id,
-            ]);
+            DB::transaction(function () use ($order) {
+                $order->loadMissing(['itemOrders.stockMovement']);
 
-            $order->update(['last_state' => 3]);
+                foreach ($order->itemOrders as $itemOrder) {
+                    $movement = $itemOrder->stockMovement;
+                    if (! $movement || (int) $movement->type !== 2) {
+                        continue;
+                    }
+
+                    if (StockMovement::firstRegresoAfterSalida($movement, $order->id)) {
+                        continue;
+                    }
+
+                    $alta = StockMovement::create([
+                        'product_id' => $movement->product_id,
+                        'qty' => $movement->qty,
+                        'type' => 0, // Regreso por orden
+                    ]);
+
+                    ItemOrder::create([
+                        'product_id' => $movement->product_id,
+                        'qty' => $movement->qty,
+                        'order_id' => $order->id,
+                        'stock_movement_id' => $alta->id,
+                    ]);
+                }
+
+                OrderState::create([
+                    'name' => 3, // Finalizada
+                    'order_id' => $order->id,
+                ]);
+
+                $order->update(['last_state' => 3]);
+            });
 
             return redirect()->back()->with('success', 'Orden finalizada correctamente');
         }

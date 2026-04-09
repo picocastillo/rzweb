@@ -150,9 +150,14 @@ class Order extends Model
         }
     }
 
+    /**
+     * @return array{stock: StockMovement, warning: ?string}
+     */
     public static function addMovementStock(array $attributes = [])
     {
         try {
+            $stockWarning = null;
+
             // Validaciones de negocio antes de crear el movimiento
             if (isset($attributes['type']) && isset($attributes['order_id'])) {
                 $order = Order::with('itemOrders')->findOrFail($attributes['order_id']);
@@ -160,9 +165,15 @@ class Order extends Model
                 $product = Product::findOrFail($attributes['product_id']);
 
                 if ($attributes['type'] == 2) {
-                    // SALIDA — verificar si hay suficiente stock
+                    // SALIDA — si no hay stock suficiente, permitir el movimiento y solo advertir
                     if ($product->current_stock < $attributes['qty']) {
-                        throw new Exception('No hay suficiente stock en la orden para esta salida.');
+                        $stockWarning = 'No hay suficiente stock para esta salida; el movimiento se registró igualmente.';
+                        Log::warning('Salida de stock con disponibilidad insuficiente', [
+                            'order_id' => $attributes['order_id'],
+                            'product_id' => $attributes['product_id'],
+                            'qty' => $attributes['qty'],
+                            'current_stock' => $product->current_stock,
+                        ]);
                     }
                 } elseif ($attributes['type'] == 0) {
                     // ENTRADA — verificar que el producto exista en la orden
@@ -172,7 +183,7 @@ class Order extends Model
                 }
             }
 
-            return DB::transaction(function () use ($attributes) {
+            $stock = DB::transaction(function () use ($attributes) {
                 // Crear el movimiento de stock
                 $stock = StockMovement::create([
                     'product_id' => $attributes['product_id'],
@@ -201,6 +212,8 @@ class Order extends Model
 
                 return $stock;
             });
+
+            return ['stock' => $stock, 'warning' => $stockWarning];
         } catch (Exception $e) {
             Log::error('Error al crear movimiento de stock: ' . $e->getMessage());
             throw $e; // el controlador puede capturarla
