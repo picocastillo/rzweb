@@ -17,6 +17,7 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'client_id',
+        'assigned_to',
         'last_state',
         'address',
         'code',
@@ -94,22 +95,32 @@ class Order extends Model
         try {
             return DB::transaction(function () use ($attributes) {
                 
+                $assignedTo = $attributes['assigned_to'] ?? null;
+                $hasWorker = $assignedTo !== null && $assignedTo !== '';
+
                 $order = self::create([
-                    'last_state' => 0, 
+                    'last_state' => $hasWorker ? 1 : 0,
                     'address' => $attributes['address'],
                     'user_id' => $attributes['user_id'],
                     'code' => $attributes['code'],
                     'date_from' => $attributes['date_from'],
                     'date_to' => $attributes['date_to'],
-                    'client_id' =>$attributes['client_id'],
+                    'client_id' => $attributes['client_id'],
                     'is_active' => true,
+                    'assigned_to' => $hasWorker ? $assignedTo : null,
                 ]);
-
 
                 OrderState::create([
                     'name' => 0,
-                    'order_id' => $order->id
+                    'order_id' => $order->id,
                 ]);
+
+                if ($hasWorker) {
+                    OrderState::create([
+                        'name' => 1,
+                        'order_id' => $order->id,
+                    ]);
+                }
 
                 if (!empty($attributes['items'])) {
                     foreach ($attributes['items'] as $value) {

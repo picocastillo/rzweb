@@ -3,13 +3,14 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { getStatusVariant } from '@/utils/order-utils';
-import { Head, router, usePage } from '@inertiajs/react';
-import { Edit3, Eye, Plus, Trash2, Search, X } from 'lucide-react';
+import { Head, router } from '@inertiajs/react';
+import { Eye, Plus, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 type Order = {
     name_last_state: string;
     name_client: string;
+    name_assigned_to: string | null;
     id: number;
     user_id: number;
     client_id: number;
@@ -33,12 +34,16 @@ export default function OrdersIndex({
         { title: 'Ordenes', href: '/orders' },
     ];
 
-        const [search, setSearch] = useState(filters.search ?? '');
+    const [search, setSearch] = useState(filters.search ?? '');
 
     // Debounce: espera 400ms antes de navegar
     useEffect(() => {
         const timeout = setTimeout(() => {
-            router.get('/orders', { search }, { preserveState: true, replace: true });
+            router.get(
+                '/orders',
+                { search },
+                { preserveState: true, replace: true },
+            );
         }, 400);
 
         return () => clearTimeout(timeout);
@@ -103,7 +108,9 @@ export default function OrdersIndex({
                                     Estado
                                 </th>
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Trabajador
                                 </th>
+                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
@@ -128,6 +135,9 @@ export default function OrdersIndex({
                                         >
                                             {order.name_last_state}
                                         </Badge>
+                                    </td>
+                                    <td className="px-6 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                        {order.name_assigned_to ?? '—'}
                                     </td>
                                     <td className="space-x-2 px-6 py-3">
                                         <Button

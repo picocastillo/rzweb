@@ -14,12 +14,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
 public function index(Request $request)
     {
-        $orders = Order::with('client')
+        $orders = Order::with(['client', 'assignedTo'])
             ->when($request->search, function ($query, $search) {
                 $query->where('address', 'like', "%{$search}%");
             })
@@ -43,9 +44,12 @@ public function index(Request $request)
             ];
         });
 
+        $workers = User::where('role_id', 2)->orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('orders/Create', [
             'clients' => $clients,
             'products' => $products,
+            'workers' => $workers,
         ]);
     }
 
@@ -60,6 +64,11 @@ public function index(Request $request)
             'items' => 'nullable|array',
             'items.*.product_id' => 'required_with:items.*|exists:products,id',
             'items.*.qty' => 'required_with:items.*|numeric|min:1',
+            'assigned_to' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')->where('role_id', 2),
+            ],
         ]);
 
         // Logica de negocios en el modelo
@@ -180,7 +189,7 @@ public function index(Request $request)
             'worker_id' => 'required|exists:users,id'
         ]);
 
-        $order->assignTo($request->worker_id, $request->order->id);
+        $order->assignTo((int) $request->worker_id);
 
         return back()->with('success', 'Orden asignada correctamente');
     }
