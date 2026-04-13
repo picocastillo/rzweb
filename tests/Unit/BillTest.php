@@ -113,6 +113,8 @@ class BillTest extends TestCase
         $bill = Bill::createWithInitialState([
             'client_id' => $client->id,
             'orders' => [$order->id],
+            'date_from' => '2025-01-10',
+            'date_to' => '2025-01-20',
         ]);
 
         // Assert
@@ -190,6 +192,8 @@ class BillTest extends TestCase
         $bill = Bill::createWithInitialState([
             'client_id' => $client->id,
             'orders' => [$order->id],
+            'date_from' => '2025-01-10',
+            'date_to' => '2025-01-15',
         ]);
 
         // Assert
@@ -263,6 +267,8 @@ class BillTest extends TestCase
         $firstBill = Bill::createWithInitialState([
             'client_id' => $client->id,
             'orders' => [$order->id],
+            'date_from' => '2025-01-01',
+            'date_to' => '2025-01-11',
         ]);
 
         // Act: Segunda factura (15 días DESDE la anterior)
@@ -270,6 +276,8 @@ class BillTest extends TestCase
         $secondBill = Bill::createWithInitialState([
             'client_id' => $client->id,
             'orders' => [$order->id],
+            'date_from' => '2025-01-11',
+            'date_to' => '2025-01-26',
         ]);
 
         // Assert
@@ -319,6 +327,8 @@ class BillTest extends TestCase
         Bill::createWithInitialState([
             'client_id' => $client->id,
             'orders' => [$order->id],
+            'date_from' => '2025-01-01',
+            'date_to' => '2025-01-31',
         ]);
     }
 
@@ -398,6 +408,8 @@ class BillTest extends TestCase
         $bill = Bill::createWithInitialState([
             'client_id' => $client->id,
             'orders' => [$order->id],
+            'date_from' => '2025-01-01',
+            'date_to' => '2025-01-10',
         ]);
 
         $this->assertCount(2, $bill->billItems);

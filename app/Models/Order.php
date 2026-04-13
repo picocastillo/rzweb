@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
@@ -42,7 +42,7 @@ class Order extends Model
         ];
     }
 
-    ////Relationships////
+    // //Relationships////
     public function client()
     {
         return $this->belongsTo(Client::class);
@@ -90,12 +90,12 @@ class Order extends Model
         );
     }
 
-    ////Functions/////
+    // //Functions/////
     public static function createWithInitialState(array $attributes = [])
     {
         try {
             return DB::transaction(function () use ($attributes) {
-                
+
                 $assignedTo = $attributes['assigned_to'] ?? null;
                 $hasWorker = $assignedTo !== null && $assignedTo !== '';
 
@@ -123,20 +123,29 @@ class Order extends Model
                     ]);
                 }
 
-                if (!empty($attributes['items'])) {
+                if (! empty($attributes['items'])) {
                     foreach ($attributes['items'] as $value) {
-                        
+
                         $stock = StockMovement::create([
                             'product_id' => $value['product_id'],
                             'qty' => $value['qty'],
-                            'type'=> 2, // Salida por orden
+                            'type' => 2, // Salida por orden
                         ]);
+
+                        if (! empty($attributes['date_from'])) {
+                            $at = Carbon::parse($attributes['date_from'], config('app.timezone'))
+                                ->setTimeFromTimeString(now()->format('H:i:s'));
+                            $stock->forceFill([
+                                'created_at' => $at,
+                                'updated_at' => $at,
+                            ])->save();
+                        }
 
                         ItemOrder::create([
                             'product_id' => $value['product_id'],
                             'qty' => $value['qty'],
                             'order_id' => $order->id,
-                            'stock_movement_id' => $stock->id
+                            'stock_movement_id' => $stock->id,
                         ]);
                     }
                 }
@@ -145,7 +154,7 @@ class Order extends Model
             });
         } catch (Exception $e) {
             // Loguear el error o manejarlo como quieras
-            Log::error('Error al crear orden: ' . $e->getMessage());
+            Log::error('Error al crear orden: '.$e->getMessage());
             throw $e; // re-lanzamos el error
         }
     }
@@ -177,7 +186,7 @@ class Order extends Model
                     }
                 } elseif ($attributes['type'] == 0) {
                     // ENTRADA — verificar que el producto exista en la orden
-                    if (!$itemOrder) {
+                    if (! $itemOrder) {
                         throw new Exception('El producto no existe en la orden para esta entrada.');
                     }
                 }
@@ -215,7 +224,7 @@ class Order extends Model
 
             return ['stock' => $stock, 'warning' => $stockWarning];
         } catch (Exception $e) {
-            Log::error('Error al crear movimiento de stock: ' . $e->getMessage());
+            Log::error('Error al crear movimiento de stock: '.$e->getMessage());
             throw $e; // el controlador puede capturarla
         }
     }
@@ -235,7 +244,7 @@ class Order extends Model
         $lastState = $this->states()
             ->orderBy('id', 'desc')
             ->first();
-        
+
         return $lastState ? getNameStateOrder($lastState->name) : 'Pendiente';
     }
 
@@ -250,5 +259,4 @@ class Order extends Model
             'order_id' => $this->id,
         ]);
     }
-
 }

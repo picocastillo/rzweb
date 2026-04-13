@@ -35,7 +35,7 @@ class StockMovement extends Model
         ];
     }
 
-    ////Relationships////
+    // //Relationships////
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -52,9 +52,9 @@ class StockMovement extends Model
             Order::class,
             ItemOrder::class,
             'stock_movement_id',
-            'id',                
-            'id',   
-            'order_id'          
+            'id',
+            'id',
+            'order_id'
         );
     }
 
@@ -85,7 +85,35 @@ class StockMovement extends Model
             ? Carbon::parse($regreso->created_at)->startOfDay()
             : Carbon::now()->startOfDay();
 
-        return $start->diffInDays($end);
+        return max(1, $start->diffInDays($end));
     }
 
+    /**
+     * Días de alquiler que caen dentro de [periodFrom, periodTo] (inclusive),
+     * respecto de esta salida (tipo 2) y su regreso o la fecha actual.
+     */
+    public function rentalDaysInPeriod(int $orderId, Carbon $periodFrom, Carbon $periodTo): int
+    {
+        $start = Carbon::parse($this->created_at)->startOfDay();
+        $regreso = static::firstRegresoAfterSalida($this, $orderId);
+        $end = $regreso !== null
+            ? Carbon::parse($regreso->created_at)->startOfDay()
+            : Carbon::now()->startOfDay();
+
+        $periodFrom = $periodFrom->copy()->startOfDay();
+        $periodTo = $periodTo->copy()->startOfDay();
+
+        if ($periodFrom->gt($periodTo)) {
+            return 0;
+        }
+
+        $overlapStart = $start->greaterThan($periodFrom) ? $start : $periodFrom;
+        $overlapEnd = $end->lessThan($periodTo) ? $end : $periodTo;
+
+        if ($overlapStart->gt($overlapEnd)) {
+            return 0;
+        }
+
+        return max(1, $overlapStart->diffInDays($overlapEnd));
+    }
 }

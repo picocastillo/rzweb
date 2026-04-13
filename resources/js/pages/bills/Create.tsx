@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Client, ItemOrder, Order, type BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 
 interface Props {
@@ -16,9 +16,11 @@ export default function Create({
     items,
     selectedClientId,
 }: Props) {
-    const { data, setData, post } = useForm({
+    const { data, setData, post, errors } = useForm({
         client_id: selectedClientId ?? '',
-        orders: [] as number[], // Agregamos el array de órdenes seleccionadas
+        orders: [] as number[],
+        date_from: '',
+        date_to: '',
     });
     const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
 
@@ -134,6 +136,61 @@ export default function Create({
                         </select>
                     </div>
 
+                    <div className="rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900">
+                        <h2 className="mb-4 text-lg font-semibold">
+                            Período de facturación
+                        </h2>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label
+                                    htmlFor="bill-date-from"
+                                    className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    Desde
+                                </label>
+                                <input
+                                    id="bill-date-from"
+                                    type="date"
+                                    value={data.date_from}
+                                    onChange={(e) =>
+                                        setData('date_from', e.target.value)
+                                    }
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    required
+                                />
+                                {errors.date_from && (
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {errors.date_from}
+                                    </p>
+                                )}
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="bill-date-to"
+                                    className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    Hasta
+                                </label>
+                                <input
+                                    id="bill-date-to"
+                                    type="date"
+                                    value={data.date_to}
+                                    onChange={(e) =>
+                                        setData('date_to', e.target.value)
+                                    }
+                                    min={data.date_from || undefined}
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    required
+                                />
+                                {errors.date_to && (
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {errors.date_to}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                     {/* LISTA DE ÓRDENES */}
                     {data.client_id && clientOrders.length > 0 && (
                         <div className="rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900">
@@ -175,6 +232,12 @@ export default function Create({
                                                 <span className="sr-only">
                                                     Incluir orden
                                                 </span>
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-3 py-3 text-left text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300"
+                                            >
+                                                Orden
                                             </th>
                                             <th
                                                 scope="col"
@@ -242,6 +305,20 @@ export default function Create({
                                                             className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600"
                                                             aria-label={`Incluir orden ${order?.code ?? item.order_id}`}
                                                         />
+                                                    </td>
+                                                    <td className="px-3 py-3 whitespace-nowrap">
+                                                        {order ? (
+                                                            <Link
+                                                                href={`/orders/${order.id}`}
+                                                                className="inline-flex rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-800 hover:bg-sky-200 dark:bg-sky-900/50 dark:text-sky-200 dark:hover:bg-sky-800/60"
+                                                            >
+                                                                #{order.id}
+                                                            </Link>
+                                                        ) : (
+                                                            <span className="text-sm text-gray-400">
+                                                                —
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td className="px-3 py-3 text-sm text-gray-900 dark:text-white">
                                                         {item.product_name}
@@ -312,7 +389,10 @@ export default function Create({
                         <button
                             type="submit"
                             disabled={
-                                !data.client_id || selectedOrderIds.length === 0
+                                !data.client_id ||
+                                selectedOrderIds.length === 0 ||
+                                !data.date_from ||
+                                !data.date_to
                             }
                             className="rounded-md bg-green-600 px-6 py-2 text-white hover:bg-green-700 disabled:bg-gray-400"
                         >

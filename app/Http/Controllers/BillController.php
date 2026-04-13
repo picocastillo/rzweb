@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
 use App\Models\Bill;
 use App\Models\Client;
 use App\Models\ItemOrder;
@@ -10,6 +9,7 @@ use App\Models\Order;
 use App\Models\StockMovement;
 use Exception;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class BillController extends Controller
 {
@@ -17,11 +17,11 @@ class BillController extends Controller
     {
         $bills = Bill::with([
             'client',
-            'billItems.stockMovement.product.costs'
+            'billItems.stockMovement.product.costs',
         ])
-        ->latest('created_at')
-        ->get();
-        //dd($bills);
+            ->latest('created_at')
+            ->get();
+        // dd($bills);
 
         return Inertia::render('bills/Index', [
             'bills' => $bills,
@@ -42,7 +42,7 @@ class BillController extends Controller
 
             // Cargar items de TODAS las órdenes del cliente
             $orderIds = $orders->pluck('id');
-            
+
             if ($orderIds->isNotEmpty()) {
                 $items = ItemOrder::whereIn('order_id', $orderIds)
                     ->with(['product', 'stockMovement'])
@@ -69,7 +69,7 @@ class BillController extends Controller
             }
         }
 
-        //dd($items);
+        // dd($items);
 
         return Inertia::render('bills/Create', [
             'clients' => $clients,
@@ -81,17 +81,21 @@ class BillController extends Controller
 
     public function store(Request $request)
     {
-        //dd($request->all());
+        // dd($request->all());
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'orders' => 'required|array|min:1',
             'orders.*' => 'required|exists:orders,id',
+            'date_from' => 'required|date',
+            'date_to' => 'required|date|after_or_equal:date_from',
         ]);
 
         try {
             Bill::createWithInitialState([
                 'client_id' => $validated['client_id'],
                 'orders' => $validated['orders'],
+                'date_from' => $validated['date_from'],
+                'date_to' => $validated['date_to'],
             ]);
 
             return redirect('/bills')->with('success', 'Factura creada exitosamente.');
@@ -103,7 +107,7 @@ class BillController extends Controller
 
     }
 
- public function show(Bill $bill)
+    public function show(Bill $bill)
     {
         // Cargar la factura con todas las relaciones necesarias
         $bill->load([
@@ -115,7 +119,7 @@ class BillController extends Controller
 
         // puedes cargarlas también si tu modelo Bill tiene relación con orders
         if (method_exists($bill, 'orders')) {
-            $bill->load(['orders' => function($query) {
+            $bill->load(['orders' => function ($query) {
                 $query->with(['itemOrders.product']);
             }]);
         }
@@ -125,6 +129,7 @@ class BillController extends Controller
             'id' => $bill->id,
             'client_id' => $bill->client_id,
             'date_from' => $bill->date_from,
+            'date_to' => $bill->date_to,
             'amount' => $bill->amount,
             'created_at' => $bill->created_at,
             'client' => $bill->client ? [
@@ -136,7 +141,7 @@ class BillController extends Controller
             'bill_items' => $bill->billItems->map(function ($billItem) {
                 $stockMovement = $billItem->stockMovement;
                 $product = $stockMovement->product ?? null;
-                
+
                 return [
                     'id' => $billItem->id,
                     'bill_id' => $billItem->bill_id,

@@ -1,7 +1,14 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, FileText, MapPin, Package, User } from 'lucide-react';
+import {
+    ArrowLeft,
+    Calendar,
+    FileText,
+    MapPin,
+    Package,
+    User,
+} from 'lucide-react';
 
 interface Cost {
     id: number;
@@ -51,6 +58,7 @@ interface Bill {
     id: number;
     client_id: number;
     date_from: string;
+    date_to?: string | null;
     amount: number;
     created_at: string;
     client?: Client;
@@ -159,33 +167,34 @@ export default function ShowBill({ bill }: Props) {
                                     </div>
                                 )}
                             </div>
-                            {/* Información del Período */}
-                            {/* <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
                                 <div className="mb-4 flex items-center gap-2">
-                                    <Calendar className="h-5 w-5 text-blue-600" />
-                                    <h2 className="text-xl font-semibold text-gray-900">
-                                        Período Facturado
+                                    <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                        Período facturado
                                     </h2>
                                 </div>
-                                <div className="space-y-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-500">
-                                            Fecha de inicio
+                                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Desde
                                         </label>
-                                        <p className="mt-1 text-lg font-medium text-gray-900">
+                                        <p className="mt-1 text-lg font-medium text-gray-900 dark:text-white">
                                             {formatDate(bill.date_from)}
                                         </p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-500">
-                                            Fecha de fin
+                                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Hasta
                                         </label>
-                                        <p className="mt-1 text-lg font-medium text-gray-900">
-                                            {formatDate(bill.created_at)}
+                                        <p className="mt-1 text-lg font-medium text-gray-900 dark:text-white">
+                                            {bill.date_to
+                                                ? formatDate(bill.date_to)
+                                                : '—'}
                                         </p>
                                     </div>
                                 </div>
-                            </div> */}
+                            </div>
                         </div>
 
                         {/* Items Facturados */}
