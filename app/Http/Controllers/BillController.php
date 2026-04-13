@@ -108,6 +108,7 @@ class BillController extends Controller
         // Cargar la factura con todas las relaciones necesarias
         $bill->load([
             'client',
+            'billItems.stockMovement.order',
             'billItems.stockMovement.product.costs',
             'billItems.stockMovement.product',
         ]);
@@ -147,6 +148,10 @@ class BillController extends Controller
                         'type' => $stockMovement->type,
                         'qty' => $stockMovement->qty,
                         'created_at' => $stockMovement->created_at,
+                        'order' => $stockMovement->order ? [
+                            'id' => $stockMovement->order->id,
+                            'address' => $stockMovement->order->address,
+                        ] : null,
                         'product' => $product ? [
                             'id' => $product->id,
                             'name' => $product->name,
