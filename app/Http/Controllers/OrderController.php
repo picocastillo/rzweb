@@ -2,25 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Note;
-use App\Models\User;
-use Inertia\Inertia;
-use App\Models\Order;
 use App\Models\Client;
 use App\Models\File;
 use App\Models\ItemOrder;
+use App\Models\Note;
+use App\Models\Order;
 use App\Models\OrderState;
 use App\Models\Product;
 use App\Models\StockMovement;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class OrderController extends Controller
 {
-public function index(Request $request)
+    public function index(Request $request)
     {
         $orders = Order::with(['client', 'assignedTo'])
             ->when($request->search, function ($query, $search) {
@@ -85,8 +86,8 @@ public function index(Request $request)
     public function show(Order $order)
     {
         $order->load([
-            'stockMovements', 
-            'client', 
+            'stockMovements',
+            'client',
             'stockMovements.product',
             'itemOrders',
             'itemOrders.product',
@@ -95,7 +96,7 @@ public function index(Request $request)
             'files',
         ]);
 
-        //dd($order);
+        // dd($order);
         $productsInOrder = $order->itemOrders->map(function ($item) {
             return [
                 'id' => $item->product->id,
@@ -108,7 +109,7 @@ public function index(Request $request)
         $allProducts = Product::all();
         $workers = User::where('role_id', 2)->get();
 
-        //dd($workers);
+        // dd($workers);
         return Inertia::render('orders/Show', [
             'order' => $order,
             'products' => $productsInOrder,
@@ -119,7 +120,7 @@ public function index(Request $request)
 
     public function stockMovement(Request $request, $orderId)
     {
-        //dd($request->all());
+        // dd($request->all());
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'qty' => 'required|numeric|min:1',
@@ -147,11 +148,11 @@ public function index(Request $request)
     public function edit(Order $order)
     {
         $order->load([
-            'stockMovements', 
-            'client', 
+            'stockMovements',
+            'client',
             'stockMovements.product',
             'itemOrders',
-            'itemOrders.product'
+            'itemOrders.product',
         ]);
         $productsInOrder = $order->itemOrders->map(function ($item) {
             return [
@@ -162,7 +163,7 @@ public function index(Request $request)
             ];
         })->unique('id')->values();
 
-        //dd($productsInOrder);
+        // dd($productsInOrder);
         return Inertia::render('orders/Edit', [
             'order' => $order,
             'products' => $productsInOrder,
@@ -194,9 +195,9 @@ public function index(Request $request)
 
     public function assignOrder(Request $request, Order $order)
     {
-        //dd($request->all());
+        // dd($request->all());
         $request->validate([
-            'worker_id' => 'required|exists:users,id'
+            'worker_id' => 'required|exists:users,id',
         ]);
 
         $order->assignTo((int) $request->worker_id);
@@ -206,7 +207,7 @@ public function index(Request $request)
 
     public function addNote(Request $request)
     {
-        //dd($request->all());
+        // dd($request->all());
         $request->validate([
             'order_id' => 'required',
             'message' => 'required',
@@ -222,7 +223,7 @@ public function index(Request $request)
 
     public function updateNote(Request $request, $id)
     {
-        //dd($request->all());
+        // dd($request->all());
         $request->validate([
             'message' => 'required|string|max:255',
         ]);
@@ -246,12 +247,12 @@ public function index(Request $request)
             $file = $request->file('file');
             if ($file) {
                 $name_file = $file->getClientOriginalName();
-                Storage::disk('public')->put('orders_attach/' . $name_file, file_get_contents($file));
+                Storage::disk('public')->put('orders_attach/'.$name_file, file_get_contents($file));
                 $o = Order::findOrFail($request->order_id);
                 File::create([
                     'order_id' => $o->id,
                     'name' => $name_file,
-                    //'is_private' => $request->is_private == 'on',
+                    // 'is_private' => $request->is_private == 'on',
                 ]);
             }
             DB::commit();
@@ -268,7 +269,7 @@ public function index(Request $request)
     {
         $file = File::findOrFail($id);
 
-        $path = public_path('storage/orders_attach/' . $file->name);
+        $path = public_path('storage/orders_attach/'.$file->name);
         if (file_exists($path)) {
             unlink($path);
         }
@@ -280,17 +281,17 @@ public function index(Request $request)
     public function indexForWorkers()
     {
         $worker = auth()->user();
-        //dd($worker);
-        
+        // dd($worker);
+
         // Ordenes activas asignadas al trabajador
         $assignedOrders = Order::where('assigned_to', $worker->id)
-            ->whereHas('states', function($query) {
+            ->whereHas('states', function ($query) {
                 $query->where('is_active', 1);
             })
             ->with(['client', 'states'])
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function($order) {
+            ->map(function ($order) {
                 return [
                     'id' => $order->id,
                     'code' => $order->code,
@@ -308,63 +309,78 @@ public function index(Request $request)
         ]);
     }
 
-    public function initOrder(Order $order) {
+    public function initOrder(Order $order)
+    {
 
         $user = auth()->user();
 
-        if ($user->role_name == "Trabajador" || $user->role_name == "Admin") {
+        if ($user->role_name == 'Trabajador' || $user->role_name == 'Admin') {
             OrderState::create([
                 'name' => 2, // En curso
                 'order_id' => $order->id,
             ]);
 
             $order->update(['last_state' => 2]);
-            
+
             return redirect()->back()->with('success', 'Orden iniciada correctamente');
         }
     }
 
-    public function finishOrder(Order $order) {
-
+    public function finishOrder(Request $request, Order $order)
+    {
         $user = auth()->user();
 
-        if ($user->role_name == "Trabajador" || $user->role_name == "Admin") {
-            DB::transaction(function () use ($order) {
-                $order->loadMissing(['itemOrders.stockMovement']);
+        if ($user->role_name !== 'Trabajador' && $user->role_name !== 'Admin') {
+            abort(403);
+        }
 
-                foreach ($order->itemOrders as $itemOrder) {
-                    $movement = $itemOrder->stockMovement;
-                    if (! $movement || (int) $movement->type !== 2) {
-                        continue;
-                    }
+        $validated = $request->validate([
+            'finish_date' => 'required|date',
+        ]);
 
-                    if (StockMovement::firstRegresoAfterSalida($movement, $order->id)) {
-                        continue;
-                    }
+        $finishAt = Carbon::parse($validated['finish_date'], config('app.timezone'))
+            ->setTimeFromTimeString(now()->format('H:i:s'));
 
-                    $alta = StockMovement::create([
-                        'product_id' => $movement->product_id,
-                        'qty' => $movement->qty,
-                        'type' => 0, // Regreso por orden
-                    ]);
+        DB::transaction(function () use ($order, $finishAt) {
+            $order->loadMissing(['itemOrders.stockMovement']);
 
-                    ItemOrder::create([
-                        'product_id' => $movement->product_id,
-                        'qty' => $movement->qty,
-                        'order_id' => $order->id,
-                        'stock_movement_id' => $alta->id,
-                    ]);
+            foreach ($order->itemOrders as $itemOrder) {
+                $movement = $itemOrder->stockMovement;
+                if (! $movement || (int) $movement->type !== 2) {
+                    continue;
                 }
 
-                OrderState::create([
-                    'name' => 3, // Finalizada
-                    'order_id' => $order->id,
+                if (StockMovement::firstRegresoAfterSalida($movement, $order->id)) {
+                    continue;
+                }
+
+                $alta = StockMovement::create([
+                    'product_id' => $movement->product_id,
+                    'qty' => $movement->qty,
+                    'type' => 0, // Regreso por orden
                 ]);
 
-                $order->update(['last_state' => 3]);
-            });
+                $alta->forceFill([
+                    'created_at' => $finishAt,
+                    'updated_at' => $finishAt,
+                ])->save();
 
-            return redirect()->back()->with('success', 'Orden finalizada correctamente');
-        }
+                ItemOrder::create([
+                    'product_id' => $movement->product_id,
+                    'qty' => $movement->qty,
+                    'order_id' => $order->id,
+                    'stock_movement_id' => $alta->id,
+                ]);
+            }
+
+            OrderState::create([
+                'name' => 3, // Finalizada
+                'order_id' => $order->id,
+            ]);
+
+            $order->update(['last_state' => 3]);
+        });
+
+        return redirect()->back()->with('success', 'Orden finalizada correctamente');
     }
 }

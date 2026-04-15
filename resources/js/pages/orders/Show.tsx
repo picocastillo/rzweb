@@ -27,10 +27,18 @@ import { useForm, usePage } from '@inertiajs/react';
 import { ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { useState } from 'react';
 
+function getLocalDateInputValue(date = new Date()): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
 export default function Show() {
     const { order, products, allProducts, available_workers } = usePage()
         .props as unknown as OrderShowProps;
     const [showAssignModal, setShowAssignModal] = useState(false);
+    const [showFinishModal, setShowFinishModal] = useState(false);
     const [openStock, setOpenStock] = useState(true);
     const [openStates, setOpenStates] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -40,6 +48,10 @@ export default function Show() {
 
     const assignForm = useForm({
         worker_id: '',
+    });
+
+    const finishForm = useForm({
+        finish_date: getLocalDateInputValue(),
     });
 
     const { reset } = useForm({
@@ -67,11 +79,18 @@ export default function Show() {
         });
     };
 
-    const handleFinishOrder = (e: { preventDefault: () => void }) => {
+    const openFinishModal = () => {
+        finishForm.setData('finish_date', getLocalDateInputValue());
+        finishForm.clearErrors();
+        setShowFinishModal(true);
+    };
+
+    const submitFinishOrder = (e: React.FormEvent) => {
         e.preventDefault();
-        assignForm.post(`/orders/${order.id}/finish`, {
+        finishForm.post(`/orders/${order.id}/finish`, {
+            preserveScroll: true,
             onSuccess: () => {
-                assignForm.reset();
+                setShowFinishModal(false);
             },
         });
     };
@@ -90,16 +109,38 @@ export default function Show() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="mx-auto max-w-7xl p-6">
                 {/* Header de la orden */}
-                <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
-                    <div className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-6 py-4">
+                <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                    <div className="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 dark:border-gray-700 dark:from-blue-900/20 dark:to-indigo-900/20">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     Orden #{order.code}
                                 </h1>
-                                <p className="mt-1 text-gray-600 dark:text-gray-400">
-                                    Creada el {formatDate(order.date_from)}
-                                </p>
+                                <div className="mt-3 flex flex-col gap-2 text-sm text-gray-600 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-8 sm:gap-y-1 dark:text-gray-400">
+                                    <p>
+                                        <span className="font-medium text-gray-700 dark:text-gray-200">
+                                            Desde:{' '}
+                                        </span>
+                                        {formatDate(order.date_from)}
+                                    </p>
+                                    <p>
+                                        <span className="font-medium text-gray-700 dark:text-gray-200">
+                                            Hasta:{' '}
+                                        </span>
+                                        {formatDate(order.date_to)}
+                                    </p>
+                                    <p>
+                                        <span className="font-medium text-gray-700 dark:text-gray-200">
+                                            Días entre fechas:{' '}
+                                        </span>
+                                        {order.date_from && order.date_to
+                                            ? `${calculateRentalDays(
+                                                  order.date_from,
+                                                  order.date_to,
+                                              )} días`
+                                            : '—'}
+                                    </p>
+                                </div>
                             </div>
                             <div className="flex items-center space-x-4">
                                 <Badge
@@ -117,42 +158,43 @@ export default function Show() {
                 {/* Contenido en dos columnas */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Card izquierda: Detalles y Movimientos */}
-                    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                         {/* Boton para iniciar orden (solo Trabajador) */}
-                        
-                            <div className="mb-4">
-                                {order.name_last_state === 'Asignada' && (
-                                    <Button
-                                        type="button"
-                                        onClick={handleStartOrder}
-                                        variant="default"
-                                    >
-                                        Iniciar Orden
-                                    </Button>
-                                )}
 
-                                {order.name_last_state === 'En curso' && (
-                                    <Button
-                                        type="button"
-                                        onClick={handleFinishOrder}
-                                        variant="default"
-                                    >
-                                        Finalizar Orden
-                                    </Button>
-                                )}
-                            </div>
-                        
+                        <div className="mb-4">
+                            {order.name_last_state === 'Asignada' && (
+                                <Button
+                                    type="button"
+                                    onClick={handleStartOrder}
+                                    variant="default"
+                                >
+                                    Iniciar Orden
+                                </Button>
+                            )}
+
+                            {order.name_last_state === 'En curso' && (
+                                <Button
+                                    type="button"
+                                    onClick={openFinishModal}
+                                    variant="default"
+                                >
+                                    Finalizar Orden
+                                </Button>
+                            )}
+                        </div>
 
                         <h2 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
                             Detalles
                         </h2>
                         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {/* Información del cliente */}
-                            <div className="rounded-lg bg-gray-50 dark:bg-gray-700 p-4">
+                            <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
                                 <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">
                                     Información del Cliente
                                 </h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Nombre</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Nombre
+                                </p>
                                 <p className="text-black dark:text-white">
                                     {order.client.name}
                                 </p>
@@ -160,12 +202,14 @@ export default function Show() {
                                     Teléfono
                                 </p>
                                 <p className="text-black dark:text-white">
-                                    {order.client.phone ? order.client.phone : 'Sin definir'}
+                                    {order.client.phone
+                                        ? order.client.phone
+                                        : 'Sin definir'}
                                 </p>
                             </div>
 
                             {/* Información del alquiler */}
-                            <div className="rounded-lg bg-gray-50 dark:bg-gray-700 p-4">
+                            <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
                                 <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">
                                     Detalles del Alquiler
                                 </h3>
@@ -185,16 +229,17 @@ export default function Show() {
                                         {formatDate(order.date_to)}
                                     </span>
                                 </div>
-                                <div className="mt-2 flex justify-between border-t border-gray-200 dark:border-gray-600 pt-2">
+                                <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 dark:border-gray-600">
                                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                                        Duración:
+                                        Días entre fechas:
                                     </span>
                                     <span className="text-black dark:text-white">
-                                        {calculateRentalDays(
-                                            order.date_from,
-                                            order.date_to,
-                                        )}{' '}
-                                        días
+                                        {order.date_from && order.date_to
+                                            ? `${calculateRentalDays(
+                                                  order.date_from,
+                                                  order.date_to,
+                                              )} días`
+                                            : '—'}
                                     </span>
                                 </div>
                             </div>
@@ -204,7 +249,7 @@ export default function Show() {
                             open={openStock}
                             onOpenChange={setOpenStock}
                         >
-                            <div className="mb-2 flex items-center gap-2 flex-wrap">
+                            <div className="mb-2 flex flex-wrap items-center gap-2">
                                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                                     Movimientos de Stock
                                 </h2>
@@ -246,21 +291,21 @@ export default function Show() {
                                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                             <thead className="bg-gray-50 dark:bg-gray-700">
                                                 <tr>
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
                                                         Producto
                                                     </th>
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
                                                         Cantidad
                                                     </th>
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
                                                         Tipo
                                                     </th>
-                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
                                                         Fecha
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                                            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                                 {order.stock_movements.map(
                                                     (sm) => (
                                                         <tr
@@ -275,7 +320,7 @@ export default function Show() {
                                                             </td>
                                                             <td className="px-4 py-2 text-sm">
                                                                 <span
-                                                                    className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${sm.qty > 0 ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'}`}
+                                                                    className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${sm.qty > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}
                                                                 >
                                                                     {sm.qty > 0
                                                                         ? '+'
@@ -300,7 +345,7 @@ export default function Show() {
                                         </table>
                                     </div>
                                 ) : (
-                                    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 py-8 text-center">
+                                    <div className="rounded-lg border border-gray-200 bg-gray-50 py-8 text-center dark:border-gray-700 dark:bg-gray-700">
                                         <p className="text-sm text-gray-500 dark:text-gray-400">
                                             No hay movimientos de stock
                                             registrados.
@@ -312,7 +357,7 @@ export default function Show() {
                     </div>
 
                     {/* Card derecha: Estados */}
-                    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                         {roleName === 'Admin' && (
                             <>
                                 <div className="mb-2 flex items-center justify-between">
@@ -322,7 +367,7 @@ export default function Show() {
                                 </div>
 
                                 {/* Trabajador asignado (puede cambiar) */}
-                                <div className="mb-5 flex items-center justify-between rounded-md bg-gray-50 dark:bg-gray-700 p-3">
+                                <div className="mb-5 flex items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-700">
                                     <div>
                                         <p className="text-xs text-gray-500 dark:text-gray-400">
                                             Trabajador asignado
@@ -435,7 +480,7 @@ export default function Show() {
                     open={showAssignModal}
                     onOpenChange={setShowAssignModal}
                 >
-                    <DialogContent className="max-w-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                    <DialogContent className="max-w-md border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
                         <DialogHeader>
                             <DialogTitle className="text-gray-900 dark:text-white">
                                 Asignar trabajador
@@ -469,7 +514,7 @@ export default function Show() {
                                     onChange={(e) =>
                                         assignForm.setData(
                                             'worker_id',
-                                            Number(e.target.value)
+                                            Number(e.target.value),
                                         )
                                     }
                                     className="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
@@ -502,7 +547,11 @@ export default function Show() {
                                     Cancelar
                                 </Button>
 
-                                <Button type="submit" variant="success" disabled={!assignForm.data.worker_id}>
+                                <Button
+                                    type="submit"
+                                    variant="success"
+                                    disabled={!assignForm.data.worker_id}
+                                >
                                     Asignar
                                 </Button>
                             </DialogFooter>
@@ -510,10 +559,78 @@ export default function Show() {
                     </DialogContent>
                 </Dialog>
 
+                <Dialog
+                    open={showFinishModal}
+                    onOpenChange={setShowFinishModal}
+                >
+                    <DialogContent className="max-w-md border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+                        <DialogHeader>
+                            <DialogTitle className="text-gray-900 dark:text-white">
+                                Finalizar orden
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <form
+                            onSubmit={submitFinishOrder}
+                            className="space-y-4"
+                        >
+                            <div>
+                                <label
+                                    htmlFor="finish_date"
+                                    className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    Fecha de finalización *
+                                </label>
+                                <input
+                                    id="finish_date"
+                                    name="finish_date"
+                                    type="date"
+                                    value={finishForm.data.finish_date}
+                                    onChange={(e) =>
+                                        finishForm.setData(
+                                            'finish_date',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    required
+                                />
+                                {finishForm.errors.finish_date && (
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {finishForm.errors.finish_date}
+                                    </p>
+                                )}
+                                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    Se registrarán movimientos de egreso (tipo
+                                    0) para cada salida pendiente, con esta
+                                    fecha.
+                                </p>
+                            </div>
+
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => setShowFinishModal(false)}
+                                >
+                                    Cancelar
+                                </Button>
+
+                                <Button
+                                    type="submit"
+                                    variant="default"
+                                    disabled={finishForm.processing}
+                                >
+                                    Finalizar
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
 
                 {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-70 p-4">
-                        <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-800 shadow-xl">
+                    <div className="bg-opacity-50 dark:bg-opacity-70 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+                        <div className="w-full max-w-md rounded-lg bg-white shadow-xl dark:bg-gray-800">
                             <StockMovementModal
                                 order={order}
                                 products={products}

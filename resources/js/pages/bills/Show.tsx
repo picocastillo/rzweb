@@ -110,6 +110,20 @@ export default function ShowBill({ bill }: Props) {
         });
     };
 
+    const formatDate = (date?: string | null) => {
+        if (!date) return '—';
+
+        try {
+            return new Date(date).toLocaleDateString('es-AR', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        } catch {
+            return 'Fecha inválida';
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Factura #${bill.id}`} />

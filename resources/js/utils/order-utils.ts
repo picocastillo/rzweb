@@ -1,7 +1,5 @@
 // Función para formatear fechas
-export const formatDate = (
-    dateString?: string | Date | null
-): string => {
+export const formatDate = (dateString?: string | Date | null): string => {
     if (!dateString) {
         return 'No definida';
     }
@@ -16,9 +14,7 @@ export const formatDate = (
 
         // Si viene como YYYY-MM-DD
         const finalDateString =
-            dateString.length === 10
-                ? `${dateString}T12:00:00`
-                : dateString;
+            dateString.length === 10 ? `${dateString}T12:00:00` : dateString;
 
         date = new Date(finalDateString);
     } else {
@@ -39,10 +35,23 @@ export const formatDate = (
     return date.toLocaleDateString('es-AR', options);
 };
 
-// Función para calcular días de alquiler
-export const calculateRentalDays = (date_from: string, date_to: string): number => {
-    const from = new Date(date_from);
-    const to = new Date(date_to);
+// Función para calcular días de alquiler (diferencia en días calendario entre fechas)
+export const calculateRentalDays = (
+    date_from: string,
+    date_to: string,
+): number => {
+    if (!date_from?.trim() || !date_to?.trim()) {
+        return 0;
+    }
+
+    const toLocalNoon = (s: string) => (s.length === 10 ? `${s}T12:00:00` : s);
+
+    const from = new Date(toLocalNoon(date_from));
+    const to = new Date(toLocalNoon(date_to));
+    if (isNaN(from.getTime()) || isNaN(to.getTime())) {
+        return 0;
+    }
+
     const diffTime = Math.abs(to.getTime() - from.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
