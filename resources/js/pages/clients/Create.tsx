@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, useForm } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
+import { Head, useForm } from '@inertiajs/react';
 
 export default function CreateClient() {
     const { data, setData, post, processing, errors } = useForm({
@@ -25,22 +25,30 @@ export default function CreateClient() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Nuevo Cliente" />
 
-            <div className="max-w-lg mx-auto p-6">
-                <h1 className="text-2xl font-semibold mb-4">Agregar Cliente</h1>
+            <div className="mx-auto max-w-lg p-6">
+                <h1 className="mb-4 text-2xl font-semibold">Agregar Cliente</h1>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1">Nombre Completo</label>
+                        <label className="mb-1 block text-sm font-medium">
+                            Nombre Completo
+                        </label>
                         <input
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             className="w-full rounded-lg border px-3 py-2"
                         />
-                        {errors.name && <p className="text-red-600 text-sm">{errors.name}</p>}
+                        {errors.name && (
+                            <p className="text-sm text-red-600">
+                                {errors.name}
+                            </p>
+                        )}
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">CUIL</label>
+                        <label className="mb-1 block text-sm font-medium">
+                            CUIL
+                        </label>
                         <input
                             type="text"
                             value={data.cuil}
@@ -50,7 +58,9 @@ export default function CreateClient() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">Teléfono</label>
+                        <label className="mb-1 block text-sm font-medium">
+                            Teléfono
+                        </label>
                         <input
                             type="text"
                             value={data.phone}
@@ -60,7 +70,9 @@ export default function CreateClient() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">Email</label>
+                        <label className="mb-1 block text-sm font-medium">
+                            Email
+                        </label>
                         <input
                             type="email"
                             value={data.email}
@@ -72,7 +84,7 @@ export default function CreateClient() {
                     <button
                         type="submit"
                         disabled={processing}
-                        className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="rounded-lg bg-sky-600 px-4 py-2 text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         Guardar
                     </button>

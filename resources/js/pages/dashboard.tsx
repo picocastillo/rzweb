@@ -2,8 +2,15 @@
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import { Package, ShoppingCart, DollarSign, Users, TrendingUp, AlertCircle } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import {
+    AlertCircle,
+    DollarSign,
+    Package,
+    ShoppingCart,
+    TrendingUp,
+    Users,
+} from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -37,7 +44,11 @@ interface DashboardProps {
     }>;
 }
 
-export default function Dashboard({ stats, recentOrders, topProducts }: DashboardProps) {
+export default function Dashboard({
+    stats,
+    recentOrders,
+    topProducts,
+}: DashboardProps) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('es-AR', {
             style: 'currency',
@@ -46,13 +57,17 @@ export default function Dashboard({ stats, recentOrders, topProducts }: Dashboar
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}> 
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 {/* Tarjetas de métricas principales */}
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                     {/* Órdenes Activas */}
-                    <div className="relative overflow-hidden rounded-xl border border-sidebar-border/70 bg-white p-6 dark:border-sidebar-border dark:bg-neutral-900">
+                    <Link
+                        href="/orders"
+                        aria-label="Ver órdenes"
+                        className="group relative block overflow-hidden rounded-xl border border-sidebar-border/70 bg-white p-6 transition hover:border-blue-400 hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-sidebar-border dark:bg-neutral-900 dark:hover:border-blue-500"
+                    >
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
@@ -62,7 +77,7 @@ export default function Dashboard({ stats, recentOrders, topProducts }: Dashboar
                                     {stats.activeOrders}
                                 </p>
                             </div>
-                            <div className="rounded-lg bg-blue-100 p-3 dark:bg-blue-900/30">
+                            <div className="rounded-lg bg-blue-100 p-3 transition group-hover:bg-blue-200 dark:bg-blue-900/30 dark:group-hover:bg-blue-900/50">
                                 <ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                             </div>
                         </div>
@@ -72,7 +87,7 @@ export default function Dashboard({ stats, recentOrders, topProducts }: Dashboar
                                 {stats.productsInRental} productos en alquiler
                             </span>
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Facturas Pendientes */}
                     <div className="relative overflow-hidden rounded-xl border border-sidebar-border/70 bg-white p-6 dark:border-sidebar-border dark:bg-neutral-900">
@@ -128,9 +143,11 @@ export default function Dashboard({ stats, recentOrders, topProducts }: Dashboar
                             </h3>
                             <div className="space-y-3">
                                 {recentOrders.map((order) => (
-                                    <div
+                                    <Link
                                         key={order.id}
-                                        className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800"
+                                        href={`/orders/${order.id}`}
+                                        aria-label={`Ver orden ${order.code}`}
+                                        className="block rounded-lg border border-neutral-200 p-4 transition hover:border-blue-400 hover:shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-neutral-800 dark:hover:border-blue-500"
                                     >
                                         <div className="flex items-start justify-between">
                                             <div>
@@ -146,9 +163,12 @@ export default function Dashboard({ stats, recentOrders, topProducts }: Dashboar
                                             </span>
                                         </div>
                                         <p className="mt-2 text-xs text-neutral-500">
-                                            Desde: {new Date(order.date_from).toLocaleDateString('es-AR')}
+                                            Desde:{' '}
+                                            {new Date(
+                                                order.date_from,
+                                            ).toLocaleDateString('es-AR')}
                                         </p>
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                         </div>
@@ -170,15 +190,20 @@ export default function Dashboard({ stats, recentOrders, topProducts }: Dashboar
                                                     {product.name}
                                                 </p>
                                                 <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                                    {formatCurrency(product.current_cost)}/día
+                                                    {formatCurrency(
+                                                        product.current_cost,
+                                                    )}
+                                                    /día
                                                 </p>
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                                    {product.stock_in_rental} en alquiler
+                                                    {product.stock_in_rental} en
+                                                    alquiler
                                                 </p>
                                                 <p className="text-xs text-neutral-500">
-                                                    {product.available_stock} disponibles
+                                                    {product.available_stock}{' '}
+                                                    disponibles
                                                 </p>
                                             </div>
                                         </div>

@@ -1,6 +1,5 @@
 import AuthenticatedSessionController from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -78,7 +77,9 @@ export default function Login({ status }: LoginProps) {
                                     name="remember"
                                     tabIndex={3}
                                 />
-                                <Label htmlFor="remember">Recordar sesión</Label>
+                                <Label htmlFor="remember">
+                                    Recordar sesión
+                                </Label>
                             </div>
 
                             <Button
@@ -89,7 +90,7 @@ export default function Login({ status }: LoginProps) {
                                 data-test="login-button"
                             >
                                 {processing && (
-                                    <LoaderCircle className="h-4 w-4 animate-spin mr-2" />
+                                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                                 )}
                                 <span>Ingresar</span>
                             </Button>

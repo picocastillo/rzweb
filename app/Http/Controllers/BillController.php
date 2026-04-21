@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\ItemOrder;
 use App\Models\Order;
 use App\Models\StockMovement;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -146,6 +147,7 @@ class BillController extends Controller
                     'id' => $billItem->id,
                     'bill_id' => $billItem->bill_id,
                     'days' => $billItem->days,
+                    'unit_price' => (float) $billItem->unit_price,
                     'stock_movement_id' => $billItem->stock_movement_id,
                     'stock_movement' => $stockMovement ? [
                         'id' => $stockMovement->id,
@@ -178,5 +180,19 @@ class BillController extends Controller
         return Inertia::render('bills/Show', [
             'bill' => $billData,
         ]);
+    }
+
+    public function pdf(Bill $bill)
+    {
+        $bill->load([
+            'client',
+            'billItems.stockMovement.order',
+            'billItems.stockMovement.product',
+        ]);
+
+        $pdf = Pdf::loadView('bills.pdf', ['bill' => $bill])
+            ->setPaper('a4');
+
+        return $pdf->download("factura-{$bill->id}.pdf");
     }
 }

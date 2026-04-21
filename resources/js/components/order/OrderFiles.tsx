@@ -49,7 +49,7 @@ export default function OrderFiles({
     };
 
     return (
-        <div className="mt-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <h2 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
                 Archivos adjuntos
             </h2>

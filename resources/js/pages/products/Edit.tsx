@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, useForm } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
+import { Head, useForm } from '@inertiajs/react';
 
 type Product = {
     id: number | string;
@@ -27,24 +27,30 @@ export default function EditProduct({ product }: { product: Product }) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Editar ${product.name}`} />
 
-            <div className="max-w-lg mx-auto p-6">
-                <h1 className="text-2xl font-semibold mb-4">Editar Producto</h1>
+            <div className="mx-auto max-w-lg p-6">
+                <h1 className="mb-4 text-2xl font-semibold">Editar Producto</h1>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1">Nombre</label>
+                        <label className="mb-1 block text-sm font-medium">
+                            Nombre
+                        </label>
                         <input
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             className="w-full rounded-lg border px-3 py-2"
                         />
-                        {errors.name && <p className="text-red-600 text-sm">{errors.name}</p>}
+                        {errors.name && (
+                            <p className="text-sm text-red-600">
+                                {errors.name}
+                            </p>
+                        )}
                     </div>
 
                     <button
                         type="submit"
                         disabled={processing}
-                        className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                        className="rounded-lg bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                     >
                         Actualizar
                     </button>

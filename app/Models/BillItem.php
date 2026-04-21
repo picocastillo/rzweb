@@ -17,6 +17,7 @@ class BillItem extends Model
     protected $fillable = [
         'bill_id',
         'days',
+        'unit_price',
         'stock_movement_id',
     ];
 
@@ -29,6 +30,7 @@ class BillItem extends Model
     {
         return [
             'created_at' => 'datetime',
+            'unit_price' => 'float',
         ];
     }
 

@@ -1,4 +1,3 @@
-
 export interface Order {
     id: number;
     code: string;
@@ -13,17 +12,18 @@ export interface Order {
     assigned_to: number;
     name_assigned_to: string;
     files: File[];
+    created_at: string;
 }
 
 export interface Note {
-    id:number,
-    message: string,
-    check: boolean,
-    user_id: number,
-    is_private: boolean,
-    order_id: number,
-    created_at: Date,
-    updated_at: Date,
+    id: number;
+    message: string;
+    check: boolean;
+    user_id: number;
+    is_private: boolean;
+    order_id: number;
+    created_at: Date;
+    updated_at: Date;
 }
 
 export interface File {
@@ -56,6 +56,7 @@ export interface StockMovement {
     qty: number;
     type: number;
     created_at: string;
+    product: Product;
 }
 
 export interface Product {

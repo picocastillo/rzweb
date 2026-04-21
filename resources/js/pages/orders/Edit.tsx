@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { usePage, useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Edit() {
@@ -76,7 +76,7 @@ export default function Edit() {
 
         post(`/orders/${order.id}/stock-movement`, {
             onSuccess: () => {
-                reset(); 
+                reset();
                 setShowModal(false);
             },
         });
@@ -362,7 +362,12 @@ export default function Edit() {
                                             id="product_id"
                                             name="product_id"
                                             value={data.product_id}
-                                            onChange={e => setData('product_id', e.target.value)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'product_id',
+                                                    e.target.value,
+                                                )
+                                            }
                                             className={`w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none ${
                                                 errors.product_id
                                                     ? 'border-red-300'
@@ -374,8 +379,12 @@ export default function Edit() {
                                                 Seleccionar producto
                                             </option>
                                             {products.map((product) => (
-                                                <option key={product.id} value={product.id}>
-                                                    {product.name} - Disponible: {product.current_stock}
+                                                <option
+                                                    key={product.id}
+                                                    value={product.id}
+                                                >
+                                                    {product.name} - Disponible:{' '}
+                                                    {product.current_stock}
                                                 </option>
                                             ))}
                                         </select>
@@ -399,7 +408,9 @@ export default function Edit() {
                                             name="qty"
                                             min="1"
                                             value={data.qty}
-                                            onChange={e => setData('qty', e.target.value)}
+                                            onChange={(e) =>
+                                                setData('qty', e.target.value)
+                                            }
                                             className={`w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none ${
                                                 errors.qty
                                                     ? 'border-red-300'

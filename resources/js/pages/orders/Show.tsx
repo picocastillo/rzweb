@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { OrderShowProps } from '@/types/order';
+import { OrderShowProps, StockMovement } from '@/types/order';
 import {
     calculateRentalDays,
     formatDate,
@@ -25,7 +25,7 @@ import {
 } from '@/utils/order-utils';
 import { useForm, usePage } from '@inertiajs/react';
 import { ChevronDown, ChevronUp, Info } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 function getLocalDateInputValue(date = new Date()): string {
     const y = date.getFullYear();
@@ -41,6 +41,7 @@ export default function Show() {
     const [showFinishModal, setShowFinishModal] = useState(false);
     const [openStock, setOpenStock] = useState(true);
     const [openStates, setOpenStates] = useState(true);
+    const [openProductDays, setOpenProductDays] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const { auth } = usePage().props;
     const user = auth.user;
@@ -60,6 +61,62 @@ export default function Show() {
         general: '',
         type: '',
     });
+
+    const isOrderFinished = order.name_last_state === 'Finalizada';
+    const stockMovements = order.stock_movements;
+
+    const productDaysRows = useMemo(() => {
+        if (!isOrderFinished) {
+            return [];
+        }
+
+        const groups = new Map<number, StockMovement[]>();
+        for (const movement of stockMovements) {
+            const existing = groups.get(movement.product_id);
+            if (existing) {
+                existing.push(movement);
+            } else {
+                groups.set(movement.product_id, [movement]);
+            }
+        }
+
+        const rows: Array<{
+            key: string;
+            productId: number;
+            productName: string;
+            qty: number;
+            fromDate: string;
+            toDate: string;
+            days: number;
+        }> = [];
+
+        for (const [productId, list] of groups) {
+            const sorted = [...list].sort(
+                (a, b) =>
+                    new Date(a.created_at).getTime() -
+                    new Date(b.created_at).getTime(),
+            );
+            const ingresos = sorted.filter((m) => Number(m.type) === 2);
+            const egresos = sorted.filter((m) => Number(m.type) === 0);
+            const pairs = Math.min(ingresos.length, egresos.length);
+
+            for (let i = 0; i < pairs; i++) {
+                const ing = ingresos[i];
+                const egr = egresos[i];
+                rows.push({
+                    key: `${productId}-${ing.id}-${egr.id}`,
+                    productId,
+                    productName: ing.product?.name ?? '—',
+                    qty: Math.abs(ing.qty),
+                    fromDate: ing.created_at,
+                    toDate: egr.created_at,
+                    days: calculateRentalDays(ing.created_at, egr.created_at),
+                });
+            }
+        }
+
+        return rows;
+    }, [isOrderFinished, stockMovements]);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -117,6 +174,16 @@ export default function Show() {
                                     Orden #{order.code}
                                 </h1>
                                 <div className="mt-3 flex flex-col gap-2 text-sm text-gray-600 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-8 sm:gap-y-1 dark:text-gray-400">
+                                    <p>
+                                        <span className="font-medium text-gray-700 dark:text-gray-200">
+                                            Creada el:{' '}
+                                        </span>
+                                        {order.created_at
+                                            ? new Date(
+                                                  order.created_at,
+                                              ).toLocaleString('es-ES')
+                                            : '—'}
+                                    </p>
                                     <p>
                                         <span className="font-medium text-gray-700 dark:text-gray-200">
                                             Desde:{' '}
@@ -268,6 +335,12 @@ export default function Show() {
                                     variant="success"
                                     size="sm"
                                     className="whitespace-normal sm:whitespace-nowrap"
+                                    disabled={isOrderFinished}
+                                    title={
+                                        isOrderFinished
+                                            ? 'La orden está finalizada'
+                                            : undefined
+                                    }
                                 >
                                     Agregar/Quitar Producto
                                 </Button>
@@ -354,6 +427,104 @@ export default function Show() {
                                 )}
                             </CollapsibleContent>
                         </Collapsible>
+
+                        {isOrderFinished && (
+                            <Collapsible
+                                open={openProductDays}
+                                onOpenChange={setOpenProductDays}
+                                className="mt-6"
+                            >
+                                <div className="mb-2 flex items-center gap-2">
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        Días por producto
+                                    </h2>
+                                    <CollapsibleTrigger asChild>
+                                        <Button variant="ghost" size="sm">
+                                            {openProductDays ? (
+                                                <ChevronUp className="h-4 w-4" />
+                                            ) : (
+                                                <ChevronDown className="h-4 w-4" />
+                                            )}
+                                        </Button>
+                                    </CollapsibleTrigger>
+                                </div>
+
+                                <CollapsibleContent>
+                                    {productDaysRows.length > 0 ? (
+                                        <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                                <thead className="bg-gray-50 dark:bg-gray-700">
+                                                    <tr>
+                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
+                                                            Producto
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
+                                                            Cantidad
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
+                                                            Ingreso
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
+                                                            Egreso
+                                                        </th>
+                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
+                                                            Días
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                                                    {productDaysRows.map(
+                                                        (row) => (
+                                                            <tr
+                                                                key={row.key}
+                                                                className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                                                            >
+                                                                <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                                                                    {
+                                                                        row.productName
+                                                                    }
+                                                                </td>
+                                                                <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                                                                    {row.qty}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                                    {new Date(
+                                                                        row.fromDate,
+                                                                    ).toLocaleString(
+                                                                        'es-ES',
+                                                                    )}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                                    {new Date(
+                                                                        row.toDate,
+                                                                    ).toLocaleString(
+                                                                        'es-ES',
+                                                                    )}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {row.days}{' '}
+                                                                    {row.days ===
+                                                                    1
+                                                                        ? 'día'
+                                                                        : 'días'}
+                                                                </td>
+                                                            </tr>
+                                                        ),
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-lg border border-gray-200 bg-gray-50 py-8 text-center dark:border-gray-700 dark:bg-gray-700">
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                No hay productos con ingreso y
+                                                egreso registrados.
+                                            </p>
+                                        </div>
+                                    )}
+                                </CollapsibleContent>
+                            </Collapsible>
+                        )}
                     </div>
 
                     {/* Card derecha: Estados */}
@@ -382,6 +553,12 @@ export default function Show() {
                                         onClick={() => setShowAssignModal(true)}
                                         variant="info"
                                         size="sm"
+                                        disabled={isOrderFinished}
+                                        title={
+                                            isOrderFinished
+                                                ? 'La orden está finalizada'
+                                                : undefined
+                                        }
                                     >
                                         {order.assigned_to
                                             ? 'Reasignar'
