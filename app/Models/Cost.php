@@ -11,7 +11,15 @@ class Cost extends Model
         'price',
     ];
 
-    ////Relationships////
+    protected function casts(): array
+    {
+        return [
+            'price' => 'float',
+            'product_id' => 'integer',
+        ];
+    }
+
+    // //Relationships////
     public function product()
     {
         return $this->belongsTo(Product::class);

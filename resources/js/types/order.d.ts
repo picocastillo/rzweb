@@ -78,4 +78,8 @@ export interface OrderShowProps {
     products: Product[];
     allProducts: Product[];
     available_workers: User[];
+    clients: Array<{
+        id: number;
+        name: string;
+    }>;
 }
