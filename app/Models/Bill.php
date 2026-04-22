@@ -124,9 +124,14 @@ class Bill extends Model
                         $order->update(['is_active' => 0]);
                     }
 
+                    // Snapshot the product price at billing time so later
+                    // changes to the product cost don't alter historical bills.
+                    $unitPrice = (float) ($movement->product->current_cost ?? 0);
+
                     BillItem::create([
                         'bill_id' => $bill->id,
                         'days' => $days,
+                        'unit_price' => $unitPrice,
                         'stock_movement_id' => $movement->id,
                     ]);
 
@@ -149,7 +154,7 @@ class Bill extends Model
                         ]);
                     }
 
-                    $total += $movement->qty * $days * ($movement->product->current_cost ?? 0);
+                    $total += $movement->qty * $days * $unitPrice;
                 }
 
                 $bill->update(['amount' => $total]);

@@ -41,7 +41,8 @@ export default function ShowUser({ user }: { user: User }) {
                                 <strong>Email:</strong> {user.email ?? '-'}
                             </p>
                             <p>
-                                <strong>Tipo de usuario:</strong> {user.role_name ?? '-'}
+                                <strong>Tipo de usuario:</strong>{' '}
+                                {user.role_name ?? '-'}
                             </p>
                         </div>
 

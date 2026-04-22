@@ -24,10 +24,10 @@ export default function AuthSimpleLayout({
                             className="flex flex-col items-center gap-2 font-medium"
                         >
                             <div className="mb-1 flex items-center justify-center">
-                                <img 
-                                    src="../../../../logo_horizontal.png" 
+                                <img
+                                    src="../../../../logo_horizontal.png"
                                     alt="Logo"
-                                    className="h-20 w-auto max-w-[250px] object-contain" 
+                                    className="h-20 w-auto max-w-[250px] object-contain"
                                 />
                             </div>
                             <span className="sr-only">{title}</span>

@@ -1,10 +1,10 @@
 // resources/js/components/order/OrderNotes.tsx
-import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import type { Note } from '@/types/order';
 import { Textarea } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
-import type { Note } from '@/types/order';
+import { useState } from 'react';
 
 export default function OrderNotes({
     orderId,
@@ -59,7 +59,7 @@ export default function OrderNotes({
     };
 
     return (
-<div className="mt-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Notas
@@ -70,7 +70,7 @@ export default function OrderNotes({
             </div>
 
             {notes.length === 0 && (
-                               <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                     Aún no hay notas.
                 </p>
             )}
@@ -79,15 +79,23 @@ export default function OrderNotes({
                 {notes.map((note) => (
                     <li
                         key={note.id}
-                        className="rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+                        className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
                     >
                         <div className="mb-2 flex items-start justify-between">
                             <div className="flex items-center gap-2">
-                                <Badge variant={note.is_private ? 'destructive' : 'default'}>
+                                <Badge
+                                    variant={
+                                        note.is_private
+                                            ? 'destructive'
+                                            : 'default'
+                                    }
+                                >
                                     {note.is_private ? 'Privada' : 'Pública'}
                                 </Badge>
                                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    {new Date(note.created_at).toLocaleString('es-ES')}
+                                    {new Date(note.created_at).toLocaleString(
+                                        'es-ES',
+                                    )}
                                 </span>
                             </div>
                             <Button
@@ -103,9 +111,14 @@ export default function OrderNotes({
                             <div className="space-y-2">
                                 <Textarea
                                     value={editForm.data.message}
-                                    onChange={(e) => editForm.setData('message', e.target.value)}
+                                    onChange={(e) =>
+                                        editForm.setData(
+                                            'message',
+                                            e.target.value,
+                                        )
+                                    }
                                     rows={3}
-                                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:ring-blue-400"
                                 />
                                 <div className="flex justify-end gap-2">
                                     <Button
@@ -124,7 +137,7 @@ export default function OrderNotes({
                                 </div>
                             </div>
                         ) : (
-                            <p className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">
+                            <p className="text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300">
                                 {note.message}
                             </p>
                         )}
@@ -134,8 +147,8 @@ export default function OrderNotes({
 
             {/* Modal nueva nota */}
             {showNewModal && (
-<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-70 p-4">
-                    <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-800 p-6 shadow-xl">
+                <div className="bg-opacity-50 dark:bg-opacity-70 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+                    <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
                         <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
                             Nueva nota
                         </h3>
@@ -147,7 +160,7 @@ export default function OrderNotes({
                                     newForm.setData('message', e.target.value)
                                 }
                                 rows={4}
-                                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:ring-blue-400"
                             />
                             {canManagePrivate && (
                                 <div className="flex items-center gap-2">
@@ -161,7 +174,7 @@ export default function OrderNotes({
                                                 e.target.checked ? 1 : 0,
                                             )
                                         }
-                                        className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-500 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        className="h-4 w-4 rounded border-gray-300 bg-white text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-blue-500 dark:focus:ring-blue-400"
                                     />
                                     <label
                                         htmlFor="private"

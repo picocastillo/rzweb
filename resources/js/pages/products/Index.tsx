@@ -1,9 +1,4 @@
 import { Button } from '@/components/ui/button';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, useForm, router } from '@inertiajs/react';
-import { DollarSign, Edit, Eye, Plus, Trash2, X } from 'lucide-react';
-import React, { useState } from 'react';
 import {
     Dialog,
     DialogClose,
@@ -14,6 +9,11 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
+import { Head, router, useForm } from '@inertiajs/react';
+import { DollarSign, Edit, Eye, Plus, Trash2, X } from 'lucide-react';
+import React, { useState } from 'react';
 
 type Product = {
     id: number;
@@ -23,11 +23,7 @@ type Product = {
     available_stock: number | null;
 };
 
-export default function ProductsIndex({
-    products,
-}: {
-    products: Product[];
-}) {
+export default function ProductsIndex({ products }: { products: Product[] }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModalCostOpen, setIsModalCostOpen] = useState(false);
 
@@ -117,8 +113,7 @@ export default function ProductsIndex({
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Costo por dia
                                 </th>
-                                <th className="px-6 py-3 text-center text-sm font-medium text-gray-700 dark:text-gray-300">
-                                </th>
+                                <th className="px-6 py-3 text-center text-sm font-medium text-gray-700 dark:text-gray-300"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
@@ -133,11 +128,17 @@ export default function ProductsIndex({
                                             : '—'}
                                     </td>
                                     <td className="px-6 py-3">
-                                        {product.current_cost !== null ? `$${product.current_cost}` : '—'}
+                                        {product.current_cost !== null
+                                            ? `$${product.current_cost}`
+                                            : '—'}
                                     </td>
                                     <td className="space-x-2 px-6 py-3 text-center">
                                         <Button
-                                            onClick={() => router.visit(`/products/${product.id}`)}
+                                            onClick={() =>
+                                                router.visit(
+                                                    `/products/${product.id}`,
+                                                )
+                                            }
                                             title="Ver"
                                             variant={'default'}
                                             type="button"
@@ -147,13 +148,17 @@ export default function ProductsIndex({
                                         <Button
                                             title="Editar"
                                             variant={'info'}
-                                            onClick={() => router.visit(`/products/${product.id}/edit`)}
+                                            onClick={() =>
+                                                router.visit(
+                                                    `/products/${product.id}/edit`,
+                                                )
+                                            }
                                             type="button"
                                         >
                                             <Edit size={16} />
                                         </Button>
                                         <Button
-                                            title='Agregar Costo'
+                                            title="Agregar Costo"
                                             onClick={() => {
                                                 reset();
                                                 setIsModalCostOpen(true);
@@ -164,7 +169,10 @@ export default function ProductsIndex({
                                             }}
                                             variant={'success'}
                                         >
-                                            <DollarSign size={16} className="mr-1" />
+                                            <DollarSign
+                                                size={16}
+                                                className="mr-1"
+                                            />
                                         </Button>
                                         <Dialog>
                                             <DialogTrigger asChild>
@@ -223,7 +231,10 @@ export default function ProductsIndex({
                         <div className="flex items-center justify-between border-b p-6 dark:border-gray-700">
                             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                                 Agregar Stock <br />
-                                <small className="text-sm leading-none font-medium">Este ajuste suma stock real al inventario disponible para alquiler.</small>
+                                <small className="text-sm leading-none font-medium">
+                                    Este ajuste suma stock real al inventario
+                                    disponible para alquiler.
+                                </small>
                             </h2>
                             <button
                                 onClick={closeModal}

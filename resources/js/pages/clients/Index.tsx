@@ -1,9 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
-import { type BreadcrumbItem } from '@/types';
-import { Edit3, Eye, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { router } from '@inertiajs/react';
 import {
     Dialog,
     DialogClose,
@@ -14,6 +9,10 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/react';
+import { Edit3, Eye, Plus, Trash2 } from 'lucide-react';
 
 type Client = {
     id: number | string;
@@ -34,7 +33,7 @@ export default function ClientsIndex({ clients }: { clients: Client[] }) {
             <Head title="Clientes" />
 
             <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4 flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">Clientes</h1>
                     <Button
                         variant="success"
@@ -44,14 +43,22 @@ export default function ClientsIndex({ clients }: { clients: Client[] }) {
                     </Button>
                 </div>
 
-                <div className="overflow-x-auto border rounded-lg">
+                <div className="overflow-x-auto rounded-lg border">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                         <thead className="bg-gray-50 dark:bg-gray-900">
                             <tr>
-                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</th>
-                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">CUIL</th>
-                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono</th>
-                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">Email</th>
+                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Nombre
+                                </th>
+                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    CUIL
+                                </th>
+                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Teléfono
+                                </th>
+                                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Email
+                                </th>
                                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300"></th>
                             </tr>
                         </thead>
@@ -59,19 +66,32 @@ export default function ClientsIndex({ clients }: { clients: Client[] }) {
                             {clients.map((client) => (
                                 <tr key={client.id}>
                                     <td className="px-6 py-3">{client.name}</td>
-                                    <td className="px-6 py-3">{client.cuil ?? '-'}</td>
-                                    <td className="px-6 py-3">{client.phone ?? '-'}</td>
-                                    <td className="px-6 py-3">{client.email ?? '-'}</td>
-                                    <td className="px-6 py-3 space-x-2">
+                                    <td className="px-6 py-3">
+                                        {client.cuil ?? '-'}
+                                    </td>
+                                    <td className="px-6 py-3">
+                                        {client.phone ?? '-'}
+                                    </td>
+                                    <td className="px-6 py-3">
+                                        {client.email ?? '-'}
+                                    </td>
+                                    <td className="space-x-2 px-6 py-3">
                                         <Button
-                                            onClick={() => router.visit(`/clients/${client.id}`)}
+                                            onClick={() =>
+                                                router.visit(
+                                                    `/clients/${client.id}`,
+                                                )
+                                            }
                                             variant={'default'}
-
                                         >
                                             <Eye size={16} />
                                         </Button>
                                         <Button
-                                            onClick={() => router.visit(`/clients/${client.id}/edit`)}
+                                            onClick={() =>
+                                                router.visit(
+                                                    `/clients/${client.id}/edit`,
+                                                )
+                                            }
                                             variant={'info'}
                                         >
                                             <Edit3 size={16} />

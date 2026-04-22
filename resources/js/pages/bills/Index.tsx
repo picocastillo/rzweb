@@ -157,24 +157,24 @@ export default function IndexBills({ bills = [] }: Props) {
                 </div>
 
                 {/* Bills Table */}
-                <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     {filteredBills.length > 0 ? (
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-900">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase dark:text-gray-300">
                                         ID Factura
                                     </th>
-                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase dark:text-gray-300">
                                         Cliente
                                     </th>
-                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 uppercase">
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase dark:text-gray-300">
                                         Período
                                     </th>
-                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 uppercase"></th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase dark:text-gray-300"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                 {filteredBills.map((bill) => {
                                     if (!bill || !bill.client) return null;
 
@@ -184,7 +184,7 @@ export default function IndexBills({ bills = [] }: Props) {
                                             className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-sm font-medium text-blue-800 dark:text-blue-300">
+                                                <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                                                     #{bill.id}
                                                 </span>
                                             </td>
@@ -222,7 +222,7 @@ export default function IndexBills({ bills = [] }: Props) {
                             </tbody>
                         </table>
                     ) : (
-                        <div className="rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 py-12 text-center">
+                        <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 py-12 text-center dark:border-gray-600 dark:bg-gray-700">
                             <FileText className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
                             <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
                                 No hay facturas
@@ -237,7 +237,7 @@ export default function IndexBills({ bills = [] }: Props) {
                                     onClick={() =>
                                         router.visit('/bills/create')
                                     }
-                                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 dark:bg-blue-700 px-4 py-2 text-sm text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+                                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
                                 >
                                     <Plus className="h-4 w-4" />
                                     Nueva Factura

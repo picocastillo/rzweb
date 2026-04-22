@@ -1,6 +1,7 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { DarkModeToggleItem } from '@/components/ui/DarkModeToggleItem';
 import {
     Sidebar,
     SidebarContent,
@@ -11,55 +12,59 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users, ShoppingCart, ClipboardList, User2, BarChart3 } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import {
+    BarChart3,
+    ClipboardList,
+    LayoutGrid,
+    ShoppingCart,
+    User2,
+    Users,
+} from 'lucide-react';
 import AppLogo from './app-logo';
-import { DarkModeToggleItem } from '@/components/ui/DarkModeToggleItem';
-import { usePage } from '@inertiajs/react';
-import AppearanceToggleDropdown from './appearance-dropdown';
 
 const mainNavItems: NavItem[] = [
-  {
-    title: 'Inicio',
-    href: '/dashboard',
-    icon: LayoutGrid,
-  },
+    {
+        title: 'Inicio',
+        href: '/dashboard',
+        icon: LayoutGrid,
+    },
 
-  // Gestión
-  {
-    title: 'Clientes',
-    href: '/clients',
-    icon: Users,
-  },
-  {
-    title: 'Usuarios',
-    href: '/users',
-    icon: User2,
-  },
+    // Gestión
+    {
+        title: 'Clientes',
+        href: '/clients',
+        icon: Users,
+    },
+    {
+        title: 'Usuarios',
+        href: '/users',
+        icon: User2,
+    },
 
-  // Operación
-  {
-    title: 'Ordenes',
-    href: '/orders',
-    icon: ClipboardList,
-  },
-  {
-    title: 'Productos',
-    href: '/products',
-    icon: ShoppingCart,
-  },
+    // Operación
+    {
+        title: 'Ordenes',
+        href: '/orders',
+        icon: ClipboardList,
+    },
+    {
+        title: 'Productos',
+        href: '/products',
+        icon: ShoppingCart,
+    },
 
-  // Análisis
-  {
-    title: 'Informes',
-    href: '/reports',
-    icon: BarChart3,
-  },
-  {
-    title: 'Facturas',
-    href: '/bills',
-    icon: LayoutGrid,
-  },
+    // Análisis
+    {
+        title: 'Informes',
+        href: '/reports',
+        icon: BarChart3,
+    },
+    {
+        title: 'Facturas',
+        href: '/bills',
+        icon: LayoutGrid,
+    },
 ];
 
 const mainNavItemsWorker: NavItem[] = [
@@ -82,9 +87,7 @@ export function AppSidebar() {
     const user = auth.user;
     const roleName = user.role_name;
 
-    const homeRoute = roleName === 'Admin'
-    ? '/dashboard'
-    : '/orders/worker';
+    const homeRoute = roleName === 'Admin' ? '/dashboard' : '/orders/worker';
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -102,7 +105,9 @@ export function AppSidebar() {
 
             <SidebarContent>
                 {roleName === 'Admin' && <NavMain items={mainNavItems} />}
-                {roleName === 'Trabajador' && <NavMain items={mainNavItemsWorker} />}
+                {roleName === 'Trabajador' && (
+                    <NavMain items={mainNavItemsWorker} />
+                )}
                 {/* <NavMain items={mainNavItems} /> */}
             </SidebarContent>
 

@@ -1,7 +1,7 @@
-import { Link } from '@inertiajs/react';
-import { ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getStatusVariant } from '@/utils/order-utils';
+import { Link } from '@inertiajs/react';
+import { ExternalLink } from 'lucide-react';
 
 type DailyMovement = {
     id: number;
@@ -45,9 +45,9 @@ export function DailyReportTable({ movements, title }: Props) {
     const productCodes = Array.from(
         new Set(
             movements
-                .map(m => m.product.code || getProductCode(m.product.name))
-                .filter(Boolean)
-        )
+                .map((m) => m.product.code || getProductCode(m.product.name))
+                .filter(Boolean),
+        ),
     ).sort();
 
     // Agrupar movimientos por dirección/orden
@@ -58,7 +58,7 @@ export function DailyReportTable({ movements, title }: Props) {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                 <thead className="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300 sticky left-0 bg-gray-50 dark:bg-gray-900 z-10">
+                        <th className="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase dark:bg-gray-900 dark:text-gray-300">
                             # Orden
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
@@ -70,17 +70,17 @@ export function DailyReportTable({ movements, title }: Props) {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
                             Estado
                         </th>
-                        
+
                         {/* Columna para cada producto */}
                         {productCodes.map((code) => (
                             <th
                                 key={code}
-                                className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase dark:text-gray-300 bg-blue-50 dark:bg-blue-950"
+                                className="bg-blue-50 px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase dark:bg-blue-950 dark:text-gray-300"
                             >
                                 {code}
                             </th>
                         ))}
-                        
+
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
                             Total
                         </th>
@@ -91,15 +91,15 @@ export function DailyReportTable({ movements, title }: Props) {
                         groupedData.map((row, idx) => {
                             const totalQty = Object.values(row.products).reduce(
                                 (sum, qty) => sum + qty,
-                                0
+                                0,
                             );
-                            
+
                             return (
                                 <tr
                                     key={idx}
                                     className="hover:bg-gray-50 dark:hover:bg-gray-900"
                                 >
-                                    <td className="px-4 py-3 text-sm sticky left-0 bg-white dark:bg-gray-950">
+                                    <td className="sticky left-0 bg-white px-4 py-3 text-sm dark:bg-gray-950">
                                         <Link
                                             href={`/orders/${row.order_id}`}
                                             className="group inline-flex items-center gap-1 font-medium text-primary hover:underline"
@@ -115,21 +115,25 @@ export function DailyReportTable({ movements, title }: Props) {
                                         {row.client_name}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <Badge variant={getStatusVariant(row.status)}>
+                                        <Badge
+                                            variant={getStatusVariant(
+                                                row.status,
+                                            )}
+                                        >
                                             {row.status}
                                         </Badge>
                                     </td>
-                                    
+
                                     {/* Cantidad por cada producto */}
                                     {productCodes.map((code) => (
                                         <td
                                             key={code}
-                                            className="px-4 py-3 text-center text-sm font-medium bg-blue-50/50 dark:bg-blue-950/50"
+                                            className="bg-blue-50/50 px-4 py-3 text-center text-sm font-medium dark:bg-blue-950/50"
                                         >
                                             {row.products[code] || '-'}
                                         </td>
                                     ))}
-                                    
+
                                     <td className="px-4 py-3 text-center text-sm font-bold">
                                         {totalQty}
                                     </td>
@@ -142,33 +146,34 @@ export function DailyReportTable({ movements, title }: Props) {
                                 colSpan={productCodes.length + 5}
                                 className="px-4 py-8 text-center text-gray-500"
                             >
-                                {title === 'Instalaciones' 
+                                {title === 'Instalaciones'
                                     ? 'No hay instalaciones para esta fecha'
                                     : 'No hay retiros para esta fecha'}
                             </td>
                         </tr>
                     )}
                 </tbody>
-                
+
                 {/* Fila de totales */}
                 {groupedData.length > 0 && (
-                    <tfoot className="bg-gray-100 dark:bg-gray-800 font-bold">
+                    <tfoot className="bg-gray-100 font-bold dark:bg-gray-800">
                         <tr>
                             <td
                                 colSpan={4}
-                                className="px-4 py-3 text-sm text-right uppercase"
+                                className="px-4 py-3 text-right text-sm uppercase"
                             >
                                 Total:
                             </td>
                             {productCodes.map((code) => {
                                 const total = groupedData.reduce(
-                                    (sum, row) => sum + (row.products[code] || 0),
-                                    0
+                                    (sum, row) =>
+                                        sum + (row.products[code] || 0),
+                                    0,
                                 );
                                 return (
                                     <td
                                         key={code}
-                                        className="px-4 py-3 text-center text-sm bg-blue-100 dark:bg-blue-900"
+                                        className="bg-blue-100 px-4 py-3 text-center text-sm dark:bg-blue-900"
                                     >
                                         {total || '-'}
                                     </td>
@@ -180,9 +185,9 @@ export function DailyReportTable({ movements, title }: Props) {
                                         sum +
                                         Object.values(row.products).reduce(
                                             (s, q) => s + q,
-                                            0
+                                            0,
                                         ),
-                                    0
+                                    0,
                                 )}
                             </td>
                         </tr>
@@ -194,14 +199,16 @@ export function DailyReportTable({ movements, title }: Props) {
 }
 
 // Función para agrupar movimientos por orden/dirección
-function groupMovementsByAddress(movements: DailyMovement[]): GroupedMovement[] {
+function groupMovementsByAddress(
+    movements: DailyMovement[],
+): GroupedMovement[] {
     const grouped = new Map<number, GroupedMovement>();
 
     movements.forEach((movement) => {
         if (!movement.order) return;
 
         const orderId = movement.order.id;
-        
+
         if (!grouped.has(orderId)) {
             grouped.set(orderId, {
                 order_id: orderId,
@@ -214,10 +221,12 @@ function groupMovementsByAddress(movements: DailyMovement[]): GroupedMovement[] 
         }
 
         const group = grouped.get(orderId)!;
-        const productCode = movement.product.code || getProductCode(movement.product.name);
-        
+        const productCode =
+            movement.product.code || getProductCode(movement.product.name);
+
         if (productCode) {
-            group.products[productCode] = (group.products[productCode] || 0) + movement.qty;
+            group.products[productCode] =
+                (group.products[productCode] || 0) + movement.qty;
         }
     });
 
@@ -232,14 +241,14 @@ function capitalizeFirst(text: string): string {
 // Función para obtener código corto del producto basado en su nombre
 function getProductCode(productName: string): string {
     const codes: Record<string, string> = {
-        'baliza': 'Ba',
-        'balizas': 'Ba',
+        baliza: 'Ba',
+        balizas: 'Ba',
         'vallas cortas': 'Vc',
         'valla corta': 'Vc',
         'vallas largas': 'Vl',
         'valla larga': 'Vl',
-        'carteles': 'Ca',
-        'cartel': 'Ca',
+        carteles: 'Ca',
+        cartel: 'Ca',
     };
 
     const name = productName.toLowerCase().trim();

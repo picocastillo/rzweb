@@ -32,6 +32,9 @@ class StockMovement extends Model
         return [
             'is_billable' => 'boolean',
             'created_at' => 'datetime',
+            'type' => 'integer',
+            'qty' => 'integer',
+            'product_id' => 'integer',
         ];
     }
 

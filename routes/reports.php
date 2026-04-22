@@ -1,12 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use App\Http\Controllers\ReportController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('reports')->group(function () {
     // Listado
     Route::get('/', [ReportController::class, 'index']);
+
+    // Descargar PDF del informe (general o diario)
+    Route::get('/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
 
     // // Formulario de creación
     // Route::get('/create', [ReportController::class, 'create']);
