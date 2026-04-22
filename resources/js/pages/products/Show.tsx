@@ -13,7 +13,7 @@ type StockMovement = {
 
 type Cost = {
     id: number;
-    price: number;
+    price: number | string;
     created_at: string; // Fecha en que se registró el costo
 };
 
@@ -21,7 +21,7 @@ type Product = {
     id: number;
     name: string;
     current_stock: number;
-    current_cost: number | null;
+    current_cost: number | string | null;
     stock_movements: StockMovement[]; // Nota: Inertia convierte la notación snake_case
     costs: Cost[];
 };
@@ -52,6 +52,22 @@ export default function ShowProduct({ product }: { product: Product }) {
 
     const getTypeMovementLabel = (type: string | number) => {
         return typeMovementLabels[Number(type)] || 'DESCONOCIDO';
+    };
+
+    const formatCurrency = (value: number | string | null | undefined) => {
+        if (value === null || value === undefined || value === '') {
+            return '—';
+        }
+
+        const numeric = typeof value === 'number' ? value : Number(value);
+        if (!Number.isFinite(numeric)) {
+            return '—';
+        }
+
+        return `$${numeric.toLocaleString('es-AR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })}`;
     };
 
     return (
@@ -89,8 +105,9 @@ export default function ShowProduct({ product }: { product: Product }) {
                                 Costo por Día
                             </p>
                             <p className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">
-                                {product.current_cost !== null
-                                    ? `$${product.current_cost}`
+                                {product.current_cost !== null &&
+                                product.current_cost !== undefined
+                                    ? formatCurrency(product.current_cost)
                                     : 'No definido'}
                             </p>
                         </div>
@@ -219,7 +236,7 @@ export default function ShowProduct({ product }: { product: Product }) {
                                                     {cost.id}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-300">
-                                                    ${cost.price.toFixed(2)}
+                                                    {formatCurrency(cost.price)}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-300">
                                                     {formatDate(

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,13 +31,13 @@ class Product extends Model
     }
 
     protected $appends = [
-        'current_cost', 
+        'current_cost',
         'current_stock',
         'stock_in_rental',
         'available_stock',
     ];
 
-    ////Relationships////
+    // //Relationships////
     public function stockMovements()
     {
         return $this->hasMany(StockMovement::class);
@@ -54,12 +53,12 @@ class Product extends Model
         return $this->hasMany(ItemOrder::class);
     }
 
-    ////Functions////
+    // //Functions////
     // public function getCurrentStockAttribute()
     // {
     //     return $this->stockMovements()->sum('qty');
     // }
-    
+
     public function adjustStock(int $qty, bool $isBillable = true)
     {
         $finalQty = $qty;
@@ -72,7 +71,7 @@ class Product extends Model
         ]);
 
         // Actualizar stock actual del producto
-        //$this->increment('current_stock', $finalQty);
+        // $this->increment('current_stock', $finalQty);
 
         return $movement;
     }
@@ -89,9 +88,11 @@ class Product extends Model
         if ($this->relationLoaded('costs') && $this->costs->isNotEmpty()) {
             return (float) $this->costs->first()->price;
         }
-        
+
         // Si no esta cargada, hago la consulta
-        return $this->costs()->latest()->value('price');
+        $price = $this->costs()->latest()->value('price');
+
+        return $price !== null ? (float) $price : null;
     }
 
     /**
@@ -132,16 +133,16 @@ class Product extends Model
      */
     public function getAvailableStockAttribute()
     {
-        
+
         $totalEntries = $this->stockMovements()
             ->whereIn('type', [1, 0]) // Entradas y ajustes
             ->sum('qty');
-            
+
         $billedExits = $this->stockMovements()
             ->where('type', 2)
             ->where('is_billed', true)
             ->sum('qty');
-            
+
         return $totalEntries - $billedExits;
     }
 
@@ -149,5 +150,4 @@ class Product extends Model
     {
         return $this->available_stock;
     }
-
 }

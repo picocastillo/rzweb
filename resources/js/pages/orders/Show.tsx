@@ -35,7 +35,7 @@ function getLocalDateInputValue(date = new Date()): string {
 }
 
 export default function Show() {
-    const { order, products, allProducts, available_workers } = usePage()
+    const { order, products, allProducts, available_workers, clients } = usePage()
         .props as unknown as OrderShowProps;
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [showFinishModal, setShowFinishModal] = useState(false);
@@ -43,9 +43,15 @@ export default function Show() {
     const [openStates, setOpenStates] = useState(true);
     const [openProductDays, setOpenProductDays] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const { auth } = usePage().props;
-    const user = auth.user;
-    const roleName = user.role_name;
+    const [isEditingDetails, setIsEditingDetails] = useState(false);
+    const pageProps = usePage().props as unknown as {
+        auth: {
+            user: {
+                role_name: string;
+            };
+        };
+    };
+    const roleName = pageProps.auth.user.role_name;
 
     const assignForm = useForm({
         worker_id: '',
@@ -53,6 +59,11 @@ export default function Show() {
 
     const finishForm = useForm({
         finish_date: getLocalDateInputValue(),
+    });
+
+    const detailsForm = useForm({
+        client_id: String(order.client?.id ?? ''),
+        address: order.address ?? '',
     });
 
     const { reset } = useForm({
@@ -157,7 +168,17 @@ export default function Show() {
         reset();
     };
 
-    const TYPE = {
+    const submitDetailsUpdate = (e: React.FormEvent) => {
+        e.preventDefault();
+        detailsForm.put(`/orders/${order.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsEditingDetails(false);
+            },
+        });
+    };
+
+    const TYPE: Record<number, string> = {
         2: 'Ingreso',
         0: 'Egreso',
     };
@@ -253,6 +274,130 @@ export default function Show() {
                         <h2 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
                             Detalles
                         </h2>
+                        {roleName === 'Admin' && (
+                            <div className="mb-4 flex justify-end">
+                                <Button
+                                    type="button"
+                                    variant="info"
+                                    size="sm"
+                                    onClick={() => {
+                                        if (!isEditingDetails) {
+                                            detailsForm.setData(
+                                                'client_id',
+                                                String(order.client?.id ?? ''),
+                                            );
+                                            detailsForm.setData(
+                                                'address',
+                                                order.address ?? '',
+                                            );
+                                        }
+                                        setIsEditingDetails((prev) => !prev);
+                                    }}
+                                    disabled={isOrderFinished}
+                                    title={
+                                        isOrderFinished
+                                            ? 'La orden está finalizada'
+                                            : undefined
+                                    }
+                                >
+                                    {isEditingDetails
+                                        ? 'Cancelar edición'
+                                        : 'Modificar cliente/dirección'}
+                                </Button>
+                            </div>
+                        )}
+                        {roleName === 'Admin' && isEditingDetails && (
+                            <form
+                                onSubmit={submitDetailsUpdate}
+                                className="mb-6 space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700"
+                            >
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label
+                                            htmlFor="client_id"
+                                            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        >
+                                            Cliente *
+                                        </label>
+                                        <select
+                                            id="client_id"
+                                            name="client_id"
+                                            value={detailsForm.data.client_id}
+                                            onChange={(e) =>
+                                                detailsForm.setData(
+                                                    'client_id',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                            required
+                                        >
+                                            <option value="">
+                                                Seleccionar cliente
+                                            </option>
+                                            {clients.map((client) => (
+                                                <option
+                                                    key={client.id}
+                                                    value={client.id}
+                                                >
+                                                    {client.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {detailsForm.errors.client_id && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {detailsForm.errors.client_id}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label
+                                            htmlFor="address"
+                                            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        >
+                                            Dirección
+                                        </label>
+                                        <input
+                                            id="address"
+                                            name="address"
+                                            type="text"
+                                            value={detailsForm.data.address}
+                                            onChange={(e) =>
+                                                detailsForm.setData(
+                                                    'address',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                            placeholder="Dirección de entrega"
+                                        />
+                                        {detailsForm.errors.address && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {detailsForm.errors.address}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() =>
+                                            setIsEditingDetails(false)
+                                        }
+                                    >
+                                        Cancelar
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        variant="success"
+                                        disabled={detailsForm.processing}
+                                    >
+                                        Guardar cambios
+                                    </Button>
+                                </div>
+                            </form>
+                        )}
                         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {/* Información del cliente */}
                             <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
@@ -691,7 +836,7 @@ export default function Show() {
                                     onChange={(e) =>
                                         assignForm.setData(
                                             'worker_id',
-                                            Number(e.target.value),
+                                            e.target.value,
                                         )
                                     }
                                     className="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"

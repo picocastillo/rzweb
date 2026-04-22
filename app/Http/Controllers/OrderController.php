@@ -108,6 +108,7 @@ class OrderController extends Controller
 
         $allProducts = Product::all();
         $workers = User::where('role_id', 2)->get();
+        $clients = Client::orderBy('name')->get(['id', 'name']);
 
         // dd($workers);
         return Inertia::render('orders/Show', [
@@ -115,6 +116,7 @@ class OrderController extends Controller
             'products' => $productsInOrder,
             'allProducts' => $allProducts,
             'available_workers' => $workers,
+            'clients' => $clients,
         ]);
     }
 
@@ -185,12 +187,20 @@ class OrderController extends Controller
             'code' => 'nullable|string|max:100',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.qty' => 'required|numeric|min:1',
+            'items' => 'nullable|array|min:1',
+            'items.*.product_id' => 'required_with:items|exists:products,id',
+            'items.*.qty' => 'required_with:items|numeric|min:1',
         ]);
 
-        $order->update($validated);
+        $order->update([
+            'client_id' => $validated['client_id'],
+            'address' => $validated['address'] ?? $order->address,
+            'code' => $validated['code'] ?? $order->code,
+            'date_from' => $validated['date_from'] ?? $order->date_from,
+            'date_to' => $validated['date_to'] ?? $order->date_to,
+        ]);
+
+        return redirect()->back()->with('success', 'Orden actualizada correctamente!');
     }
 
     public function assignOrder(Request $request, Order $order)
