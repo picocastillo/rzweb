@@ -416,7 +416,11 @@ class OrderController extends Controller
                 'order_id' => $order->id,
             ]);
 
-            $order->update(['last_state' => 3]);
+            $orderUpdate = ['last_state' => 3];
+            if ($order->date_to === null) {
+                $orderUpdate['date_to'] = $finishAt->toDateString();
+            }
+            $order->update($orderUpdate);
         });
 
         return redirect()->back()->with('success', 'Orden finalizada correctamente');
