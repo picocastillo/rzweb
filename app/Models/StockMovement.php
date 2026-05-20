@@ -5,10 +5,14 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class StockMovement extends Model
 {
     use HasFactory;
+
+    /** @var Collection<int, self>|null */
+    protected static ?Collection $activeSalidasCache = null;
 
     /**
      * The attributes that are mass assignable.
@@ -18,7 +22,6 @@ class StockMovement extends Model
     protected $fillable = [
         'product_id',
         'type',
-        'is_billed',
         'qty',
     ];
 
@@ -49,6 +52,75 @@ class StockMovement extends Model
         return $this->hasMany(ItemOrder::class, 'stock_movement_id');
     }
 
+    public function billItems()
+    {
+        return $this->hasMany(BillItem::class);
+    }
+
+    /**
+     * Salidas (tipo 2) cuyo material sigue en la orden (sin regreso posterior).
+     * Result is cached per request (2 queries total).
+     *
+     * @return Collection<int, self>
+     */
+    public static function activeSalidas(): Collection
+    {
+        if (static::$activeSalidasCache !== null) {
+            return static::$activeSalidasCache;
+        }
+
+        $salidas = static::query()
+            ->where('type', 2)
+            ->with('itemOrders:id,order_id,stock_movement_id')
+            ->get(['id', 'product_id', 'type', 'qty', 'created_at']);
+
+        if ($salidas->isEmpty()) {
+            return static::$activeSalidasCache = collect();
+        }
+
+        $orderIds = $salidas
+            ->flatMap(fn (self $movement) => $movement->itemOrders->pluck('order_id'))
+            ->unique()
+            ->filter()
+            ->values();
+
+        $regresos = static::query()
+            ->where('type', 0)
+            ->whereHas('itemOrders', fn ($q) => $q->whereIn('order_id', $orderIds))
+            ->with('itemOrders:id,order_id,stock_movement_id')
+            ->get(['id', 'product_id', 'created_at']);
+
+        static::$activeSalidasCache = $salidas->filter(function (self $salida) use ($regresos) {
+            $orderId = $salida->itemOrders->first()?->order_id;
+
+            if (! $orderId) {
+                return false;
+            }
+
+            $hasRegreso = $regresos->contains(
+                fn (self $regreso) => (int) $regreso->product_id === (int) $salida->product_id
+                    && (int) $regreso->itemOrders->first()?->order_id === (int) $orderId
+                    && $regreso->created_at > $salida->created_at,
+            );
+
+            return ! $hasRegreso;
+        })->values();
+
+        return static::$activeSalidasCache;
+    }
+
+    /**
+     * Salida (tipo 2) cuyo material sigue en la orden (sin regreso posterior).
+     */
+    public function isActiveRental(): bool
+    {
+        if ((int) $this->type !== 2) {
+            return false;
+        }
+
+        return static::activeSalidas()->contains('id', $this->id);
+    }
+
     public function order()
     {
         return $this->hasOneThrough(
@@ -77,6 +149,53 @@ class StockMovement extends Model
     }
 
     /**
+     * Cierra un alquiler activo (salida sin regreso) al facturar: registro de regreso (tipo 0)
+     * y nueva salida (tipo 2) en la fecha actual, para continuar el alquiler en la orden.
+     */
+    public static function closeActiveRentalForBilling(self $salida, int $orderId): void
+    {
+        $at = Carbon::now(config('app.timezone'));
+
+        $regreso = static::create([
+            'product_id' => $salida->product_id,
+            'qty' => $salida->qty,
+            'type' => 0,
+        ]);
+        $regreso->forceFill([
+            'created_at' => $at,
+            'updated_at' => $at,
+        ])->save();
+
+        ItemOrder::create([
+            'product_id' => $salida->product_id,
+            'qty' => $salida->qty,
+            'order_id' => $orderId,
+            'stock_movement_id' => $regreso->id,
+        ]);
+
+        $newSalidaAt = $at->copy()->addSecond();
+
+        $newSalida = static::create([
+            'product_id' => $salida->product_id,
+            'qty' => $salida->qty,
+            'type' => 2,
+        ]);
+        $newSalida->forceFill([
+            'created_at' => $newSalidaAt,
+            'updated_at' => $newSalidaAt,
+        ])->save();
+
+        ItemOrder::create([
+            'product_id' => $salida->product_id,
+            'qty' => $salida->qty,
+            'order_id' => $orderId,
+            'stock_movement_id' => $newSalida->id,
+        ]);
+
+        static::$activeSalidasCache = null;
+    }
+
+    /**
      * Días entre esta salida (tipo 2) y el regreso (tipo 0) siguiente,
      * o hasta hoy si el material sigue en la orden.
      */
@@ -88,7 +207,7 @@ class StockMovement extends Model
             ? Carbon::parse($regreso->created_at)->startOfDay()
             : Carbon::now()->startOfDay();
 
-        return max(1, $start->diffInDays($end));
+        return $start->diffInDays($end) + 1;
     }
 
     /**
@@ -117,6 +236,6 @@ class StockMovement extends Model
             return 0;
         }
 
-        return max(1, $overlapStart->diffInDays($overlapEnd));
+        return $overlapStart->diffInDays($overlapEnd) + 1;
     }
 }

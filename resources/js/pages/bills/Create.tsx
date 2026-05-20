@@ -1,7 +1,8 @@
 import AppLayout from '@/layouts/app-layout';
 import { Client, ItemOrder, Order, type BreadcrumbItem } from '@/types';
+import { calculateRentalDaysInPeriod } from '@/utils/order-utils';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 interface Props {
     clients: Client[];
@@ -65,7 +66,7 @@ export default function Create({
     };
 
     const handleSelectAllOrders = () => {
-        setSelectedOrderIds(clientOrders.map((order) => order.id));
+        setSelectedOrderIds(billableOrderIds);
     };
 
     const handleDeselectAllOrders = () => {
@@ -85,27 +86,70 @@ export default function Create({
           )
         : [];
 
-    // Ítems de todas las órdenes del cliente (tabla única con selección por orden)
-    const clientOrderItems = data.client_id
-        ? items.filter((item) =>
-              clientOrders.some((o) => o.id === item.order_id),
-          )
-        : [];
-
     const orderForItem = (item: ItemOrder): Order | undefined =>
         orders.find((o) => o.id === item.order_id);
 
-    // Días: misma regla que facturación (salida tipo 2 → regreso tipo 0, o hasta hoy)
-    const calculateDaysInRental = (itemId: number): number => {
-        const item = items.find((i) => i.id === itemId);
-        if (!item) return 0;
-        if (item.rental_days != null) return item.rental_days;
-
-        return 0;
+    // Días: misma regla que facturación (período ∩ salida→regreso, inclusivo +1)
+    const calculateDaysInRental = (item: ItemOrder): number => {
+        if (!item.salida_at) {
+            return 0;
+        }
+        if (data.date_from && data.date_to) {
+            return calculateRentalDaysInPeriod(
+                item.salida_at,
+                item.regreso_at,
+                data.date_from,
+                data.date_to,
+            );
+        }
+        return item.rental_days ?? 0;
     };
 
+    const clientOrderItems = useMemo(() => {
+        if (!data.client_id) {
+            return [];
+        }
+        return items.filter((item) => {
+            const order = orders.find((o) => o.id === item.order_id);
+            if (
+                !order ||
+                order.client_id.toString() !== data.client_id.toString()
+            ) {
+                return false;
+            }
+            if (!item.salida_at || item.already_billed) {
+                return false;
+            }
+            if (data.date_from && data.date_to) {
+                return (
+                    calculateRentalDaysInPeriod(
+                        item.salida_at,
+                        item.regreso_at,
+                        data.date_from,
+                        data.date_to,
+                    ) > 0
+                );
+            }
+            return true;
+        });
+    }, [data.client_id, data.date_from, data.date_to, items, orders]);
+
+    const billableOrderIds = useMemo(
+        () => [...new Set(clientOrderItems.map((item) => item.order_id))],
+        [clientOrderItems],
+    );
+
+    const billableOrderIdsKey = billableOrderIds.join(',');
+
+    useEffect(() => {
+        const ids = billableOrderIdsKey
+            ? billableOrderIdsKey.split(',').map(Number)
+            : [];
+        setSelectedOrderIds((prev) => prev.filter((id) => ids.includes(id)));
+    }, [billableOrderIdsKey]);
+
     const subTotal = (item: ItemOrder): number => {
-        const days = calculateDaysInRental(item.id);
+        const days = calculateDaysInRental(item);
         return (item.current_cost ?? 0) * item.quantity * days;
     };
 
@@ -196,7 +240,7 @@ export default function Create({
                         <div className="rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900">
                             <div className="mb-4 flex items-center justify-between">
                                 <h2 className="text-lg font-semibold">
-                                    Órdenes del Cliente
+                                    Movimientos a facturar entre fechas
                                 </h2>
                                 <div className="flex space-x-2">
                                     <button
@@ -218,7 +262,7 @@ export default function Create({
 
                             <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
                                 {selectedOrderIds.length} de{' '}
-                                {clientOrders.length} órdenes seleccionadas
+                                {billableOrderIds.length} órdenes seleccionadas
                             </div>
 
                             <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
@@ -333,19 +377,23 @@ export default function Create({
                                                         ).toFixed(2)}
                                                     </td>
                                                     <td className="px-3 py-3 text-right text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">
-                                                        {item.rental_days !=
-                                                        null
-                                                            ? calculateDaysInRental(
-                                                                  item.id,
-                                                              )
-                                                            : '—'}
+                                                        {(() => {
+                                                            const days =
+                                                                calculateDaysInRental(
+                                                                    item,
+                                                                );
+                                                            return days > 0
+                                                                ? days
+                                                                : '—';
+                                                        })()}
                                                     </td>
                                                     <td className="max-w-xs px-3 py-3 text-sm text-gray-700 dark:text-gray-300">
                                                         {order?.address ?? '—'}
                                                     </td>
                                                     <td className="px-3 py-3 text-right text-sm font-medium whitespace-nowrap text-gray-900 dark:text-white">
-                                                        {item.rental_days !=
-                                                        null
+                                                        {calculateDaysInRental(
+                                                            item,
+                                                        ) > 0
                                                             ? subTotal(
                                                                   item,
                                                               ).toFixed(2)
@@ -359,8 +407,9 @@ export default function Create({
                             </div>
                             {clientOrderItems.length === 0 && (
                                 <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                                    No hay productos en las órdenes de este
-                                    cliente.
+                                    {data.date_from && data.date_to
+                                        ? 'No hay movimientos con días en el período seleccionado.'
+                                        : 'Indique el período de facturación para ver los movimientos facturables.'}
                                 </p>
                             )}
                         </div>

@@ -135,7 +135,7 @@
                     $dateFrom = $order['date_from'] ?? null;
                     $dateTo = $order['date_to'] ?? null;
                     $days = ($dateFrom && $dateTo)
-                        ? max(1, \Carbon\Carbon::parse($dateFrom)->startOfDay()->diffInDays(\Carbon\Carbon::parse($dateTo)->startOfDay()))
+                        ? \Carbon\Carbon::parse($dateFrom)->startOfDay()->diffInDays(\Carbon\Carbon::parse($dateTo)->startOfDay()) + 1
                         : null;
                 @endphp
                 <tr>

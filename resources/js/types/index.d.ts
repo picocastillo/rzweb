@@ -77,4 +77,7 @@ interface ItemOrder {
     quantity: number;
     current_cost?: number;
     rental_days?: number | null;
+    salida_at?: string | null;
+    regreso_at?: string | null;
+    already_billed?: boolean;
 }

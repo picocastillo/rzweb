@@ -116,34 +116,25 @@ class Product extends Model
     }
 
     /**
-     * Stock actualmente en alquiler (aún no facturado)
-     * Son los movimientos tipo 2 (salida) que tienen is_billed = false
+     * Stock actualmente en alquiler (salidas tipo 2 sin regreso).
      */
     public function getStockInRentalAttribute()
     {
-        return $this->stockMovements()
-            ->where('type', 2)
-            ->where('is_billed', false)
+        return StockMovement::activeSalidas()
+            ->where('product_id', $this->id)
             ->sum('qty');
     }
 
     /**
-     * Stock disponible para nuevas órdenes
-     * = Stock total + Stock en alquiler (porque el stock en alquiler ya fue restado)
+     * Stock disponible para nuevas órdenes.
      */
     public function getAvailableStockAttribute()
     {
-
         $totalEntries = $this->stockMovements()
-            ->whereIn('type', [1, 0]) // Entradas y ajustes
+            ->whereIn('type', [1, 0])
             ->sum('qty');
 
-        $billedExits = $this->stockMovements()
-            ->where('type', 2)
-            ->where('is_billed', true)
-            ->sum('qty');
-
-        return $totalEntries - $billedExits;
+        return $totalEntries - $this->stock_in_rental;
     }
 
     public function getStockWithoutItemOrdersAttribute()

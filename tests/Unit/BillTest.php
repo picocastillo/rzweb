@@ -122,14 +122,12 @@ class BillTest extends TestCase
         $this->assertEquals(1, $bill->billItems->count());
 
         $billItem = $bill->billItems->first();
-        $this->assertEquals(10, $billItem->days);
+        $this->assertEquals(11, $billItem->days);
 
-        // Cálculo: 5 unidades * 10 días * $100
-        $this->assertEquals(5000, $bill->amount);
+        // Cálculo: 5 unidades * 11 días * $100
+        $this->assertEquals(5500, $bill->amount);
 
-        // Verificar que el movimiento fue marcado como facturado
-        $movement = StockMovement::where('type', 2)->first();
-        $this->assertTrue((bool) $movement->is_billed);
+        $this->assertEquals($stockMovementIn->id, $billItem->stock_movement_id);
     }
 
     public function test_puede_facturar_orden_parcial_sin_devolucion()
@@ -197,16 +195,12 @@ class BillTest extends TestCase
         ]);
 
         // Assert
-        $this->assertEquals(5, $bill->billItems->first()->days);
-        // Cálculo: 3 unidades * 5 días * $50
-        $this->assertEquals(750, $bill->amount);
+        $this->assertEquals(6, $bill->billItems->first()->days);
+        // Cálculo: 3 unidades * 6 días * $50
+        $this->assertEquals(900, $bill->amount);
 
-        // Verificar nuevo movimiento pendiente
-        $newMovement = StockMovement::where('type', 2)
-            ->where('is_billed', false)
-            ->first();
-        $this->assertNotNull($newMovement);
-        $this->assertEquals(3, $newMovement->qty);
+        $this->assertEquals(2, StockMovement::where('type', 2)->count());
+        $this->assertEquals(1, StockMovement::where('type', 0)->count());
     }
 
     public function test_calcula_dias_desde_ultima_factura_en_facturacion_parcial_recurrente()
@@ -281,8 +275,8 @@ class BillTest extends TestCase
         ]);
 
         // Assert
-        $this->assertEquals(10, $firstBill->billItems->first()->days);
-        $this->assertEquals(15, $secondBill->billItems->first()->days);
+        $this->assertEquals(11, $firstBill->billItems->first()->days);
+        $this->assertEquals(16, $secondBill->billItems->first()->days);
     }
 
     public function test_lanza_excepcion_si_no_hay_movimientos_pendientes()
@@ -322,7 +316,7 @@ class BillTest extends TestCase
         ]);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('No hay movimientos pendientes para facturar');
+        $this->expectExceptionMessage('No hay movimientos de salida para facturar');
 
         Bill::createWithInitialState([
             'client_id' => $client->id,
@@ -413,10 +407,10 @@ class BillTest extends TestCase
         ]);
 
         $this->assertCount(2, $bill->billItems);
-        $this->assertEquals(9, $bill->billItems[0]->days);
-        $this->assertEquals(7, $bill->billItems[1]->days);
+        $this->assertEquals(10, $bill->billItems[0]->days);
+        $this->assertEquals(8, $bill->billItems[1]->days);
 
-        // Total = (2×9×100) + (1×7×100)
-        $this->assertEquals(2500, $bill->amount);
+        // Total = (2×10×100) + (1×8×100)
+        $this->assertEquals(2800, $bill->amount);
     }
 }

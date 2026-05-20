@@ -42,7 +42,6 @@ Table stock_movement {
   id integer [primary key]
   product_id integer [not null]
   type varchar
-  is_billed bool
   created_at datetime
   qty integer
 }

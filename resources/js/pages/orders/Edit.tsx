@@ -1,5 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { calculateRentalDays } from '@/utils/order-utils';
 import { useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -51,14 +52,6 @@ export default function Edit() {
     const formatDate = (dateString: Date) => {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString('es-ES', options);
-    };
-
-    // Función para calcular días de alquiler
-    const calculateRentalDays = () => {
-        const from = new Date(order.date_from);
-        const to = new Date(order.date_to);
-        const diffTime = Math.abs(to - from);
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
 
     // Función para obtener el color del estado
@@ -197,7 +190,11 @@ export default function Edit() {
                                                 Duración:
                                             </span>
                                             <span className="text-black">
-                                                {calculateRentalDays()} días
+                                                {calculateRentalDays(
+                                                    order.date_from,
+                                                    order.date_to,
+                                                )}{' '}
+                                                días
                                             </span>
                                         </div>
                                     </div>

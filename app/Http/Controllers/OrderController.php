@@ -80,7 +80,7 @@ class OrderController extends Controller
             'user_id' => auth()->id(),
         ]);
 
-        return redirect('/orders')->with('success', 'Orden creada exitosamente!');
+        return redirect('/orders/'.$order->id);
     }
 
     public function show(Order $order)
@@ -164,7 +164,7 @@ class OrderController extends Controller
             ]);
         }
 
-        if ($stockMovement->is_billed) {
+        if ($stockMovement->billItems()->exists()) {
             return back()->withErrors([
                 'general' => 'No se puede eliminar un movimiento ya facturado.',
             ]);
