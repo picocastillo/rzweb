@@ -72,13 +72,12 @@ class Bill extends Model
                 }
 
                 $movements = StockMovement::where('type', 2)
-                    ->where('is_billed', false)
                     ->whereHas('itemOrders', fn ($q) => $q->whereIn('order_id', $attributes['orders']))
                     ->with(['itemOrders.order', 'product'])
                     ->get();
 
                 if ($movements->isEmpty()) {
-                    throw new \Exception('No hay movimientos pendientes para facturar');
+                    throw new \Exception('No hay movimientos de salida para facturar');
                 }
 
                 $billableLines = [];
@@ -88,6 +87,12 @@ class Bill extends Model
                         continue;
                     }
                     $orderId = $itemOrder->order_id;
+
+                    if ($movement->billItems()->exists()
+                        && StockMovement::firstRegresoAfterSalida($movement, $orderId)) {
+                        continue;
+                    }
+
                     $days = $movement->rentalDaysInPeriod($orderId, $periodFrom, $periodTo);
                     if ($days > 0) {
                         $billableLines[] = [
@@ -99,7 +104,7 @@ class Bill extends Model
                 }
 
                 if (empty($billableLines)) {
-                    throw new \Exception('Ningún alquiler pendiente tiene días en el período seleccionado.');
+                    throw new \Exception('Ningún alquiler tiene días en el período seleccionado.');
                 }
 
                 $bill = Bill::create([
@@ -135,26 +140,11 @@ class Bill extends Model
                         'stock_movement_id' => $movement->id,
                     ]);
 
-                    $movement->update(['is_billed' => true]);
-
-                    if (! $regreso) {
-                        $newMovement = StockMovement::create([
-                            'product_id' => $movement->product_id,
-                            'qty' => $movement->qty,
-                            'type' => 2,
-                            'is_billed' => false,
-                            'created_at' => now()->endOfDay(),
-                        ]);
-
-                        ItemOrder::create([
-                            'order_id' => $orderId,
-                            'product_id' => $movement->product_id,
-                            'qty' => $movement->qty,
-                            'stock_movement_id' => $newMovement->id,
-                        ]);
-                    }
-
                     $total += $movement->qty * $days * $unitPrice;
+
+                    if (! StockMovement::firstRegresoAfterSalida($movement, $orderId)) {
+                        StockMovement::closeActiveRentalForBilling($movement, $orderId);
+                    }
                 }
 
                 $bill->update(['amount' => $total]);

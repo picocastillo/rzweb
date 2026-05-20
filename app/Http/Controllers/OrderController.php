@@ -80,7 +80,7 @@ class OrderController extends Controller
             'user_id' => auth()->id(),
         ]);
 
-        return redirect('/orders')->with('success', 'Orden creada exitosamente!');
+        return redirect('/orders/'.$order->id);
     }
 
     public function show(Order $order)
@@ -145,6 +145,34 @@ class OrderController extends Controller
         }
 
         return $redirect;
+    }
+
+    public function deleteStockMovement(Order $order, StockMovement $stockMovement)
+    {
+        $belongsToOrder = ItemOrder::query()
+            ->where('order_id', $order->id)
+            ->where('stock_movement_id', $stockMovement->id)
+            ->exists();
+
+        if (! $belongsToOrder) {
+            abort(404);
+        }
+
+        if ((int) $order->last_state === 3) {
+            return back()->withErrors([
+                'general' => 'No se pueden eliminar movimientos de una orden finalizada.',
+            ]);
+        }
+
+        if ($stockMovement->billItems()->exists()) {
+            return back()->withErrors([
+                'general' => 'No se puede eliminar un movimiento ya facturado.',
+            ]);
+        }
+
+        DB::transaction(fn () => $stockMovement->delete());
+
+        return back()->with('success', 'Movimiento eliminado correctamente');
     }
 
     public function edit(Order $order)
@@ -388,7 +416,11 @@ class OrderController extends Controller
                 'order_id' => $order->id,
             ]);
 
-            $order->update(['last_state' => 3]);
+            $orderUpdate = ['last_state' => 3];
+            if ($order->date_to === null) {
+                $orderUpdate['date_to'] = $finishAt->toDateString();
+            }
+            $order->update($orderUpdate);
         });
 
         return redirect()->back()->with('success', 'Orden finalizada correctamente');

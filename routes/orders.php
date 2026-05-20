@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OrderController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('orders')->group(function () {
 
@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified'])->prefix('orders')->group(function () {
 
     Route::post('/{order}/add-stock', [OrderController::class, 'addStock']);
     Route::post('/{order}/stock-movement', [OrderController::class, 'stockMovement']);
+    Route::delete('/{order}/stock-movement/{stockMovement}', [OrderController::class, 'deleteStockMovement']);
     Route::post('/{order}/assign', [OrderController::class, 'assignOrder']);
 
     Route::post('{order}/note', [OrderController::class, 'addNote']);
@@ -27,5 +28,5 @@ Route::middleware(['auth', 'verified'])->prefix('orders')->group(function () {
 
     Route::post('{order}/file', [OrderController::class, 'attachFile']);
     Route::delete('/{order}/file/{file}', [OrderController::class, 'deleteFile']);
-    
+
 });

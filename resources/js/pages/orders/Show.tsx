@@ -23,8 +23,8 @@ import {
     formatDate,
     getStatusVariant,
 } from '@/utils/order-utils';
-import { useForm, usePage } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { router, useForm, usePage } from '@inertiajs/react';
+import { ChevronDown, ChevronUp, Info, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 function getLocalDateInputValue(date = new Date()): string {
@@ -35,8 +35,8 @@ function getLocalDateInputValue(date = new Date()): string {
 }
 
 export default function Show() {
-    const { order, products, allProducts, available_workers, clients } = usePage()
-        .props as unknown as OrderShowProps;
+    const { order, products, allProducts, available_workers, clients } =
+        usePage().props as unknown as OrderShowProps;
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [showFinishModal, setShowFinishModal] = useState(false);
     const [openStock, setOpenStock] = useState(true);
@@ -148,8 +148,26 @@ export default function Show() {
     };
 
     const openFinishModal = () => {
-        finishForm.setData('finish_date', getLocalDateInputValue());
+        const today = getLocalDateInputValue();
+        finishForm.setData('finish_date', today);
         finishForm.clearErrors();
+
+        if (!order.date_to?.trim()) {
+            router.put(
+                `/orders/${order.id}`,
+                {
+                    client_id: String(order.client?.id ?? ''),
+                    address: order.address ?? '',
+                    date_to: today,
+                },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => setShowFinishModal(true),
+                },
+            );
+            return;
+        }
+
         setShowFinishModal(true);
     };
 
@@ -181,6 +199,22 @@ export default function Show() {
     const TYPE: Record<number, string> = {
         2: 'Ingreso',
         0: 'Egreso',
+    };
+
+    const handleDeleteStockMovement = (movementId: number) => {
+        if (isOrderFinished) {
+            return;
+        }
+        if (
+            !confirm(
+                '¿Eliminar este movimiento de stock? Esta acción no se puede deshacer.',
+            )
+        ) {
+            return;
+        }
+        router.delete(`/orders/${order.id}/stock-movement/${movementId}`, {
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -227,6 +261,14 @@ export default function Show() {
                                                   order.date_to,
                                               )} días`
                                             : '—'}
+                                    </p>
+                                    <p className="sm:w-full">
+                                        <span className="font-medium text-gray-700 dark:text-gray-200">
+                                            Dirección:{' '}
+                                        </span>
+                                        {order.address?.trim()
+                                            ? order.address
+                                            : 'Sin definir'}
                                     </p>
                                 </div>
                             </div>
@@ -418,6 +460,14 @@ export default function Show() {
                                         ? order.client.phone
                                         : 'Sin definir'}
                                 </p>
+                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                    Dirección
+                                </p>
+                                <p className="text-black dark:text-white">
+                                    {order.address?.trim()
+                                        ? order.address
+                                        : 'Sin definir'}
+                                </p>
                             </div>
 
                             {/* Información del alquiler */}
@@ -521,6 +571,9 @@ export default function Show() {
                                                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
                                                         Fecha
                                                     </th>
+                                                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-300">
+                                                        Acciones
+                                                    </th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
@@ -555,6 +608,28 @@ export default function Show() {
                                                                 ).toLocaleString(
                                                                     'es-ES',
                                                                 )}
+                                                            </td>
+                                                            <td className="px-4 py-2 text-right">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="destructive"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        handleDeleteStockMovement(
+                                                                            sm.id,
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        isOrderFinished
+                                                                    }
+                                                                    title={
+                                                                        isOrderFinished
+                                                                            ? 'La orden está finalizada'
+                                                                            : 'Eliminar movimiento'
+                                                                    }
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
                                                             </td>
                                                         </tr>
                                                     ),

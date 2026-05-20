@@ -35,7 +35,7 @@ export const formatDate = (dateString?: string | Date | null): string => {
     return date.toLocaleDateString('es-AR', options);
 };
 
-// Función para calcular días de alquiler (diferencia en días calendario entre fechas)
+// Días de alquiler inclusivos (diferencia calendario + 1: el día de inicio cuenta)
 export const calculateRentalDays = (
     date_from: string,
     date_to: string,
@@ -53,7 +53,49 @@ export const calculateRentalDays = (
     }
 
     const diffTime = Math.abs(to.getTime() - from.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+};
+
+const toDayDate = (value: string): Date | null => {
+    const dateOnly = value.includes('T') ? value.slice(0, 10) : value;
+    if (!dateOnly?.trim()) {
+        return null;
+    }
+    const date = new Date(
+        dateOnly.length === 10 ? `${dateOnly}T12:00:00` : dateOnly,
+    );
+    return isNaN(date.getTime()) ? null : date;
+};
+
+/** Misma regla que StockMovement::rentalDaysInPeriod (inclusivo, +1). */
+export const calculateRentalDaysInPeriod = (
+    salidaAt: string,
+    regresoAt: string | null | undefined,
+    periodFrom: string,
+    periodTo: string,
+): number => {
+    const start = toDayDate(salidaAt);
+    const end = regresoAt
+        ? toDayDate(regresoAt)
+        : toDayDate(new Date().toISOString().slice(0, 10));
+    const from = toDayDate(periodFrom);
+    const to = toDayDate(periodTo);
+
+    if (!start || !end || !from || !to || from > to) {
+        return 0;
+    }
+
+    const overlapStart = start > from ? start : from;
+    const overlapEnd = end < to ? end : to;
+
+    if (overlapStart > overlapEnd) {
+        return 0;
+    }
+
+    return calculateRentalDays(
+        overlapStart.toISOString().slice(0, 10),
+        overlapEnd.toISOString().slice(0, 10),
+    );
 };
 
 // Función para obtener el color del estado

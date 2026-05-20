@@ -16,10 +16,8 @@ class BillController extends Controller
 {
     public function index()
     {
-        $bills = Bill::with([
-            'client',
-            'billItems.stockMovement.product.costs',
-        ])
+        $bills = Bill::with('client:id,name,cuil,phone')
+            ->select(['id', 'client_id', 'date_from', 'date_to', 'amount', 'created_at'])
             ->latest('created_at')
             ->get();
         // dd($bills);
@@ -51,10 +49,17 @@ class BillController extends Controller
                     ->map(function ($item) {
                         $movement = $item->stockMovement;
                         $rentalDays = null;
+                        $salidaAt = null;
+                        $regresoAt = null;
+                        $alreadyBilled = false;
                         if ($movement instanceof StockMovement && (int) $movement->type === 2) {
-                            $rentalDays = $movement->rentalDaysBetweenSalidaAndRegreso(
-                                (int) $item->order_id,
-                            );
+                            $orderId = (int) $item->order_id;
+                            $rentalDays = $movement->rentalDaysBetweenSalidaAndRegreso($orderId);
+                            $salidaAt = $movement->created_at;
+                            $regreso = StockMovement::firstRegresoAfterSalida($movement, $orderId);
+                            $regresoAt = $regreso?->created_at;
+                            $alreadyBilled = $movement->billItems()->exists()
+                                && $regreso !== null;
                         }
 
                         return [
@@ -65,6 +70,9 @@ class BillController extends Controller
                             'quantity' => $item->qty,
                             'current_cost' => $item->product->current_cost ?? 0,
                             'rental_days' => $rentalDays,
+                            'salida_at' => $salidaAt,
+                            'regreso_at' => $regresoAt,
+                            'already_billed' => $alreadyBilled,
                         ];
                     });
             }

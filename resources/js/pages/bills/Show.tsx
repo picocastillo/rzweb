@@ -310,10 +310,23 @@ export default function ShowBill({ bill }: Props) {
                                                             </p>
                                                             <div className="mt-1 flex items-start gap-1 text-xs text-gray-500 dark:text-gray-400">
                                                                 <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-                                                                <span className="break-words">
-                                                                    {item.stock_movement?.order?.address?.trim() ||
-                                                                        '—'}
-                                                                </span>
+                                                                {item
+                                                                    .stock_movement
+                                                                    ?.order
+                                                                    ?.id ? (
+                                                                    <Link
+                                                                        href={`/orders/${item.stock_movement.order.id}`}
+                                                                        className="break-words text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                                                                    >
+                                                                        {item.stock_movement.order.address?.trim() ||
+                                                                            '—'}
+                                                                    </Link>
+                                                                ) : (
+                                                                    <span className="break-words">
+                                                                        {item.stock_movement?.order?.address?.trim() ||
+                                                                            '—'}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -471,10 +484,23 @@ export default function ShowBill({ bill }: Props) {
                                                                         </div>
                                                                         <div className="mt-1 flex items-start gap-1 text-xs text-gray-500 lg:hidden dark:text-gray-400">
                                                                             <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
-                                                                            <span className="break-words">
-                                                                                {item.stock_movement?.order?.address?.trim() ||
-                                                                                    '—'}
-                                                                            </span>
+                                                                            {item
+                                                                                .stock_movement
+                                                                                ?.order
+                                                                                ?.id ? (
+                                                                                <Link
+                                                                                    href={`/orders/${item.stock_movement.order.id}`}
+                                                                                    className="break-words text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                                                                                >
+                                                                                    {item.stock_movement.order.address?.trim() ||
+                                                                                        '—'}
+                                                                                </Link>
+                                                                            ) : (
+                                                                                <span className="break-words">
+                                                                                    {item.stock_movement?.order?.address?.trim() ||
+                                                                                        '—'}
+                                                                                </span>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -482,10 +508,23 @@ export default function ShowBill({ bill }: Props) {
                                                             <td className="hidden max-w-xs px-3 py-4 text-sm text-gray-900 lg:table-cell lg:px-6 dark:text-white">
                                                                 <div className="flex gap-2">
                                                                     <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
-                                                                    <span className="break-words">
-                                                                        {item.stock_movement?.order?.address?.trim() ||
-                                                                            '—'}
-                                                                    </span>
+                                                                    {item
+                                                                        .stock_movement
+                                                                        ?.order
+                                                                        ?.id ? (
+                                                                        <Link
+                                                                            href={`/orders/${item.stock_movement.order.id}`}
+                                                                            className="break-words text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                                                                        >
+                                                                            {item.stock_movement.order.address?.trim() ||
+                                                                                '—'}
+                                                                        </Link>
+                                                                    ) : (
+                                                                        <span className="break-words">
+                                                                            {item.stock_movement?.order?.address?.trim() ||
+                                                                                '—'}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             </td>
                                                             <td className="px-3 py-4 whitespace-nowrap lg:px-6">
