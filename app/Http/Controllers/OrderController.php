@@ -80,7 +80,7 @@ class OrderController extends Controller
             'user_id' => auth()->id(),
         ]);
 
-        return redirect('/orders/'.$order->id);
+        return redirect('/orders/create')->with('success', 'Orden creada');;
     }
 
     public function show(Order $order)
@@ -202,7 +202,20 @@ class OrderController extends Controller
 
     public function destroy(Order $order)
     {
-        $order->delete();
+        DB::transaction(function () use ($order) {
+            $order->loadMissing('itemOrders');
+
+            $stockMovementIds = $order->itemOrders
+                ->pluck('stock_movement_id')
+                ->unique()
+                ->filter();
+
+            $order->itemOrders()->delete();
+
+            StockMovement::whereIn('id', $stockMovementIds)->delete();
+
+            $order->delete();
+        });
 
         return redirect('/orders')->with('success', 'Orden eliminada correctamente!');
     }
