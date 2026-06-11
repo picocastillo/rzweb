@@ -80,7 +80,7 @@ class OrderController extends Controller
             'user_id' => auth()->id(),
         ]);
 
-        return redirect('/orders/create')->with('success', 'Orden creada');;
+        return redirect('/orders/create')->with('success', 'Orden creada');
     }
 
     public function show(Order $order)
@@ -424,16 +424,20 @@ class OrderController extends Controller
                 ]);
             }
 
-            OrderState::create([
+            $finalState = OrderState::create([
                 'name' => 3, // Finalizada
                 'order_id' => $order->id,
             ]);
 
-            $orderUpdate = ['last_state' => 3];
-            if ($order->date_to === null) {
-                $orderUpdate['date_to'] = $finishAt->toDateString();
-            }
-            $order->update($orderUpdate);
+            $finalState->forceFill([
+                'created_at' => $finishAt,
+                'updated_at' => $finishAt,
+            ])->save();
+
+            $order->update([
+                'last_state' => 3,
+                'date_to' => $finishAt->toDateString(),
+            ]);
         });
 
         return redirect()->back()->with('success', 'Orden finalizada correctamente');

@@ -148,26 +148,10 @@ export default function Show() {
     };
 
     const openFinishModal = () => {
-        const today = getLocalDateInputValue();
-        finishForm.setData('finish_date', today);
+        const defaultFinishDate =
+            order.date_to?.trim().slice(0, 10) || getLocalDateInputValue();
+        finishForm.setData('finish_date', defaultFinishDate);
         finishForm.clearErrors();
-
-        if (!order.date_to?.trim()) {
-            router.put(
-                `/orders/${order.id}`,
-                {
-                    client_id: String(order.client?.id ?? ''),
-                    address: order.address ?? '',
-                    date_to: today,
-                },
-                {
-                    preserveScroll: true,
-                    onSuccess: () => setShowFinishModal(true),
-                },
-            );
-            return;
-        }
-
         setShowFinishModal(true);
     };
 
